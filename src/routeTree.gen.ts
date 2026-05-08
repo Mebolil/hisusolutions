@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
 import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
+import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
 
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
@@ -70,6 +71,11 @@ const AppButcecrmIndexRoute = AppButcecrmIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
+const AppButcecrmSatislarRoute = AppButcecrmSatislarRouteImport.update({
+  id: '/satislar',
+  path: '/satislar',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesById {
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRouteTypes {
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/panel'
     | '/web-sitesi'
     | '/app/butcecrm'
+    | '/app/butcecrm/satislar'
     | '/app/butcecrm/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/otomasyon'
     | '/panel'
     | '/web-sitesi'
+    | '/app/butcecrm/satislar'
     | '/app/butcecrm'
   id:
     | '__root__'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/panel'
     | '/web-sitesi'
     | '/app/butcecrm'
+    | '/app/butcecrm/satislar'
     | '/app/butcecrm/'
   fileRoutesById: FileRoutesById
 }
@@ -229,14 +241,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppButcecrmIndexRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
+    '/app/butcecrm/satislar': {
+      id: '/app/butcecrm/satislar'
+      path: '/satislar'
+      fullPath: '/app/butcecrm/satislar'
+      preLoaderRoute: typeof AppButcecrmSatislarRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
   }
 }
 
 interface AppButcecrmRouteChildren {
+  AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
   AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
 }
 
 const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
+  AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
   AppButcecrmIndexRoute: AppButcecrmIndexRoute,
 }
 
@@ -258,3 +279,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -26,7 +26,7 @@ const PRODUCTS: Product[] = [
     icon: BarChart3,
     title: "BütçeCRM",
     desc: "Gelir, gider, stok ve reklam ROI'sini tek ekranda yönetin.",
-    plans: ["budgecrm", "butceleme", "pro", "enterprise"],
+    plans: ["butceleme", "pro", "enterprise"],
   },
   {
     key: "web",

@@ -9,8 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
+import { Route as OtomasyonRouteImport } from './routes/otomasyon'
+import { Route as IletisimRouteImport } from './routes/iletisim'
+import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
+import { Route as ButcelemeRouteImport } from './routes/butceleme'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WebSitesiRoute = WebSitesiRouteImport.update({
+  id: '/web-sitesi',
+  path: '/web-sitesi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtomasyonRoute = OtomasyonRouteImport.update({
+  id: '/otomasyon',
+  path: '/otomasyon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IletisimRoute = IletisimRouteImport.update({
+  id: '/iletisim',
+  path: '/iletisim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HakkimizdaRoute = HakkimizdaRouteImport.update({
+  id: '/hakkimizda',
+  path: '/hakkimizda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ButcelemeRoute = ButcelemeRouteImport.update({
+  id: '/butceleme',
+  path: '/butceleme',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +55,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/butceleme': typeof ButcelemeRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iletisim': typeof IletisimRoute
+  '/otomasyon': typeof OtomasyonRoute
+  '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/butceleme': typeof ButcelemeRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iletisim': typeof IletisimRoute
+  '/otomasyon': typeof OtomasyonRoute
+  '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/butceleme': typeof ButcelemeRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iletisim': typeof IletisimRoute
+  '/otomasyon': typeof OtomasyonRoute
+  '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/butceleme'
+    | '/hakkimizda'
+    | '/iletisim'
+    | '/otomasyon'
+    | '/web-sitesi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/butceleme'
+    | '/hakkimizda'
+    | '/iletisim'
+    | '/otomasyon'
+    | '/web-sitesi'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/butceleme'
+    | '/hakkimizda'
+    | '/iletisim'
+    | '/otomasyon'
+    | '/web-sitesi'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  ButcelemeRoute: typeof ButcelemeRoute
+  HakkimizdaRoute: typeof HakkimizdaRoute
+  IletisimRoute: typeof IletisimRoute
+  OtomasyonRoute: typeof OtomasyonRoute
+  WebSitesiRoute: typeof WebSitesiRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/web-sitesi': {
+      id: '/web-sitesi'
+      path: '/web-sitesi'
+      fullPath: '/web-sitesi'
+      preLoaderRoute: typeof WebSitesiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otomasyon': {
+      id: '/otomasyon'
+      path: '/otomasyon'
+      fullPath: '/otomasyon'
+      preLoaderRoute: typeof OtomasyonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iletisim': {
+      id: '/iletisim'
+      path: '/iletisim'
+      fullPath: '/iletisim'
+      preLoaderRoute: typeof IletisimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hakkimizda': {
+      id: '/hakkimizda'
+      path: '/hakkimizda'
+      fullPath: '/hakkimizda'
+      preLoaderRoute: typeof HakkimizdaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/butceleme': {
+      id: '/butceleme'
+      path: '/butceleme'
+      fullPath: '/butceleme'
+      preLoaderRoute: typeof ButcelemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +177,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  ButcelemeRoute: ButcelemeRoute,
+  HakkimizdaRoute: HakkimizdaRoute,
+  IletisimRoute: IletisimRoute,
+  OtomasyonRoute: OtomasyonRoute,
+  WebSitesiRoute: WebSitesiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

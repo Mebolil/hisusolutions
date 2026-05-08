@@ -22,7 +22,7 @@ type Product = {
 const PRODUCTS: Product[] = [
   {
     key: "butceleme",
-    to: "/butceleme",
+    to: "/app/butcecrm",
     icon: BarChart3,
     title: "BütçeCRM",
     desc: "Gelir, gider, stok ve reklam ROI'sini tek ekranda yönetin.",

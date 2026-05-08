@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
 import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
+import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
 import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
 import { Route as AppButcecrmGiderlerRouteImport } from './routes/app.butcecrm.giderler'
 import { Route as AppButcecrmAlislarRouteImport } from './routes/app.butcecrm.alislar'
@@ -73,6 +74,11 @@ const AppButcecrmIndexRoute = AppButcecrmIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
+const AppButcecrmStokRoute = AppButcecrmStokRouteImport.update({
+  id: '/stok',
+  path: '/stok',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
 const AppButcecrmSatislarRoute = AppButcecrmSatislarRouteImport.update({
   id: '/satislar',
   path: '/satislar',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
+  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesByTo {
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
+  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesById {
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
+  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRouteTypes {
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/satislar'
+    | '/app/butcecrm/stok'
     | '/app/butcecrm/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/satislar'
+    | '/app/butcecrm/stok'
     | '/app/butcecrm'
   id:
     | '__root__'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/satislar'
+    | '/app/butcecrm/stok'
     | '/app/butcecrm/'
   fileRoutesById: FileRoutesById
 }
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppButcecrmIndexRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
+    '/app/butcecrm/stok': {
+      id: '/app/butcecrm/stok'
+      path: '/stok'
+      fullPath: '/app/butcecrm/stok'
+      preLoaderRoute: typeof AppButcecrmStokRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
     '/app/butcecrm/satislar': {
       id: '/app/butcecrm/satislar'
       path: '/satislar'
@@ -293,6 +312,7 @@ interface AppButcecrmRouteChildren {
   AppButcecrmAlislarRoute: typeof AppButcecrmAlislarRoute
   AppButcecrmGiderlerRoute: typeof AppButcecrmGiderlerRoute
   AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
+  AppButcecrmStokRoute: typeof AppButcecrmStokRoute
   AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
 }
 
@@ -300,6 +320,7 @@ const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
   AppButcecrmAlislarRoute: AppButcecrmAlislarRoute,
   AppButcecrmGiderlerRoute: AppButcecrmGiderlerRoute,
   AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
+  AppButcecrmStokRoute: AppButcecrmStokRoute,
   AppButcecrmIndexRoute: AppButcecrmIndexRoute,
 }
 

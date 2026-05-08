@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
+import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as IletisimRouteImport } from './routes/iletisim'
 import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
   path: '/web-sitesi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelRoute = PanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OtomasyonRoute = OtomasyonRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
+  '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
+  '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
+  '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/hakkimizda'
     | '/iletisim'
     | '/otomasyon'
+    | '/panel'
     | '/web-sitesi'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/hakkimizda'
     | '/iletisim'
     | '/otomasyon'
+    | '/panel'
     | '/web-sitesi'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/hakkimizda'
     | '/iletisim'
     | '/otomasyon'
+    | '/panel'
     | '/web-sitesi'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   HakkimizdaRoute: typeof HakkimizdaRoute
   IletisimRoute: typeof IletisimRoute
   OtomasyonRoute: typeof OtomasyonRoute
+  PanelRoute: typeof PanelRoute
   WebSitesiRoute: typeof WebSitesiRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/web-sitesi'
       fullPath: '/web-sitesi'
       preLoaderRoute: typeof WebSitesiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel': {
+      id: '/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof PanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/otomasyon': {
@@ -182,8 +202,19 @@ const rootRouteChildren: RootRouteChildren = {
   HakkimizdaRoute: HakkimizdaRoute,
   IletisimRoute: IletisimRoute,
   OtomasyonRoute: OtomasyonRoute,
+  PanelRoute: PanelRoute,
   WebSitesiRoute: WebSitesiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

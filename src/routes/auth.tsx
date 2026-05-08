@@ -26,7 +26,7 @@ function AuthPage() {
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else { toast.success("Giriş başarılı"); navigate({ to: "/" }); }
+      else { toast.success("Giriş başarılı"); navigate({ to: "/panel" }); }
     } else {
       const { error } = await supabase.auth.signUp({
         email, password,

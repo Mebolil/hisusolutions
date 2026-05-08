@@ -47,9 +47,14 @@ export function Header() {
 
         <div className="hidden items-center gap-2 lg:flex">
           {user ? (
-            <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>
-              Çıkış Yap
-            </Button>
+            <>
+              <Link to="/panel" className="rounded-full px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">
+                Panelim
+              </Link>
+              <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}>
+                Çıkış Yap
+              </Button>
+            </>
           ) : (
             <Link to="/auth" className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
               Giriş Yap

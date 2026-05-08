@@ -17,6 +17,8 @@ import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
 import { Route as ButcelemeRouteImport } from './routes/butceleme'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
+import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
 
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
@@ -58,6 +60,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppButcecrmRoute = AppButcecrmRouteImport.update({
+  id: '/app/butcecrm',
+  path: '/app/butcecrm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppButcecrmIndexRoute = AppButcecrmIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +92,7 @@ export interface FileRoutesByTo {
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/app/butcecrm': typeof AppButcecrmIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +104,8 @@ export interface FileRoutesById {
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/butcecrm/': typeof AppButcecrmIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +118,8 @@ export interface FileRouteTypes {
     | '/otomasyon'
     | '/panel'
     | '/web-sitesi'
+    | '/app/butcecrm'
+    | '/app/butcecrm/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +130,7 @@ export interface FileRouteTypes {
     | '/otomasyon'
     | '/panel'
     | '/web-sitesi'
+    | '/app/butcecrm'
   id:
     | '__root__'
     | '/'
@@ -121,6 +141,8 @@ export interface FileRouteTypes {
     | '/otomasyon'
     | '/panel'
     | '/web-sitesi'
+    | '/app/butcecrm'
+    | '/app/butcecrm/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +154,7 @@ export interface RootRouteChildren {
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
   WebSitesiRoute: typeof WebSitesiRoute
+  AppButcecrmRoute: typeof AppButcecrmRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -192,8 +215,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/butcecrm': {
+      id: '/app/butcecrm'
+      path: '/app/butcecrm'
+      fullPath: '/app/butcecrm'
+      preLoaderRoute: typeof AppButcecrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/butcecrm/': {
+      id: '/app/butcecrm/'
+      path: '/'
+      fullPath: '/app/butcecrm/'
+      preLoaderRoute: typeof AppButcecrmIndexRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
   }
 }
+
+interface AppButcecrmRouteChildren {
+  AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
+}
+
+const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
+  AppButcecrmIndexRoute: AppButcecrmIndexRoute,
+}
+
+const AppButcecrmRouteWithChildren = AppButcecrmRoute._addFileChildren(
+  AppButcecrmRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -204,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,
   WebSitesiRoute: WebSitesiRoute,
+  AppButcecrmRoute: AppButcecrmRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

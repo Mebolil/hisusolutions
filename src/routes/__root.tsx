@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -72,11 +73,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
+      { name: "description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
+      { name: "author", content: "Hisu Solutions" },
+      { property: "og:title", content: "Hisu Solutions — AaaS Platformu" },
+      { property: "og:description", content: "İşinize özel otomasyon, finans ve web çözümleri." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -114,6 +115,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
 }

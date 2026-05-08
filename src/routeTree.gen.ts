@@ -22,6 +22,7 @@ import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.inde
 import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
 import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
 import { Route as AppButcecrmReklamRouteImport } from './routes/app.butcecrm.reklam'
+import { Route as AppButcecrmRaporlarRouteImport } from './routes/app.butcecrm.raporlar'
 import { Route as AppButcecrmHatirlaticilarRouteImport } from './routes/app.butcecrm.hatirlaticilar'
 import { Route as AppButcecrmGiderlerRouteImport } from './routes/app.butcecrm.giderler'
 import { Route as AppButcecrmCarilerRouteImport } from './routes/app.butcecrm.cariler'
@@ -92,6 +93,11 @@ const AppButcecrmReklamRoute = AppButcecrmReklamRouteImport.update({
   path: '/reklam',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
+const AppButcecrmRaporlarRoute = AppButcecrmRaporlarRouteImport.update({
+  id: '/raporlar',
+  path: '/raporlar',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
 const AppButcecrmHatirlaticilarRoute =
   AppButcecrmHatirlaticilarRouteImport.update({
     id: '/hatirlaticilar',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
   '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
   '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
   '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/raporlar'
     | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/raporlar'
     | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/raporlar'
     | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppButcecrmReklamRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
+    '/app/butcecrm/raporlar': {
+      id: '/app/butcecrm/raporlar'
+      path: '/raporlar'
+      fullPath: '/app/butcecrm/raporlar'
+      preLoaderRoute: typeof AppButcecrmRaporlarRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
     '/app/butcecrm/hatirlaticilar': {
       id: '/app/butcecrm/hatirlaticilar'
       path: '/hatirlaticilar'
@@ -371,6 +390,7 @@ interface AppButcecrmRouteChildren {
   AppButcecrmCarilerRoute: typeof AppButcecrmCarilerRoute
   AppButcecrmGiderlerRoute: typeof AppButcecrmGiderlerRoute
   AppButcecrmHatirlaticilarRoute: typeof AppButcecrmHatirlaticilarRoute
+  AppButcecrmRaporlarRoute: typeof AppButcecrmRaporlarRoute
   AppButcecrmReklamRoute: typeof AppButcecrmReklamRoute
   AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
   AppButcecrmStokRoute: typeof AppButcecrmStokRoute
@@ -382,6 +402,7 @@ const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
   AppButcecrmCarilerRoute: AppButcecrmCarilerRoute,
   AppButcecrmGiderlerRoute: AppButcecrmGiderlerRoute,
   AppButcecrmHatirlaticilarRoute: AppButcecrmHatirlaticilarRoute,
+  AppButcecrmRaporlarRoute: AppButcecrmRaporlarRoute,
   AppButcecrmReklamRoute: AppButcecrmReklamRoute,
   AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
   AppButcecrmStokRoute: AppButcecrmStokRoute,

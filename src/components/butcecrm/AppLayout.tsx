@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { label: "Reklam",         path: "/app/butcecrm/reklam",         icon: Megaphone,       enabled: true  },
   { label: "Cariler",        path: "/app/butcecrm/cariler",        icon: Users,           enabled: true  },
   { label: "Hatırlatıcılar", path: "/app/butcecrm/hatirlaticilar", icon: Bell,            enabled: true  },
-  { label: "Raporlar",       path: "/app/butcecrm/raporlar",       icon: BarChart3,       enabled: false },
+  { label: "Raporlar",       path: "/app/butcecrm/raporlar",       icon: BarChart3,       enabled: true  },
 ];
 
 export function ButceCrmLayout({ children }: { children: ReactNode }) {

@@ -19,7 +19,7 @@ const navItems: NavItem[] = [
   { label: "Giderler",       path: "/app/butcecrm/giderler",       icon: Receipt,         enabled: true  },
   { label: "Alışlar",        path: "/app/butcecrm/alislar",        icon: ShoppingCart,    enabled: true  },
   { label: "Stok",           path: "/app/butcecrm/stok",           icon: Package,         enabled: true  },
-  { label: "Reklam",         path: "/app/butcecrm/reklam",         icon: Megaphone,       enabled: false },
+  { label: "Reklam",         path: "/app/butcecrm/reklam",         icon: Megaphone,       enabled: true  },
   { label: "Cariler",        path: "/app/butcecrm/cariler",        icon: Users,           enabled: false },
   { label: "Hatırlatıcılar", path: "/app/butcecrm/hatirlaticilar", icon: Bell,            enabled: false },
   { label: "Raporlar",       path: "/app/butcecrm/raporlar",       icon: BarChart3,       enabled: false },

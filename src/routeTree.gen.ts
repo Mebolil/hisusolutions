@@ -21,6 +21,7 @@ import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
 import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
 import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
 import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
+import { Route as AppButcecrmReklamRouteImport } from './routes/app.butcecrm.reklam'
 import { Route as AppButcecrmGiderlerRouteImport } from './routes/app.butcecrm.giderler'
 import { Route as AppButcecrmAlislarRouteImport } from './routes/app.butcecrm.alislar'
 
@@ -84,6 +85,11 @@ const AppButcecrmSatislarRoute = AppButcecrmSatislarRouteImport.update({
   path: '/satislar',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
+const AppButcecrmReklamRoute = AppButcecrmReklamRouteImport.update({
+  id: '/reklam',
+  path: '/reklam',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
 const AppButcecrmGiderlerRoute = AppButcecrmGiderlerRouteImport.update({
   id: '/giderler',
   path: '/giderler',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm': typeof AppButcecrmIndexRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
+    | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/web-sitesi'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
+    | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/app/butcecrm'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/giderler'
+    | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm/'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppButcecrmSatislarRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
+    '/app/butcecrm/reklam': {
+      id: '/app/butcecrm/reklam'
+      path: '/reklam'
+      fullPath: '/app/butcecrm/reklam'
+      preLoaderRoute: typeof AppButcecrmReklamRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
     '/app/butcecrm/giderler': {
       id: '/app/butcecrm/giderler'
       path: '/giderler'
@@ -311,6 +330,7 @@ declare module '@tanstack/react-router' {
 interface AppButcecrmRouteChildren {
   AppButcecrmAlislarRoute: typeof AppButcecrmAlislarRoute
   AppButcecrmGiderlerRoute: typeof AppButcecrmGiderlerRoute
+  AppButcecrmReklamRoute: typeof AppButcecrmReklamRoute
   AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
   AppButcecrmStokRoute: typeof AppButcecrmStokRoute
   AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
@@ -319,6 +339,7 @@ interface AppButcecrmRouteChildren {
 const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
   AppButcecrmAlislarRoute: AppButcecrmAlislarRoute,
   AppButcecrmGiderlerRoute: AppButcecrmGiderlerRoute,
+  AppButcecrmReklamRoute: AppButcecrmReklamRoute,
   AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
   AppButcecrmStokRoute: AppButcecrmStokRoute,
   AppButcecrmIndexRoute: AppButcecrmIndexRoute,

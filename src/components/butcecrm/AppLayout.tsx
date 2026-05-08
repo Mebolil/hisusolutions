@@ -16,7 +16,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Ana Sayfa",      path: "/app/butcecrm",                icon: LayoutDashboard, enabled: true  },
   { label: "Satışlar",       path: "/app/butcecrm/satislar",       icon: ShoppingBag,     enabled: true  },
-  { label: "Giderler",       path: "/app/butcecrm/giderler",       icon: Receipt,         enabled: false },
+  { label: "Giderler",       path: "/app/butcecrm/giderler",       icon: Receipt,         enabled: true  },
   { label: "Alışlar",        path: "/app/butcecrm/alislar",        icon: ShoppingCart,    enabled: false },
   { label: "Stok",           path: "/app/butcecrm/stok",           icon: Package,         enabled: false },
   { label: "Reklam",         path: "/app/butcecrm/reklam",         icon: Megaphone,       enabled: false },

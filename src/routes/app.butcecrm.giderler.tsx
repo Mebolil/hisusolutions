@@ -16,6 +16,17 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, Receipt } from "lucide-react";
 import { toast } from "sonner";
+import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+
+const EXPENSES_CSV_FIELDS: CsvField[] = [
+  { key: "expense_date",   label: "Tarih",         required: true, type: "date" },
+  { key: "category",       label: "Kategori",      required: true },
+  { key: "amount",         label: "Tutar",         required: true, type: "number" },
+  { key: "paid_amount",    label: "Ödenen",        type: "number" },
+  { key: "payment_status", label: "Ödeme Durumu",  required: true },
+  { key: "note",           label: "Not" },
+];
+const EXPENSES_CSV_SAMPLE = ["2025-05-01", "Kira", 5000, 5000, "ödendi", "Mayıs ayı"];
 
 type Expense = {
   id: string;
@@ -119,6 +130,22 @@ function ExpensesPage() {
           onCreated={load}
         />
       </div>
+
+      <CsvToolbar
+        slug="giderler"
+        table="expenses"
+        fields={EXPENSES_CSV_FIELDS}
+        sampleRow={EXPENSES_CSV_SAMPLE}
+        exportRows={filtered.map((e) => ({
+          expense_date: e.expense_date,
+          category: e.category,
+          amount: e.amount,
+          paid_amount: e.paid_amount,
+          payment_status: e.payment_status,
+          note: e.note,
+        }))}
+        onImported={load}
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Gider Adedi" value={String(totals.count)} />

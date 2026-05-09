@@ -139,10 +139,21 @@ export function CsvToolbar({
     setImporting(true);
     setErrorReport(null);
     try {
-      const text = await file.text();
-      const rows = parseCsv(text);
+      let rows: string[][];
+      const isXlsx = /\.xlsx$/i.test(file.name);
+      if (isXlsx) {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" });
+        rows = aoa.map((r) => (r as unknown[]).map((c) => String(c ?? "")));
+        rows = rows.filter((r) => r.some((v) => v.trim() !== ""));
+      } else {
+        const text = await file.text();
+        rows = parseCsv(text);
+      }
       if (rows.length < 2) {
-        toast.error("CSV boş veya sadece başlık içeriyor");
+        toast.error("Dosya boş veya sadece başlık içeriyor");
         return;
       }
       const headerRow = rows[0].map((h) => h.trim());

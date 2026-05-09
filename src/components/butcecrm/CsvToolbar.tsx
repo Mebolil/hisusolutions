@@ -278,10 +278,13 @@ export function CsvToolbar({
         <Button type="button" variant="outline" size="sm" onClick={handleExport} className="gap-2">
           <Download className="h-4 w-4" /> CSV Dışa Aktar
         </Button>
+        <Button type="button" variant="outline" size="sm" onClick={handleExportXlsx} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4" /> Excel Dışa Aktar
+        </Button>
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,text/csv"
           className="hidden"
           onChange={handleImport}
         />

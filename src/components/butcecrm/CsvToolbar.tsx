@@ -109,6 +109,24 @@ export function CsvToolbar({
     toast.success("CSV indirildi");
   }
 
+  function handleExportXlsx() {
+    if (exportRows.length === 0) {
+      toast.error("Dışa aktarılacak veri yok");
+      return;
+    }
+    const data = exportRows.map((r) => {
+      const o: Record<string, unknown> = {};
+      fields.forEach((f) => { o[f.label] = r[f.key] ?? ""; });
+      return o;
+    });
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, slug.slice(0, 31));
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `${slug}-${today}.xlsx`);
+    toast.success("Excel indirildi");
+  }
+
   function handleTemplate() {
     const csv = rowsToCsv(headers, keys, [Object.fromEntries(keys.map((k, i) => [k, sampleRow[i]]))]);
     downloadCsv(`${slug}-sablon.csv`, csv);

@@ -131,6 +131,22 @@ function ExpensesPage() {
         />
       </div>
 
+      <CsvToolbar
+        slug="giderler"
+        table="expenses"
+        fields={EXPENSES_CSV_FIELDS}
+        sampleRow={EXPENSES_CSV_SAMPLE}
+        exportRows={filtered.map((e) => ({
+          expense_date: e.expense_date,
+          category: e.category,
+          amount: e.amount,
+          paid_amount: e.paid_amount,
+          payment_status: e.payment_status,
+          note: e.note,
+        }))}
+        onImported={load}
+      />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Gider Adedi" value={String(totals.count)} />
         <StatCard label="Toplam Tutar" value={formatCurrency(totals.total)} valueClass="text-red-600" />

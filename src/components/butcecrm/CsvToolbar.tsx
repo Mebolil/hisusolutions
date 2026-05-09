@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Download, Upload, FileText } from "lucide-react";
+import { Download, Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase";
 
 export type CsvField = {

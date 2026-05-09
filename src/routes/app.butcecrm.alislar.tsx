@@ -130,6 +130,23 @@ function PurchasesPage() {
         />
       </div>
 
+      <CsvToolbar
+        slug="alislar"
+        table="purchases"
+        fields={PURCHASES_CSV_FIELDS}
+        sampleRow={PURCHASES_CSV_SAMPLE}
+        exportRows={filtered.map((p) => ({
+          purchase_date: p.purchase_date,
+          product_name: p.product_name,
+          quantity: p.quantity,
+          unit_price: p.unit_price,
+          amount: p.amount,
+          paid_amount: p.paid_amount,
+          payment_status: p.payment_status,
+        }))}
+        onImported={load}
+      />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Alış Adedi" value={String(totals.count)} />
         <StatCard label="Toplam Tutar" value={formatCurrency(totals.total)} />

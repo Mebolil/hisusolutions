@@ -14,6 +14,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Package, Search, AlertTriangle, History } from "lucide-react";
+import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+
+const PRODUCTS_CSV_FIELDS: CsvField[] = [
+  { key: "name",                 label: "Ürün Adı",        required: true },
+  { key: "category",             label: "Kategori" },
+  { key: "quantity",             label: "Stok Miktarı",    required: true, type: "number" },
+  { key: "low_stock_threshold",  label: "Düşük Stok Eşiği", type: "number" },
+  { key: "unit_price",           label: "Birim Fiyat",     type: "number" },
+];
+const PRODUCTS_CSV_SAMPLE = ["Örnek Ürün", "Genel", 100, 10, 50];
 
 type Product = {
   id: string;

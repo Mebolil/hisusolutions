@@ -15,6 +15,18 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+
+const PURCHASES_CSV_FIELDS: CsvField[] = [
+  { key: "purchase_date",  label: "Tarih",         required: true, type: "date" },
+  { key: "product_name",   label: "Ürün",          required: true },
+  { key: "quantity",       label: "Miktar",        required: true, type: "number" },
+  { key: "unit_price",     label: "Birim Fiyat",   required: true, type: "number" },
+  { key: "amount",         label: "Tutar",         required: true, type: "number" },
+  { key: "paid_amount",    label: "Ödenen",        type: "number" },
+  { key: "payment_status", label: "Ödeme Durumu",  required: true },
+];
+const PURCHASES_CSV_SAMPLE = ["2025-05-01", "Örnek Ürün", 10, 50, 500, 500, "ödendi"];
 
 type Purchase = {
   id: string;

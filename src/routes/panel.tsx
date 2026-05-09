@@ -63,7 +63,7 @@ function PanelPage() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("plan")
-        .eq("id", session.user.id)
+        .eq("user_id", session.user.id)
         .maybeSingle();
 
       // plan can be a string ("pro"), comma list ("butceleme,web") or array

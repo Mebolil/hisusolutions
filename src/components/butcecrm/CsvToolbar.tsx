@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Download, Upload, FileText } from "lucide-react";
+import { Download, Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase";
 
 export type CsvField = {
@@ -108,6 +109,24 @@ export function CsvToolbar({
     toast.success("CSV indirildi");
   }
 
+  function handleExportXlsx() {
+    if (exportRows.length === 0) {
+      toast.error("Dışa aktarılacak veri yok");
+      return;
+    }
+    const data = exportRows.map((r) => {
+      const o: Record<string, unknown> = {};
+      fields.forEach((f) => { o[f.label] = r[f.key] ?? ""; });
+      return o;
+    });
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, slug.slice(0, 31));
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `${slug}-${today}.xlsx`);
+    toast.success("Excel indirildi");
+  }
+
   function handleTemplate() {
     const csv = rowsToCsv(headers, keys, [Object.fromEntries(keys.map((k, i) => [k, sampleRow[i]]))]);
     downloadCsv(`${slug}-sablon.csv`, csv);
@@ -120,10 +139,21 @@ export function CsvToolbar({
     setImporting(true);
     setErrorReport(null);
     try {
-      const text = await file.text();
-      const rows = parseCsv(text);
+      let rows: string[][];
+      const isXlsx = /\.xlsx$/i.test(file.name);
+      if (isXlsx) {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" });
+        rows = aoa.map((r) => (r as unknown[]).map((c) => String(c ?? "")));
+        rows = rows.filter((r) => r.some((v) => v.trim() !== ""));
+      } else {
+        const text = await file.text();
+        rows = parseCsv(text);
+      }
       if (rows.length < 2) {
-        toast.error("CSV boş veya sadece başlık içeriyor");
+        toast.error("Dosya boş veya sadece başlık içeriyor");
         return;
       }
       const headerRow = rows[0].map((h) => h.trim());
@@ -248,10 +278,13 @@ export function CsvToolbar({
         <Button type="button" variant="outline" size="sm" onClick={handleExport} className="gap-2">
           <Download className="h-4 w-4" /> CSV Dışa Aktar
         </Button>
+        <Button type="button" variant="outline" size="sm" onClick={handleExportXlsx} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4" /> Excel Dışa Aktar
+        </Button>
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,text/csv"
           className="hidden"
           onChange={handleImport}
         />

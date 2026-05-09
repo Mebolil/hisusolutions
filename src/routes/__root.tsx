@@ -76,11 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
       { name: "description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
       { name: "author", content: "Hisu Solutions" },
-      { property: "og:title", content: "Hisu Solutions — AaaS Platformu" },
-      { property: "og:description", content: "İşinize özel otomasyon, finans ve web çözümleri." },
+      { property: "og:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
+      { property: "og:description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
+      { name: "twitter:description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6f222516-de88-4e24-9723-0457736fa9de/id-preview-b5bf80c9--6ec28e2b-6589-4327-90c6-77377ef22b57.lovable.app-1778325988471.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6f222516-de88-4e24-9723-0457736fa9de/id-preview-b5bf80c9--6ec28e2b-6589-4327-90c6-77377ef22b57.lovable.app-1778325988471.png" },
     ],
     links: [
       {

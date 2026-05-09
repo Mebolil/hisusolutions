@@ -92,6 +92,7 @@ export function CsvToolbar({
   slug, table, fields, sampleRow, exportRows, transformRow, onImported,
 }: CsvToolbarProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const xlsxRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [errorReport, setErrorReport] = useState<string[] | null>(null);
 
@@ -275,6 +276,16 @@ export function CsvToolbar({
         >
           <Upload className="h-4 w-4" /> {importing ? "Yükleniyor..." : "CSV İçe Aktar"}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => xlsxRef.current?.click()}
+          disabled={importing}
+          className="gap-2"
+        >
+          <FileSpreadsheet className="h-4 w-4" /> {importing ? "Yükleniyor..." : "Excel İçe Aktar"}
+        </Button>
         <Button type="button" variant="outline" size="sm" onClick={handleExport} className="gap-2">
           <Download className="h-4 w-4" /> CSV Dışa Aktar
         </Button>
@@ -284,7 +295,14 @@ export function CsvToolbar({
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,.xlsx,text/csv"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={handleImport}
+        />
+        <input
+          ref={xlsxRef}
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           className="hidden"
           onChange={handleImport}
         />

@@ -133,9 +133,25 @@ function StockPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Stok</h1>
-        <p className="text-muted-foreground text-sm">Ürün stok seviyeleri ve hareket geçmişi</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Stok</h1>
+          <p className="text-muted-foreground text-sm">Ürün stok seviyeleri ve hareket geçmişi</p>
+        </div>
+        <CsvToolbar
+          slug="stok"
+          table="products"
+          fields={PRODUCTS_CSV_FIELDS}
+          sampleRow={PRODUCTS_CSV_SAMPLE}
+          exportRows={filtered.map((p) => ({
+            name: p.name,
+            category: p.category,
+            quantity: p.quantity,
+            low_stock_threshold: p.low_stock_threshold,
+            unit_price: p.unit_price,
+          }))}
+          onImported={load}
+        />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

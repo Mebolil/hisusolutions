@@ -264,6 +264,7 @@ function NewCampaignDialog({
     e.preventDefault();
     const platform = form.platform === "__new__" ? form.newPlatform.trim() : form.platform;
     if (!form.name) return toast.error("Kampanya adı zorunludur");
+    if (!platform) return toast.error("Platform seçmelisiniz");
     setSaving(true);
     const payload = {
       name: form.name,

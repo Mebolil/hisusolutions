@@ -289,9 +289,15 @@ function NewSaleDialog({
       return toast.error("Ürün ve tutar zorunludur");
     }
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setSaving(false);
+      return toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın");
+    }
     const total = Number(form.total_amount);
     const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
     const payload = {
+      user_id: session.user.id,
       sale_date: form.sale_date,
       customer_id: form.customer_id || null,
       product_name: form.product_name,

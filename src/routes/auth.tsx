@@ -83,6 +83,16 @@ function AuthPage() {
                 <Input id="password" type="password" placeholder="En az 6 karakter" className="pl-10" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
               </div>
             </div>
+            {mode === "signin" && (
+              <label htmlFor="remember" className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  id="remember"
+                  checked={remember}
+                  onCheckedChange={(v) => setRemember(v === true)}
+                />
+                Beni Hatırla
+              </label>
+            )}
             <Button type="submit" disabled={loading} className="w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90">
               {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "Kayıt Ol"}
             </Button>

@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Lock, Mail, Zap } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, REMEMBER_ME_KEY } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -17,6 +18,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -24,10 +26,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     if (mode === "signin") {
+      // Storage seçimini sign-in çağrısından önce ayarla
+      window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
       else { toast.success("Giriş başarılı"); navigate({ to: "/panel" }); }
     } else {
+      window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signUp({
         email, password,
         options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
@@ -78,6 +83,16 @@ function AuthPage() {
                 <Input id="password" type="password" placeholder="En az 6 karakter" className="pl-10" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
               </div>
             </div>
+            {mode === "signin" && (
+              <label htmlFor="remember" className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  id="remember"
+                  checked={remember}
+                  onCheckedChange={(v) => setRemember(v === true)}
+                />
+                Beni Hatırla
+              </label>
+            )}
             <Button type="submit" disabled={loading} className="w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90">
               {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "Kayıt Ol"}
             </Button>

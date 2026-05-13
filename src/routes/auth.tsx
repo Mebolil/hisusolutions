@@ -18,6 +18,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -25,10 +26,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     if (mode === "signin") {
+      // Storage seçimini sign-in çağrısından önce ayarla
+      window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
       else { toast.success("Giriş başarılı"); navigate({ to: "/panel" }); }
     } else {
+      window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signUp({
         email, password,
         options: { emailRedirectTo: window.location.origin, data: { full_name: name } },

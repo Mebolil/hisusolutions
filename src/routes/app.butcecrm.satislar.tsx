@@ -996,18 +996,75 @@ function NewSaleDialog({
                 <div>
                   <Label className="text-xs">Ödeme Yöntemi</Label>
                   <Select value={extras.payment_method}
-                    onValueChange={(v) => setExtras({ ...extras, payment_method: v })}>
+                    onValueChange={(v) => setExtras({ ...extras, payment_method: v, installments: "1" })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Kredi Kartı">Kredi Kartı</SelectItem>
-                      <SelectItem value="Havale/EFT">Havale/EFT</SelectItem>
-                      <SelectItem value="Kapıda Ödeme">Kapıda Ödeme</SelectItem>
-                      <SelectItem value="Nakit">Nakit</SelectItem>
-                      <SelectItem value="Çek/Senet">Çek/Senet</SelectItem>
-                      <SelectItem value="Diğer">Diğer</SelectItem>
+                      {settings.paymentMethods.map((m) => (
+                        <SelectItem key={m.name} value={m.name}>
+                          {m.name}{m.isCreditCard ? " 💳" : ""}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  <Link to="/app/butcecrm/ayarlar" className="text-[10px] text-muted-foreground hover:text-primary mt-1 inline-block">
+                    Yöntemleri yönet →
+                  </Link>
                 </div>
+                {selectedPaymentMethod?.isCreditCard && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Vade (Taksit)</Label>
+                      <Select value={extras.installments}
+                        onValueChange={(v) => setExtras({ ...extras, installments: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {settings.installmentPlans
+                            .slice().sort((a, b) => a.count - b.count)
+                            .map((p) => (
+                              <SelectItem key={p.count} value={String(p.count)}>
+                                {p.count} taksit (%{p.rate})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Komisyonu Kim Üstlensin</Label>
+                      <Select value={extras.commission_incidence}
+                        onValueChange={(v: "customer" | "seller") =>
+                          setExtras({ ...extras, commission_incidence: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer">Müşteriye yansıt (toplam artar)</SelectItem>
+                          <SelectItem value="seller">Satıcı üstlensin (maliyete eklenir)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {effectiveRate > 0 && Number(form.total_amount) > 0 && installmentPlan && (
+                      <div className="md:col-span-2 rounded-md border bg-muted/30 p-2 text-xs space-y-1">
+                        {(() => {
+                          const qty = Number(form.quantity) || 0;
+                          const up = Number(form.unit_price) || 0;
+                          const disc = Number(form.discount) || 0;
+                          const base = Math.max(0, up * qty - disc);
+                          const commission = +(base * effectiveRate / 100).toFixed(2);
+                          const total = extras.commission_incidence === "customer"
+                            ? base + commission : base;
+                          const perInstallment = installmentPlan.count > 0
+                            ? +(total / installmentPlan.count).toFixed(2) : 0;
+                          return (
+                            <>
+                              <div>Ara toplam: <b>{formatCurrency(base)}</b></div>
+                              <div>Komisyon ({installmentPlan.count}×, %{effectiveRate}): <b>{formatCurrency(commission)}</b></div>
+                              <div>Toplam: <b>{formatCurrency(total)}</b></div>
+                              <div>Taksit başına: <b>{formatCurrency(perInstallment)}</b> × {installmentPlan.count} ay</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                )}
                 <div>
                   <Label className="text-xs">Sipariş Durumu</Label>
                   <Select value={extras.order_status}

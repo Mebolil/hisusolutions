@@ -525,6 +525,7 @@ function NewSaleDialog({
   open: boolean; setOpen: (v: boolean) => void;
   customers: Customer[]; campaigns: Campaign[]; products: Product[]; onCreated: () => void;
 }) {
+  const [settings, setSettings] = useSettings();
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     sale_date: today,
@@ -551,6 +552,8 @@ function NewSaleDialog({
     order_status: "",
     delivery_date: "",
     shipping_address: "",
+    installments: "1",
+    commission_incidence: "customer" as "customer" | "seller",
   });
   const [costs, setCosts] = useState({
     product: "",
@@ -569,9 +572,23 @@ function NewSaleDialog({
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
   const [quickSaving, setQuickSaving] = useState(false);
-  const [platforms, setPlatforms] = useState<string[]>(loadPlatforms);
+  const platforms = settings.platforms;
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
+
+  // Selected payment method object + applicable rate (CC vade rate, or fixed rate)
+  const selectedPaymentMethod = useMemo(
+    () => settings.paymentMethods.find((m) => m.name === extras.payment_method),
+    [settings.paymentMethods, extras.payment_method],
+  );
+  const installmentPlan = useMemo(() => {
+    if (!selectedPaymentMethod?.isCreditCard) return null;
+    const c = parseInt(extras.installments, 10) || 1;
+    return settings.installmentPlans.find((p) => p.count === c)
+      || { count: c, rate: 0 };
+  }, [selectedPaymentMethod, extras.installments, settings.installmentPlans]);
+  const effectiveRate = installmentPlan?.rate ?? selectedPaymentMethod?.rate ?? 0;
+
 
   useEffect(() => { setLocalCustomers(customers); }, [customers]);
 

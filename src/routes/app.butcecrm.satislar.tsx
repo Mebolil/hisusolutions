@@ -271,7 +271,7 @@ function SalesPage() {
           <CardTitle className="text-base">Filtreler</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <div>
               <Label className="text-xs">Ödeme Durumu</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -289,6 +289,26 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {platformList.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Sipariş Durumu</Label>
+              <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {ORDER_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Kargo Firması</Label>
+              <Select value={carrierFilter} onValueChange={setCarrierFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {CARRIERS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

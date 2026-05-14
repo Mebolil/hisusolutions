@@ -125,9 +125,16 @@ function SalesPage() {
     [customers],
   );
 
+  const platformList = useMemo(() => {
+    const set = new Set<string>();
+    sales.forEach((s) => s.platform && set.add(s.platform));
+    return Array.from(set).sort();
+  }, [sales]);
+
   const filtered = useMemo(() => {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
+      if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
@@ -136,12 +143,47 @@ function SalesPage() {
       }
       return true;
     });
-  }, [sales, statusFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);
     const paid = filtered.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
-    return { total, paid, remaining: total - paid, count: filtered.length };
+    const cost = filtered.reduce((s, x) => s + Number(x.total_cost || 0), 0);
+    const profit = total - cost;
+    const margin = total > 0 ? (profit / total) * 100 : 0;
+    const avg = filtered.length > 0 ? total / filtered.length : 0;
+    return { total, paid, cost, profit, margin, avg, remaining: total - paid, count: filtered.length };
+  }, [filtered]);
+
+  const platformBreakdown = useMemo(() => {
+    const map = new Map<string, { revenue: number; profit: number; count: number }>();
+    filtered.forEach((s) => {
+      const k = s.platform || "Belirtilmemiş";
+      const cur = map.get(k) || { revenue: 0, profit: 0, count: 0 };
+      cur.revenue += Number(s.total_amount || 0);
+      cur.profit += Number(s.total_amount || 0) - Number(s.total_cost || 0);
+      cur.count += 1;
+      map.set(k, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [filtered]);
+
+  const topProducts = useMemo(() => {
+    const map = new Map<string, { qty: number; revenue: number; profit: number }>();
+    filtered.forEach((s) => {
+      const k = s.product_name || "—";
+      const cur = map.get(k) || { qty: 0, revenue: 0, profit: 0 };
+      cur.qty += Number(s.quantity || 0);
+      cur.revenue += Number(s.total_amount || 0);
+      cur.profit += Number(s.total_amount || 0) - Number(s.total_cost || 0);
+      map.set(k, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
   }, [filtered]);
 
   async function updateStatus(sale: Sale, newStatus: Status) {

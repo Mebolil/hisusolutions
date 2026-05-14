@@ -295,7 +295,7 @@ function NewExpenseDialog({
       amount: total,
       paid_amount: paid,
       payment_status: form.payment_status,
-      note: form.note || null,
+      note: form.note || "",
     };
     const { error } = await supabase.from("expenses").insert(payload);
     if (!error && form.category === "__new__" && cat) {

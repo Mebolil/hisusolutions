@@ -659,7 +659,24 @@ function NewSaleDialog({
     const breakdownLines = (Object.keys(labels) as Array<keyof typeof labels>)
       .filter((k) => Number((costs as Record<string, string>)[k]) > 0)
       .map((k) => `${labels[k]}: ${Number((costs as Record<string, string>)[k]).toFixed(2)} ₺`);
+    const extraLabels: Record<string, string> = {
+      order_no: "Sipariş No",
+      invoice_no: "Fatura No",
+      payment_method: "Ödeme Yöntemi",
+      shipping_carrier: "Kargo Firması",
+      tracking_no: "Kargo Takip No",
+      order_status: "Sipariş Durumu",
+      delivery_date: "Teslim Tarihi",
+      shipping_address: "Teslimat Adresi",
+    };
+    const extraLines = (Object.keys(extraLabels) as Array<keyof typeof extraLabels>)
+      .filter((k) => (extras as Record<string, string>)[k].trim() !== "")
+      .map((k) => `${extraLabels[k]}: ${(extras as Record<string, string>)[k].trim()}`);
     let combinedNotes = form.notes.trim();
+    if (extraLines.length) {
+      const header = "[Sipariş Bilgileri]\n" + extraLines.join("\n");
+      combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
+    }
     if (breakdownLines.length) {
       const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
       combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;

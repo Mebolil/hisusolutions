@@ -14,7 +14,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingBag } from "lucide-react";
+import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
@@ -44,6 +51,7 @@ type Sale = {
 };
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
+type Product = { id: string; name: string; quantity: number; unit_price: number | null };
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
@@ -87,7 +95,9 @@ function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
@@ -95,14 +105,16 @@ function SalesPage() {
 
   async function load() {
     setLoading(true);
-    const [s, c, ca] = await Promise.all([
+    const [s, c, ca, p] = await Promise.all([
       supabase.from("sales").select("*").order("sale_date", { ascending: false }),
       supabase.from("customers").select("id,name").order("name"),
       supabase.from("campaigns").select("id,name").order("name"),
+      supabase.from("products").select("id,name,quantity,unit_price").order("name"),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
     setCampaigns((ca.data as Campaign[]) || []);
+    setProducts((p.data as Product[]) || []);
     setLoading(false);
   }
 
@@ -113,9 +125,16 @@ function SalesPage() {
     [customers],
   );
 
+  const platformList = useMemo(() => {
+    const set = new Set<string>();
+    sales.forEach((s) => s.platform && set.add(s.platform));
+    return Array.from(set).sort();
+  }, [sales]);
+
   const filtered = useMemo(() => {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
+      if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
@@ -124,12 +143,47 @@ function SalesPage() {
       }
       return true;
     });
-  }, [sales, statusFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);
     const paid = filtered.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
-    return { total, paid, remaining: total - paid, count: filtered.length };
+    const cost = filtered.reduce((s, x) => s + Number(x.total_cost || 0), 0);
+    const profit = total - cost;
+    const margin = total > 0 ? (profit / total) * 100 : 0;
+    const avg = filtered.length > 0 ? total / filtered.length : 0;
+    return { total, paid, cost, profit, margin, avg, remaining: total - paid, count: filtered.length };
+  }, [filtered]);
+
+  const platformBreakdown = useMemo(() => {
+    const map = new Map<string, { revenue: number; profit: number; count: number }>();
+    filtered.forEach((s) => {
+      const k = s.platform || "Belirtilmemiş";
+      const cur = map.get(k) || { revenue: 0, profit: 0, count: 0 };
+      cur.revenue += Number(s.total_amount || 0);
+      cur.profit += Number(s.total_amount || 0) - Number(s.total_cost || 0);
+      cur.count += 1;
+      map.set(k, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [filtered]);
+
+  const topProducts = useMemo(() => {
+    const map = new Map<string, { qty: number; revenue: number; profit: number }>();
+    filtered.forEach((s) => {
+      const k = s.product_name || "—";
+      const cur = map.get(k) || { qty: 0, revenue: 0, profit: 0 };
+      cur.qty += Number(s.quantity || 0);
+      cur.revenue += Number(s.total_amount || 0);
+      cur.profit += Number(s.total_amount || 0) - Number(s.total_cost || 0);
+      map.set(k, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
   }, [filtered]);
 
   async function updateStatus(sale: Sale, newStatus: Status) {
@@ -140,6 +194,13 @@ function SalesPage() {
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setSales((prev) => prev.map((s) => (s.id === sale.id ? { ...s, ...patch } as Sale : s)));
+  }
+
+  async function deleteSale(sale: Sale) {
+    const { error } = await supabase.from("sales").delete().eq("id", sale.id);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success("Satış silindi");
+    setSales((prev) => prev.filter((s) => s.id !== sale.id));
   }
 
   return (
@@ -154,6 +215,7 @@ function SalesPage() {
           setOpen={setOpen}
           customers={customers}
           campaigns={campaigns}
+          products={products}
           onCreated={load}
         />
       </div>
@@ -182,12 +244,19 @@ function SalesPage() {
         <StatCard label="Kalan" value={formatCurrency(totals.remaining)} valueClass="text-amber-600" />
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Toplam Maliyet" value={formatCurrency(totals.cost)} valueClass="text-muted-foreground" />
+        <StatCard label="Net Kâr" value={formatCurrency(totals.profit)} valueClass={totals.profit >= 0 ? "text-emerald-600" : "text-red-600"} />
+        <StatCard label="Kâr Marjı" value={`${totals.margin.toFixed(1)}%`} valueClass={totals.margin >= 0 ? "text-emerald-600" : "text-red-600"} />
+        <StatCard label="Ortalama Sepet" value={formatCurrency(totals.avg)} />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Filtreler</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <div>
               <Label className="text-xs">Ödeme Durumu</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -195,6 +264,16 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Platform</Label>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {platformList.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -217,6 +296,76 @@ function SalesPage() {
         </CardContent>
       </Card>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" /> Platform Dağılımı
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {platformBreakdown.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Veri yok</p>
+            ) : (
+              <div className="space-y-3">
+                {platformBreakdown.map((p) => {
+                  const pct = totals.total > 0 ? (p.revenue / totals.total) * 100 : 0;
+                  return (
+                    <div key={p.name}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="font-medium">{p.name}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {p.count} satış · {formatCurrency(p.revenue)} · kâr {formatCurrency(p.profit)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Award className="h-4 w-4 text-primary" /> En Çok Satan 5 Ürün
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Veri yok</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ürün</TableHead>
+                    <TableHead className="text-right">Adet</TableHead>
+                    <TableHead className="text-right">Ciro</TableHead>
+                    <TableHead className="text-right">Kâr</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topProducts.map((p) => (
+                    <TableRow key={p.name}>
+                      <TableCell className="max-w-[180px] truncate">{p.name}</TableCell>
+                      <TableCell className="text-right">{p.qty}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(p.revenue)}</TableCell>
+                      <TableCell className={`text-right ${p.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                        {formatCurrency(p.profit)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -233,12 +382,17 @@ function SalesPage() {
                   <TableHead>Platform</TableHead>
                   <TableHead className="text-right">Miktar</TableHead>
                   <TableHead className="text-right">Tutar</TableHead>
+                  <TableHead className="text-right">Maliyet</TableHead>
+                  <TableHead className="text-right">Kâr</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
                   <TableHead>Durum</TableHead>
+                  <TableHead className="w-[40px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((s) => (
+                {filtered.map((s) => {
+                  const profit = Number(s.total_amount || 0) - Number(s.total_cost || 0);
+                  return (
                   <TableRow key={s.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
@@ -251,8 +405,11 @@ function SalesPage() {
                       ) : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell className="text-right">{Number(s.quantity)}</TableCell>
-
                     <TableCell className="text-right font-medium">{formatCurrency(Number(s.total_amount))}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{formatCurrency(Number(s.total_cost || 0))}</TableCell>
+                    <TableCell className={`text-right font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                      {formatCurrency(profit)}
+                    </TableCell>
                     <TableCell className="text-right">{formatCurrency(Number(s.paid_amount || 0))}</TableCell>
                     <TableCell>
                       <Select value={s.payment_status} onValueChange={(v) => updateStatus(s, v as Status)}>
@@ -264,8 +421,30 @@ function SalesPage() {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Satışı sil?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Bu işlem geri alınamaz. "{s.product_name}" satışı kalıcı olarak silinecek.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>İptal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteSale(s)}>Sil</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -287,24 +466,29 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
 }
 
 function NewSaleDialog({
-  open, setOpen, customers, campaigns, onCreated,
+  open, setOpen, customers, campaigns, products, onCreated,
 }: {
   open: boolean; setOpen: (v: boolean) => void;
-  customers: Customer[]; campaigns: Campaign[]; onCreated: () => void;
+  customers: Customer[]; campaigns: Campaign[]; products: Product[]; onCreated: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     sale_date: today,
     customer_id: "",
+    product_id: "",
     product_name: "",
     quantity: "1",
+    unit_price: "",
+    discount: "",
     total_amount: "",
     total_cost: "",
     paid_amount: "",
     payment_status: "bekliyor" as Status,
     campaign_id: "",
     platform: "",
+    notes: "",
   });
+  const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -318,10 +502,39 @@ function NewSaleDialog({
 
   function reset() {
     setForm({
-      sale_date: today, customer_id: "", product_name: "", quantity: "1",
+      sale_date: today, customer_id: "", product_id: "", product_name: "", quantity: "1",
+      unit_price: "", discount: "",
       total_amount: "", total_cost: "", paid_amount: "",
-      payment_status: "bekliyor", campaign_id: "", platform: "",
+      payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
+    setDecrementStock(true);
+  }
+
+  // Auto-calc total from unit_price * quantity - discount
+  useEffect(() => {
+    const qty = Number(form.quantity) || 0;
+    const up = Number(form.unit_price) || 0;
+    const disc = Number(form.discount) || 0;
+    if (up > 0 && qty > 0) {
+      const t = Math.max(0, up * qty - disc);
+      setForm((f) => (f.total_amount === String(t) ? f : { ...f, total_amount: String(t) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.unit_price, form.quantity, form.discount]);
+
+  function selectProduct(id: string) {
+    if (id === "__manual__") {
+      setForm((f) => ({ ...f, product_id: "", product_name: "" }));
+      return;
+    }
+    const p = products.find((x) => x.id === id);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      product_id: p.id,
+      product_name: p.name,
+      unit_price: p.unit_price != null ? String(p.unit_price) : f.unit_price,
+    }));
   }
 
   function addPlatform(name: string) {
@@ -369,7 +582,7 @@ function NewSaleDialog({
     }
     const total = Number(form.total_amount);
     const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
-    const payload = {
+    const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,
       customer_id: form.customer_id || null,
@@ -382,9 +595,28 @@ function NewSaleDialog({
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
     };
-    const { error } = await supabase.from("sales").insert(payload);
+    if (form.notes.trim()) payload.notes = form.notes.trim();
+    let { error } = await supabase.from("sales").insert(payload);
+    // Retry without notes if column doesn't exist
+    if (error && form.notes.trim() && /notes/i.test(error.message)) {
+      delete payload.notes;
+      ({ error } = await supabase.from("sales").insert(payload));
+    }
+    if (error) {
+      setSaving(false);
+      return toast.error("Eklenemedi: " + friendlyDbError(error));
+    }
+    // Decrement product stock if linked
+    if (decrementStock && form.product_id) {
+      const prod = products.find((p) => p.id === form.product_id);
+      if (prod) {
+        const newQty = Math.max(0, Number(prod.quantity || 0) - (Number(form.quantity) || 1));
+        const { error: stockErr } = await supabase
+          .from("products").update({ quantity: newQty }).eq("id", form.product_id);
+        if (stockErr) toast.warning("Satış kaydedildi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
+      }
+    }
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Satış eklendi");
     reset();
     setOpen(false);
@@ -426,27 +658,73 @@ function NewSaleDialog({
           </div>
           <div>
             <Label>Ürün</Label>
-            <Input value={form.product_name}
-              onChange={(e) => setForm({ ...form, product_name: e.target.value })} required />
+            <Select
+              value={form.product_id || (form.product_name ? "__manual__" : "")}
+              onValueChange={selectProduct}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Stoktan seç veya manuel gir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__manual__" className="text-primary font-medium">
+                  + Manuel Ürün (stokta yok)
+                </SelectItem>
+                {products.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} {p.quantity != null ? `(stok: ${p.quantity})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!form.product_id && (
+              <Input
+                className="mt-2"
+                value={form.product_name}
+                onChange={(e) => setForm({ ...form, product_name: e.target.value })}
+                placeholder="Ürün adı"
+                required
+              />
+            )}
+            {form.product_id && (
+              <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={decrementStock}
+                  onCheckedChange={(v) => setDecrementStock(!!v)}
+                />
+                Satış kaydedilince stoktan düş
+              </label>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <div>
               <Label>Miktar</Label>
               <Input type="number" min="1" value={form.quantity}
                 onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </div>
             <div>
-              <Label>Tutar (₺)</Label>
+              <Label>Birim Fiyat (₺)</Label>
+              <Input type="number" step="0.01" value={form.unit_price}
+                onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
+                placeholder="opsiyonel" />
+            </div>
+            <div>
+              <Label>İskonto (₺)</Label>
+              <Input type="number" step="0.01" value={form.discount}
+                onChange={(e) => setForm({ ...form, discount: e.target.value })}
+                placeholder="0" />
+            </div>
+            <div>
+              <Label>Toplam (₺)</Label>
               <Input type="number" step="0.01" value={form.total_amount}
                 onChange={(e) => setForm({ ...form, total_amount: e.target.value })} required />
             </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Maliyet (₺)</Label>
               <Input type="number" step="0.01" value={form.total_cost}
                 onChange={(e) => setForm({ ...form, total_cost: e.target.value })} />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Ödeme Durumu</Label>
               <Select value={form.payment_status}
@@ -492,6 +770,15 @@ function NewSaleDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div>
+            <Label>Notlar (opsiyonel)</Label>
+            <Textarea
+              rows={2}
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Sipariş notu, kargo bilgisi, vb."
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>

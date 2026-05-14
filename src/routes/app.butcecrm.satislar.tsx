@@ -244,12 +244,19 @@ function SalesPage() {
         <StatCard label="Kalan" value={formatCurrency(totals.remaining)} valueClass="text-amber-600" />
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Toplam Maliyet" value={formatCurrency(totals.cost)} valueClass="text-muted-foreground" />
+        <StatCard label="Net Kâr" value={formatCurrency(totals.profit)} valueClass={totals.profit >= 0 ? "text-emerald-600" : "text-red-600"} />
+        <StatCard label="Kâr Marjı" value={`${totals.margin.toFixed(1)}%`} valueClass={totals.margin >= 0 ? "text-emerald-600" : "text-red-600"} />
+        <StatCard label="Ortalama Sepet" value={formatCurrency(totals.avg)} />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Filtreler</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <div>
               <Label className="text-xs">Ödeme Durumu</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -257,6 +264,16 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Platform</Label>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {platformList.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -279,6 +296,76 @@ function SalesPage() {
         </CardContent>
       </Card>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" /> Platform Dağılımı
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {platformBreakdown.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Veri yok</p>
+            ) : (
+              <div className="space-y-3">
+                {platformBreakdown.map((p) => {
+                  const pct = totals.total > 0 ? (p.revenue / totals.total) * 100 : 0;
+                  return (
+                    <div key={p.name}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="font-medium">{p.name}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {p.count} satış · {formatCurrency(p.revenue)} · kâr {formatCurrency(p.profit)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Award className="h-4 w-4 text-primary" /> En Çok Satan 5 Ürün
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Veri yok</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ürün</TableHead>
+                    <TableHead className="text-right">Adet</TableHead>
+                    <TableHead className="text-right">Ciro</TableHead>
+                    <TableHead className="text-right">Kâr</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topProducts.map((p) => (
+                    <TableRow key={p.name}>
+                      <TableCell className="max-w-[180px] truncate">{p.name}</TableCell>
+                      <TableCell className="text-right">{p.qty}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(p.revenue)}</TableCell>
+                      <TableCell className={`text-right ${p.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                        {formatCurrency(p.profit)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -295,12 +382,17 @@ function SalesPage() {
                   <TableHead>Platform</TableHead>
                   <TableHead className="text-right">Miktar</TableHead>
                   <TableHead className="text-right">Tutar</TableHead>
+                  <TableHead className="text-right">Maliyet</TableHead>
+                  <TableHead className="text-right">Kâr</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
                   <TableHead>Durum</TableHead>
+                  <TableHead className="w-[40px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((s) => (
+                {filtered.map((s) => {
+                  const profit = Number(s.total_amount || 0) - Number(s.total_cost || 0);
+                  return (
                   <TableRow key={s.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
@@ -313,8 +405,11 @@ function SalesPage() {
                       ) : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell className="text-right">{Number(s.quantity)}</TableCell>
-
                     <TableCell className="text-right font-medium">{formatCurrency(Number(s.total_amount))}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{formatCurrency(Number(s.total_cost || 0))}</TableCell>
+                    <TableCell className={`text-right font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                      {formatCurrency(profit)}
+                    </TableCell>
                     <TableCell className="text-right">{formatCurrency(Number(s.paid_amount || 0))}</TableCell>
                     <TableCell>
                       <Select value={s.payment_status} onValueChange={(v) => updateStatus(s, v as Status)}>
@@ -326,8 +421,30 @@ function SalesPage() {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Satışı sil?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Bu işlem geri alınamaz. "{s.product_name}" satışı kalıcı olarak silinecek.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>İptal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteSale(s)}>Sil</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

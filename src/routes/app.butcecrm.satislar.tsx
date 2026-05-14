@@ -196,6 +196,13 @@ function SalesPage() {
     setSales((prev) => prev.map((s) => (s.id === sale.id ? { ...s, ...patch } as Sale : s)));
   }
 
+  async function deleteSale(sale: Sale) {
+    const { error } = await supabase.from("sales").delete().eq("id", sale.id);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success("Satış silindi");
+    setSales((prev) => prev.filter((s) => s.id !== sale.id));
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -208,6 +215,7 @@ function SalesPage() {
           setOpen={setOpen}
           customers={customers}
           campaigns={campaigns}
+          products={products}
           onCreated={load}
         />
       </div>

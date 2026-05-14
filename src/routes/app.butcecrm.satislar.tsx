@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil } from "lucide-react";
+import { useSettings } from "@/lib/butcecrm-settings";
+import { Link } from "@tanstack/react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

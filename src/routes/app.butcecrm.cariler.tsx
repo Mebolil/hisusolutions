@@ -203,7 +203,11 @@ function PartyDialog({
   kind: Kind; title: string;
   editing: Party | null; onSaved: () => void;
 }) {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "" });
+  const isSupplier = kind === "suppliers";
+  const [form, setForm] = useState({
+    name: "", phone: "", email: "", address: "",
+    tax_no: "", tax_office: "", contact_person: "",
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -213,6 +217,9 @@ function PartyDialog({
         phone: editing?.phone || "",
         email: editing?.email || "",
         address: editing?.address || "",
+        tax_no: editing?.tax_no || "",
+        tax_office: editing?.tax_office || "",
+        contact_person: editing?.contact_person || "",
       });
     }
   }, [open, editing]);
@@ -224,12 +231,20 @@ function PartyDialog({
       return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
     }
     setSaving(true);
-    const payload = {
+    const base = {
       name: parsed.data.name,
       phone: parsed.data.phone || null,
       email: parsed.data.email || null,
       address: parsed.data.address || null,
     };
+    const payload = isSupplier
+      ? {
+          ...base,
+          tax_no: parsed.data.tax_no || null,
+          tax_office: parsed.data.tax_office || null,
+          contact_person: parsed.data.contact_person || null,
+        }
+      : base;
     const { error } = editing
       ? await supabase.from(kind).update(payload).eq("id", editing.id)
       : await supabase.from(kind).insert(payload);
@@ -248,10 +263,33 @@ function PartyDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <Label>İsim</Label>
+            <Label>{isSupplier ? "Firma / Tedarikçi Adı" : "İsim"}</Label>
             <Input value={form.name} maxLength={120}
               onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
+
+          {isSupplier && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Vergi No / TCKN</Label>
+                  <Input value={form.tax_no} maxLength={20}
+                    onChange={(e) => setForm({ ...form, tax_no: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Vergi Dairesi</Label>
+                  <Input value={form.tax_office} maxLength={80}
+                    onChange={(e) => setForm({ ...form, tax_office: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <Label>Yetkili Kişi</Label>
+                <Input value={form.contact_person} maxLength={80}
+                  onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
+              </div>
+            </>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Telefon</Label>

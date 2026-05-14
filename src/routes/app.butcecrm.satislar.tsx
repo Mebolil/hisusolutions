@@ -40,12 +40,33 @@ type Sale = {
   paid_amount: number | null;
   payment_status: string;
   campaign_id: string | null;
+  platform: string | null;
 };
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
+
+const DEFAULT_PLATFORMS = ["Trendyol", "Hepsiburada", "Amazon", "N11", "Kendi Sitem"];
+const PLATFORMS_LS_KEY = "butcecrm:sale-platforms";
+
+function loadPlatforms(): string[] {
+  if (typeof window === "undefined") return DEFAULT_PLATFORMS;
+  try {
+    const raw = window.localStorage.getItem(PLATFORMS_LS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr;
+    }
+  } catch {}
+  return DEFAULT_PLATFORMS;
+}
+function savePlatforms(list: string[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PLATFORMS_LS_KEY, JSON.stringify(list));
+}
+
 
 export const Route = createFileRoute("/app/butcecrm/satislar")({
   head: () => ({ meta: [{ title: "BütçeCRM — Satışlar" }] }),

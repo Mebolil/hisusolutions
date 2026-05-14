@@ -602,6 +602,7 @@ function NewSaleDialog({
     setExtras({
       order_no: "", invoice_no: "", payment_method: "", shipping_carrier: "",
       tracking_no: "", order_status: "", delivery_date: "", shipping_address: "",
+      installments: "1", commission_incidence: "customer",
     });
     setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
     setCostsOpen(false);
@@ -663,13 +664,9 @@ function NewSaleDialog({
   function addPlatform(name: string) {
     const v = name.trim();
     if (!v) return;
-    if (platforms.includes(v)) {
-      setForm((f) => ({ ...f, platform: v }));
-      return;
+    if (!platforms.includes(v)) {
+      setSettings({ ...settings, platforms: [...platforms, v] });
     }
-    const next = [...platforms, v];
-    setPlatforms(next);
-    savePlatforms(next);
     setForm((f) => ({ ...f, platform: v }));
   }
 

@@ -594,10 +594,24 @@ function NewSaleDialog({
       payment_status: form.payment_status,
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
+      notes: form.notes.trim() || null,
     };
     const { error } = await supabase.from("sales").insert(payload);
+    if (error) {
+      setSaving(false);
+      return toast.error("Eklenemedi: " + friendlyDbError(error));
+    }
+    // Decrement product stock if linked
+    if (decrementStock && form.product_id) {
+      const prod = products.find((p) => p.id === form.product_id);
+      if (prod) {
+        const newQty = Math.max(0, Number(prod.quantity || 0) - (Number(form.quantity) || 1));
+        const { error: stockErr } = await supabase
+          .from("products").update({ quantity: newQty }).eq("id", form.product_id);
+        if (stockErr) toast.warning("Satış kaydedildi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
+      }
+    }
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Satış eklendi");
     reset();
     setOpen(false);

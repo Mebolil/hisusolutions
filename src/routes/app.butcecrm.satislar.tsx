@@ -1071,11 +1071,7 @@ function NewSaleDialog({
                     onValueChange={(v) => setExtras({ ...extras, order_status: v })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Hazırlanıyor">Hazırlanıyor</SelectItem>
-                      <SelectItem value="Kargoda">Kargoda</SelectItem>
-                      <SelectItem value="Teslim Edildi">Teslim Edildi</SelectItem>
-                      <SelectItem value="İptal">İptal</SelectItem>
-                      <SelectItem value="İade">İade</SelectItem>
+                      {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

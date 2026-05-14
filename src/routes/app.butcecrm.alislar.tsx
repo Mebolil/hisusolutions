@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { friendlyDbError } from "@/lib/butcecrm-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,7 +113,7 @@ function PurchasesPage() {
     if (newStatus === "ödendi") patch.paid_amount = Number(p.amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
     const { error } = await supabase.from("purchases").update(patch).eq("id", p.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setPurchases((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } as Purchase : x)));
   }
@@ -308,7 +309,7 @@ function NewPurchaseDialog({
     };
     const { error } = await supabase.from("purchases").insert(payload);
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Alış eklendi");
     reset();
     setOpen(false);

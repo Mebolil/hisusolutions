@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { friendlyDbError } from "@/lib/butcecrm-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -397,7 +398,7 @@ function NewProductDialog({
       await supabase.from("product_categories").insert({ name: cat }).then(() => {});
     }
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Ürün eklendi");
     reset();
     setOpen(false);
@@ -535,7 +536,7 @@ function EditProductDialog({
       await supabase.from("product_categories").insert({ name: cat }).then(() => {});
     }
     setSaving(false);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ürün güncellendi");
     onSaved();
   }
@@ -546,7 +547,7 @@ function EditProductDialog({
     setSaving(true);
     const { error } = await supabase.from("products").delete().eq("id", product.id);
     setSaving(false);
-    if (error) return toast.error("Silinemedi: " + error.message);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Ürün silindi");
     onSaved();
   }

@@ -59,10 +59,13 @@ function statusBadge(s: string) {
   return map[s] || "bg-secondary text-foreground";
 }
 
+type Product = { id: string; name: string; unit_price: number | null };
+
 function PurchasesPage() {
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [from, setFrom] = useState("");
@@ -72,12 +75,14 @@ function PurchasesPage() {
 
   async function load() {
     setLoading(true);
-    const [p, s] = await Promise.all([
+    const [p, s, pr] = await Promise.all([
       supabase.from("purchases").select("*").order("purchase_date", { ascending: false }),
       supabase.from("suppliers").select("id,name").order("name"),
+      supabase.from("products").select("id,name,unit_price").order("name"),
     ]);
     setPurchases((p.data as Purchase[]) || []);
     setSuppliers((s.data as Supplier[]) || []);
+    setProducts((pr.data as Product[]) || []);
     setLoading(false);
   }
 
@@ -127,7 +132,7 @@ function PurchasesPage() {
         </div>
         <NewPurchaseDialog
           open={open} setOpen={setOpen}
-          suppliers={suppliers} onCreated={load}
+          suppliers={suppliers} products={products} onCreated={load}
         />
       </div>
 

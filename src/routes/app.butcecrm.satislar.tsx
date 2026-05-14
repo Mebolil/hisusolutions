@@ -53,8 +53,6 @@ type Sale = {
   notes?: string | null;
 };
 
-const CARRIERS = ["Yurtiçi Kargo", "MNG Kargo", "Aras Kargo", "PTT Kargo", "Sürat Kargo"];
-const ORDER_STATUSES = ["Hazırlanıyor", "Kargoda", "Teslim Edildi", "İptal", "İade"];
 
 function parseNoteField(notes: string | null | undefined, label: string): string {
   if (!notes) return "";
@@ -69,24 +67,6 @@ type Product = { id: string; name: string; quantity: number; unit_price: number 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
 
-const DEFAULT_PLATFORMS = ["Trendyol", "Hepsiburada", "Amazon", "N11", "Kendi Sitem"];
-const PLATFORMS_LS_KEY = "butcecrm:sale-platforms";
-
-function loadPlatforms(): string[] {
-  if (typeof window === "undefined") return DEFAULT_PLATFORMS;
-  try {
-    const raw = window.localStorage.getItem(PLATFORMS_LS_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr) && arr.length) return arr;
-    }
-  } catch {}
-  return DEFAULT_PLATFORMS;
-}
-function savePlatforms(list: string[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(PLATFORMS_LS_KEY, JSON.stringify(list));
-}
 
 
 export const Route = createFileRoute("/app/butcecrm/satislar")({

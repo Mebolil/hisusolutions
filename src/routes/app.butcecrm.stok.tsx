@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
 const PRODUCTS_CSV_FIELDS: CsvField[] = [

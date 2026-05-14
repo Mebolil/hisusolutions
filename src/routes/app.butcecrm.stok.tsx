@@ -274,9 +274,14 @@ function StockPage() {
                         <span className={`text-xs px-2 py-0.5 rounded border ${STATE_BADGE[st]}`}>{STATE_LABEL[st]}</span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => openHistory(p)} className="gap-1">
-                          <History className="h-3.5 w-3.5" /> Geçmiş
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(p)} className="gap-1">
+                            <Pencil className="h-3.5 w-3.5" /> Düzenle
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => openHistory(p)} className="gap-1">
+                            <History className="h-3.5 w-3.5" /> Geçmiş
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

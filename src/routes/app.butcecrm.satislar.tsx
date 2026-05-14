@@ -651,7 +651,7 @@ function NewSaleDialog({
     if (combinedNotes) payload.notes = combinedNotes;
     let { error } = await supabase.from("sales").insert(payload);
     // Retry without notes if column doesn't exist
-    if (error && form.notes.trim() && /notes/i.test(error.message)) {
+    if (error && payload.notes && /notes/i.test(error.message)) {
       delete payload.notes;
       ({ error } = await supabase.from("sales").insert(payload));
     }

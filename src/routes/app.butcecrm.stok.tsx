@@ -494,7 +494,8 @@ function EditProductDialog({
     e.preventDefault();
     if (!product) return;
     if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
-    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const cat = (form.category === "__new__" ? form.newCategory.trim() : form.category).trim();
+    if (!cat) return toast.error("Kategori zorunludur");
     const newQty = Number(form.quantity || 0);
     const oldQty = Number(product.quantity || 0);
     const diff = newQty - oldQty;
@@ -502,7 +503,7 @@ function EditProductDialog({
     setSaving(true);
     const { error } = await supabase.from("products").update({
       name: form.name.trim(),
-      category: cat || null,
+      category: cat,
       quantity: newQty,
       low_stock_threshold: Number(form.low_stock_threshold || 0),
       unit_price: form.unit_price ? Number(form.unit_price) : null,

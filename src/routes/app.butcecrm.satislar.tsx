@@ -274,6 +274,12 @@ function NewSaleDialog({
     campaign_id: "",
   });
   const [saving, setSaving] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
+  const [quickSaving, setQuickSaving] = useState(false);
+
+  useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
   function reset() {
     setForm({
@@ -281,6 +287,24 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "",
     });
+  }
+
+  async function saveQuickCustomer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quick.name.trim()) return toast.error("İsim zorunludur");
+    setQuickSaving(true);
+    const { data, error } = await supabase.from("customers").insert({
+      name: quick.name.trim(),
+      phone: quick.phone.trim() || null,
+      email: quick.email.trim() || null,
+    }).select("id,name").single();
+    setQuickSaving(false);
+    if (error || !data) return toast.error("Eklenemedi: " + (error?.message || ""));
+    setLocalCustomers((prev) => [...prev, data as Customer].sort((a, b) => a.name.localeCompare(b.name)));
+    setForm((f) => ({ ...f, customer_id: data.id }));
+    setQuick({ name: "", phone: "", email: "" });
+    setQuickOpen(false);
+    toast.success("Müşteri eklendi");
   }
 
   async function submit(e: React.FormEvent) {

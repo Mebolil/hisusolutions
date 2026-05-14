@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award } from "lucide-react";
+import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -218,8 +218,19 @@ function SalesPage() {
     setSales((prev) => prev.filter((s) => s.id !== sale.id));
   }
 
+  const [editing, setEditing] = useState<Sale | null>(null);
+
   return (
     <div className="space-y-6">
+      <EditSaleDialog
+        sale={editing}
+        onClose={() => setEditing(null)}
+        platforms={platformList}
+        onSaved={(updated) => {
+          setSales((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+          setEditing(null);
+        }}
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><ShoppingBag className="h-6 w-6 text-primary" /> Satışlar</h1>
@@ -421,7 +432,7 @@ function SalesPage() {
                   <TableHead className="text-right">Kâr</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead className="w-[90px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -457,25 +468,30 @@ function SalesPage() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Satışı sil?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Bu işlem geri alınamaz. "{s.product_name}" satışı kalıcı olarak silinecek.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>İptal</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteSale(s)}>Sil</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(s)} title="Düzenle">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-600" title="Sil">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Satışı sil?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bu işlem geri alınamaz. "{s.product_name}" satışı kalıcı olarak silinecek.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>İptal</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteSale(s)}>Sil</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                   );
@@ -1121,6 +1137,120 @@ function NewSaleDialog({
           </form>
         </DialogContent>
       </Dialog>
+    </Dialog>
+  );
+}
+
+function EditSaleDialog({
+  sale, onClose, onSaved, platforms,
+}: {
+  sale: Sale | null;
+  onClose: () => void;
+  onSaved: (updated: Sale) => void;
+  platforms: string[];
+}) {
+  const [form, setForm] = useState<Sale | null>(sale);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setForm(sale); }, [sale]);
+
+  if (!form) return null;
+
+  async function save() {
+    if (!form) return;
+    setSaving(true);
+    const payload: Record<string, unknown> = {
+      sale_date: form.sale_date,
+      product_name: form.product_name,
+      quantity: Number(form.quantity) || 0,
+      total_amount: Number(form.total_amount) || 0,
+      total_cost: form.total_cost == null || form.total_cost === ("" as unknown) ? null : Number(form.total_cost),
+      paid_amount: form.paid_amount == null || form.paid_amount === ("" as unknown) ? null : Number(form.paid_amount),
+      payment_status: form.payment_status,
+      platform: form.platform || null,
+    };
+    if (form.notes !== undefined) payload.notes = form.notes;
+    let { error } = await supabase.from("sales").update(payload).eq("id", form.id);
+    if (error && payload.notes !== undefined && /notes/i.test(error.message)) {
+      delete payload.notes;
+      ({ error } = await supabase.from("sales").update(payload).eq("id", form.id));
+    }
+    setSaving(false);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
+    toast.success("Satış güncellendi");
+    onSaved({ ...form, ...(payload as Partial<Sale>) } as Sale);
+  }
+
+  return (
+    <Dialog open={!!sale} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Satışı Düzenle</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Tarih</Label>
+            <Input type="date" value={form.sale_date}
+              onChange={(e) => setForm({ ...form, sale_date: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Platform</Label>
+            <Select value={form.platform || ""} onValueChange={(v) => setForm({ ...form, platform: v })}>
+              <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
+              <SelectContent>
+                {platforms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs">Ürün</Label>
+            <Input value={form.product_name}
+              onChange={(e) => setForm({ ...form, product_name: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Miktar</Label>
+            <Input type="number" value={form.quantity}
+              onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Tutar (₺)</Label>
+            <Input type="number" step="0.01" value={form.total_amount}
+              onChange={(e) => setForm({ ...form, total_amount: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Maliyet (₺)</Label>
+            <Input type="number" step="0.01" value={form.total_cost ?? ""}
+              onChange={(e) => setForm({ ...form, total_cost: e.target.value === "" ? null : Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Tahsil Edilen (₺)</Label>
+            <Input type="number" step="0.01" value={form.paid_amount ?? ""}
+              onChange={(e) => setForm({ ...form, paid_amount: e.target.value === "" ? null : Number(e.target.value) })} />
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs">Ödeme Durumu</Label>
+            <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs">Notlar</Label>
+            <Textarea rows={5} value={form.notes ?? ""}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Sipariş Durumu: Kargoda&#10;Kargo Firması: Yurtiçi Kargo&#10;..." />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              "Sipariş Durumu: ...", "Kargo Firması: ..." satırları filtrelerde kullanılır.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>İptal</Button>
+          <Button onClick={save} disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

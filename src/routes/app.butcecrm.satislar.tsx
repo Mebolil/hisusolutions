@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil } from "lucide-react";
+import { useSettings } from "@/lib/butcecrm-settings";
+import { Link } from "@tanstack/react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -51,8 +53,6 @@ type Sale = {
   notes?: string | null;
 };
 
-const CARRIERS = ["Yurtiçi Kargo", "MNG Kargo", "Aras Kargo", "PTT Kargo", "Sürat Kargo"];
-const ORDER_STATUSES = ["Hazırlanıyor", "Kargoda", "Teslim Edildi", "İptal", "İade"];
 
 function parseNoteField(notes: string | null | undefined, label: string): string {
   if (!notes) return "";
@@ -67,24 +67,6 @@ type Product = { id: string; name: string; quantity: number; unit_price: number 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
 
-const DEFAULT_PLATFORMS = ["Trendyol", "Hepsiburada", "Amazon", "N11", "Kendi Sitem"];
-const PLATFORMS_LS_KEY = "butcecrm:sale-platforms";
-
-function loadPlatforms(): string[] {
-  if (typeof window === "undefined") return DEFAULT_PLATFORMS;
-  try {
-    const raw = window.localStorage.getItem(PLATFORMS_LS_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr) && arr.length) return arr;
-    }
-  } catch {}
-  return DEFAULT_PLATFORMS;
-}
-function savePlatforms(list: string[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(PLATFORMS_LS_KEY, JSON.stringify(list));
-}
 
 
 export const Route = createFileRoute("/app/butcecrm/satislar")({
@@ -102,6 +84,7 @@ function statusBadge(s: string) {
 }
 
 function SalesPage() {
+  const [settings] = useSettings();
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -309,7 +292,7 @@ function SalesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {ORDER_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -319,7 +302,7 @@ function SalesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {CARRIERS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -522,6 +505,7 @@ function NewSaleDialog({
   open: boolean; setOpen: (v: boolean) => void;
   customers: Customer[]; campaigns: Campaign[]; products: Product[]; onCreated: () => void;
 }) {
+  const [settings, setSettings] = useSettings();
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     sale_date: today,
@@ -548,6 +532,8 @@ function NewSaleDialog({
     order_status: "",
     delivery_date: "",
     shipping_address: "",
+    installments: "1",
+    commission_incidence: "customer" as "customer" | "seller",
   });
   const [costs, setCosts] = useState({
     product: "",
@@ -566,9 +552,23 @@ function NewSaleDialog({
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
   const [quickSaving, setQuickSaving] = useState(false);
-  const [platforms, setPlatforms] = useState<string[]>(loadPlatforms);
+  const platforms = settings.platforms;
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
+
+  // Selected payment method object + applicable rate (CC vade rate, or fixed rate)
+  const selectedPaymentMethod = useMemo(
+    () => settings.paymentMethods.find((m) => m.name === extras.payment_method),
+    [settings.paymentMethods, extras.payment_method],
+  );
+  const installmentPlan = useMemo(() => {
+    if (!selectedPaymentMethod?.isCreditCard) return null;
+    const c = parseInt(extras.installments, 10) || 1;
+    return settings.installmentPlans.find((p) => p.count === c)
+      || { count: c, rate: 0 };
+  }, [selectedPaymentMethod, extras.installments, settings.installmentPlans]);
+  const effectiveRate = installmentPlan?.rate ?? selectedPaymentMethod?.rate ?? 0;
+
 
   useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
@@ -582,6 +582,7 @@ function NewSaleDialog({
     setExtras({
       order_no: "", invoice_no: "", payment_method: "", shipping_carrier: "",
       tracking_no: "", order_status: "", delivery_date: "", shipping_address: "",
+      installments: "1", commission_incidence: "customer",
     });
     setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
     setCostsOpen(false);
@@ -589,17 +590,34 @@ function NewSaleDialog({
     setDecrementStock(true);
   }
 
-  // Auto-calc total from unit_price * quantity - discount
+  // Auto-calc total from unit_price * quantity - discount (+ vade komisyonu if customer pays it)
   useEffect(() => {
     const qty = Number(form.quantity) || 0;
     const up = Number(form.unit_price) || 0;
     const disc = Number(form.discount) || 0;
     if (up > 0 && qty > 0) {
-      const t = Math.max(0, up * qty - disc);
+      const base = Math.max(0, up * qty - disc);
+      const addToCustomer =
+        effectiveRate > 0 && extras.commission_incidence === "customer"
+          ? base * effectiveRate / 100
+          : 0;
+      const t = +(base + addToCustomer).toFixed(2);
       setForm((f) => (f.total_amount === String(t) ? f : { ...f, total_amount: String(t) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.unit_price, form.quantity, form.discount]);
+  }, [form.unit_price, form.quantity, form.discount, effectiveRate, extras.commission_incidence]);
+
+  // If commission incidence = seller AND a rate applies, push it into costs.commission
+  useEffect(() => {
+    if (effectiveRate <= 0 || extras.commission_incidence !== "seller") return;
+    const qty = Number(form.quantity) || 0;
+    const up = Number(form.unit_price) || 0;
+    const disc = Number(form.discount) || 0;
+    const base = Math.max(0, up * qty - disc);
+    if (base <= 0) return;
+    const c = (base * effectiveRate / 100).toFixed(2);
+    setCosts((p) => (p.commission === c ? p : { ...p, commission: c, commission_pct: "" }));
+  }, [effectiveRate, extras.commission_incidence, form.unit_price, form.quantity, form.discount]);
 
   // Auto-calc commission from percentage of total_amount
   useEffect(() => {
@@ -643,13 +661,9 @@ function NewSaleDialog({
   function addPlatform(name: string) {
     const v = name.trim();
     if (!v) return;
-    if (platforms.includes(v)) {
-      setForm((f) => ({ ...f, platform: v }));
-      return;
+    if (!platforms.includes(v)) {
+      setSettings({ ...settings, platforms: [...platforms, v] });
     }
-    const next = [...platforms, v];
-    setPlatforms(next);
-    savePlatforms(next);
     setForm((f) => ({ ...f, platform: v }));
   }
 
@@ -723,6 +737,10 @@ function NewSaleDialog({
     const extraLines = (Object.keys(extraLabels) as Array<keyof typeof extraLabels>)
       .filter((k) => (extras as Record<string, string>)[k].trim() !== "")
       .map((k) => `${extraLabels[k]}: ${(extras as Record<string, string>)[k].trim()}`);
+    if (selectedPaymentMethod?.isCreditCard && installmentPlan) {
+      extraLines.push(`Vade: ${installmentPlan.count} taksit (%${effectiveRate})`);
+      extraLines.push(`Vade Komisyonu: ${extras.commission_incidence === "customer" ? "Müşteriye yansıtıldı" : "Satıcı üstlendi"}`);
+    }
     let combinedNotes = form.notes.trim();
     if (extraLines.length) {
       const header = "[Sipariş Bilgileri]\n" + extraLines.join("\n");
@@ -962,29 +980,82 @@ function NewSaleDialog({
                 <div>
                   <Label className="text-xs">Ödeme Yöntemi</Label>
                   <Select value={extras.payment_method}
-                    onValueChange={(v) => setExtras({ ...extras, payment_method: v })}>
+                    onValueChange={(v) => setExtras({ ...extras, payment_method: v, installments: "1" })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Kredi Kartı">Kredi Kartı</SelectItem>
-                      <SelectItem value="Havale/EFT">Havale/EFT</SelectItem>
-                      <SelectItem value="Kapıda Ödeme">Kapıda Ödeme</SelectItem>
-                      <SelectItem value="Nakit">Nakit</SelectItem>
-                      <SelectItem value="Çek/Senet">Çek/Senet</SelectItem>
-                      <SelectItem value="Diğer">Diğer</SelectItem>
+                      {settings.paymentMethods.map((m) => (
+                        <SelectItem key={m.name} value={m.name}>
+                          {m.name}{m.isCreditCard ? " 💳" : ""}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  <Link to="/app/butcecrm/ayarlar" className="text-[10px] text-muted-foreground hover:text-primary mt-1 inline-block">
+                    Yöntemleri yönet →
+                  </Link>
                 </div>
+                {selectedPaymentMethod?.isCreditCard && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Vade (Taksit)</Label>
+                      <Select value={extras.installments}
+                        onValueChange={(v) => setExtras({ ...extras, installments: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {settings.installmentPlans
+                            .slice().sort((a, b) => a.count - b.count)
+                            .map((p) => (
+                              <SelectItem key={p.count} value={String(p.count)}>
+                                {p.count} taksit (%{p.rate})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Komisyonu Kim Üstlensin</Label>
+                      <Select value={extras.commission_incidence}
+                        onValueChange={(v: "customer" | "seller") =>
+                          setExtras({ ...extras, commission_incidence: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer">Müşteriye yansıt (toplam artar)</SelectItem>
+                          <SelectItem value="seller">Satıcı üstlensin (maliyete eklenir)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {effectiveRate > 0 && Number(form.total_amount) > 0 && installmentPlan && (
+                      <div className="md:col-span-2 rounded-md border bg-muted/30 p-2 text-xs space-y-1">
+                        {(() => {
+                          const qty = Number(form.quantity) || 0;
+                          const up = Number(form.unit_price) || 0;
+                          const disc = Number(form.discount) || 0;
+                          const base = Math.max(0, up * qty - disc);
+                          const commission = +(base * effectiveRate / 100).toFixed(2);
+                          const total = extras.commission_incidence === "customer"
+                            ? base + commission : base;
+                          const perInstallment = installmentPlan.count > 0
+                            ? +(total / installmentPlan.count).toFixed(2) : 0;
+                          return (
+                            <>
+                              <div>Ara toplam: <b>{formatCurrency(base)}</b></div>
+                              <div>Komisyon ({installmentPlan.count}×, %{effectiveRate}): <b>{formatCurrency(commission)}</b></div>
+                              <div>Toplam: <b>{formatCurrency(total)}</b></div>
+                              <div>Taksit başına: <b>{formatCurrency(perInstallment)}</b> × {installmentPlan.count} ay</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                )}
                 <div>
                   <Label className="text-xs">Sipariş Durumu</Label>
                   <Select value={extras.order_status}
                     onValueChange={(v) => setExtras({ ...extras, order_status: v })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Hazırlanıyor">Hazırlanıyor</SelectItem>
-                      <SelectItem value="Kargoda">Kargoda</SelectItem>
-                      <SelectItem value="Teslim Edildi">Teslim Edildi</SelectItem>
-                      <SelectItem value="İptal">İptal</SelectItem>
-                      <SelectItem value="İade">İade</SelectItem>
+                      {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -994,15 +1065,7 @@ function NewSaleDialog({
                     onValueChange={(v) => setExtras({ ...extras, shipping_carrier: v })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Yurtiçi Kargo">Yurtiçi Kargo</SelectItem>
-                      <SelectItem value="MNG Kargo">MNG Kargo</SelectItem>
-                      <SelectItem value="Aras Kargo">Aras Kargo</SelectItem>
-                      <SelectItem value="PTT Kargo">PTT Kargo</SelectItem>
-                      <SelectItem value="Sürat Kargo">Sürat Kargo</SelectItem>
-                      <SelectItem value="UPS">UPS</SelectItem>
-                      <SelectItem value="Hepsijet">Hepsijet</SelectItem>
-                      <SelectItem value="Trendyol Express">Trendyol Express</SelectItem>
-                      <SelectItem value="Diğer">Diğer</SelectItem>
+                      {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

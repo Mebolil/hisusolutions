@@ -2,7 +2,7 @@ import { type ReactNode, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingBag, Receipt, ShoppingCart, Package,
-  Megaphone, Users, Bell, BarChart3, Menu, X, LogOut,
+  Megaphone, Users, Bell, BarChart3, Menu, X, LogOut, Settings,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { label: "Cariler",        path: "/app/butcecrm/cariler",        icon: Users,           enabled: true  },
   { label: "Hatırlatıcılar", path: "/app/butcecrm/hatirlaticilar", icon: Bell,            enabled: true  },
   { label: "Raporlar",       path: "/app/butcecrm/raporlar",       icon: BarChart3,       enabled: true  },
+  { label: "Ayarlar",        path: "/app/butcecrm/ayarlar",        icon: Settings,        enabled: true  },
 ];
 
 export function ButceCrmLayout({ children }: { children: ReactNode }) {

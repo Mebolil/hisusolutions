@@ -488,6 +488,16 @@ function NewSaleDialog({
     platform: "",
     notes: "",
   });
+  const [costs, setCosts] = useState({
+    product: "",
+    commission: "",
+    commission_pct: "",
+    shipping: "",
+    packaging: "",
+    tax: "",
+    other: "",
+  });
+  const [costsOpen, setCostsOpen] = useState(false);
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
@@ -507,6 +517,8 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
+    setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
+    setCostsOpen(false);
     setDecrementStock(true);
   }
 
@@ -521,6 +533,30 @@ function NewSaleDialog({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.unit_price, form.quantity, form.discount]);
+
+  // Auto-calc commission from percentage of total_amount
+  useEffect(() => {
+    const pct = Number(costs.commission_pct) || 0;
+    const total = Number(form.total_amount) || 0;
+    if (pct > 0 && total > 0) {
+      const c = (total * pct) / 100;
+      setCosts((p) => (p.commission === c.toFixed(2) ? p : { ...p, commission: c.toFixed(2) }));
+    }
+  }, [costs.commission_pct, form.total_amount]);
+
+  // Sum cost breakdown -> total_cost
+  const breakdownSum = useMemo(() => {
+    return ["product", "commission", "shipping", "packaging", "tax", "other"]
+      .reduce((s, k) => s + (Number((costs as Record<string, string>)[k]) || 0), 0);
+  }, [costs]);
+
+  useEffect(() => {
+    const anyFilled = ["product", "commission", "shipping", "packaging", "tax", "other"]
+      .some((k) => (costs as Record<string, string>)[k] !== "");
+    if (anyFilled) {
+      setForm((f) => (f.total_cost === breakdownSum.toFixed(2) ? f : { ...f, total_cost: breakdownSum.toFixed(2) }));
+    }
+  }, [breakdownSum, costs]);
 
   function selectProduct(id: string) {
     if (id === "__manual__") {

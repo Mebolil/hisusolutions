@@ -303,12 +303,16 @@ function NewSaleDialog({
     paid_amount: "",
     payment_status: "bekliyor" as Status,
     campaign_id: "",
+    platform: "",
   });
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
   const [quickSaving, setQuickSaving] = useState(false);
+  const [platforms, setPlatforms] = useState<string[]>(loadPlatforms);
+  const [newPlatformOpen, setNewPlatformOpen] = useState(false);
+  const [newPlatformName, setNewPlatformName] = useState("");
 
   useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
@@ -316,9 +320,23 @@ function NewSaleDialog({
     setForm({
       sale_date: today, customer_id: "", product_name: "", quantity: "1",
       total_amount: "", total_cost: "", paid_amount: "",
-      payment_status: "bekliyor", campaign_id: "",
+      payment_status: "bekliyor", campaign_id: "", platform: "",
     });
   }
+
+  function addPlatform(name: string) {
+    const v = name.trim();
+    if (!v) return;
+    if (platforms.includes(v)) {
+      setForm((f) => ({ ...f, platform: v }));
+      return;
+    }
+    const next = [...platforms, v];
+    setPlatforms(next);
+    savePlatforms(next);
+    setForm((f) => ({ ...f, platform: v }));
+  }
+
 
   async function saveQuickCustomer(e: React.FormEvent) {
     e.preventDefault();

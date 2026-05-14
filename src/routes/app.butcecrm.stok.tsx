@@ -501,8 +501,22 @@ function EditProductDialog({
     const diff = newQty - oldQty;
 
     setSaving(true);
+    const newName = form.name.trim();
+    if (newName !== product.name || cat !== (product.category || "")) {
+      const { data: dup } = await supabase
+        .from("products")
+        .select("id")
+        .eq("name", newName)
+        .eq("category", cat)
+        .neq("id", product.id)
+        .maybeSingle();
+      if (dup) {
+        setSaving(false);
+        return toast.error("Bu kategoride aynı isimde başka bir ürün zaten var");
+      }
+    }
     const { error } = await supabase.from("products").update({
-      name: form.name.trim(),
+      name: newName,
       category: cat,
       quantity: newQty,
       low_stock_threshold: Number(form.low_stock_threshold || 0),

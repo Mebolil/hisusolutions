@@ -305,7 +305,10 @@ function NewReminderDialog({
     const parsed = reminderSchema.safeParse(form);
     if (!parsed.success) return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const payload = {
+      user_id: session.user.id,
       title: parsed.data.title,
       type: parsed.data.type,
       due_date: parsed.data.due_date,

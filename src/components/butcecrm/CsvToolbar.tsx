@@ -139,6 +139,12 @@ export function CsvToolbar({
     if (!file) return;
     setImporting(true);
     setErrorReport(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast.error("Oturum bulunamadı");
+      setImporting(false);
+      return;
+    }
     try {
       let rows: string[][];
       const isXlsx = /\.xlsx$/i.test(file.name);
@@ -218,9 +224,9 @@ export function CsvToolbar({
         if (transformRow) {
           const out = transformRow(raw);
           if (typeof out === "string") { errors.push(`Satır ${lineNo}: ${out}`); continue; }
-          payloads.push(out);
+          payloads.push({ user_id: session.user.id, ...out });
         } else {
-          payloads.push(obj);
+          payloads.push({ user_id: session.user.id, ...obj });
         }
       }
 

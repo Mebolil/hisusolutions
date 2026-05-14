@@ -231,7 +231,10 @@ function PartyDialog({
       return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
     }
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const base = {
+      user_id: session.user.id,
       name: parsed.data.name,
       phone: parsed.data.phone || null,
       email: parsed.data.email || null,

@@ -286,11 +286,14 @@ function NewExpenseDialog({
     const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
     if (!cat || !form.amount) return toast.error("Kategori ve tutar zorunludur");
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const total = Number(form.amount);
     const paid = form.paid_amount
       ? Number(form.paid_amount)
       : (form.payment_status === "ödendi" ? total : 0);
     const payload = {
+      user_id: session.user.id,
       expense_date: form.expense_date,
       category: cat,
       amount: total,

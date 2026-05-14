@@ -345,11 +345,14 @@ function NewPurchaseDialog({
       return toast.error("Ürün ve birim fiyat zorunludur");
     }
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const total = computedAmount;
     const paid = form.paid_amount
       ? Number(form.paid_amount)
       : (form.payment_status === "ödendi" ? total : 0);
     const payload = {
+      user_id: session.user.id,
       purchase_date: form.purchase_date,
       supplier_id: form.supplier_id || null,
       product_name: form.product_name,

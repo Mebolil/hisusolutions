@@ -267,7 +267,10 @@ function NewCampaignDialog({
     if (!form.name) return toast.error("Kampanya adı zorunludur");
     if (!platform) return toast.error("Platform seçmelisiniz");
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const payload = {
+      user_id: session.user.id,
       name: form.name,
       platform: platform || null,
       status: form.status,

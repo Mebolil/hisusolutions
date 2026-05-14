@@ -274,6 +274,12 @@ function NewSaleDialog({
     campaign_id: "",
   });
   const [saving, setSaving] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
+  const [quickSaving, setQuickSaving] = useState(false);
+
+  useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
   function reset() {
     setForm({
@@ -281,6 +287,24 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "",
     });
+  }
+
+  async function saveQuickCustomer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quick.name.trim()) return toast.error("İsim zorunludur");
+    setQuickSaving(true);
+    const { data, error } = await supabase.from("customers").insert({
+      name: quick.name.trim(),
+      phone: quick.phone.trim() || null,
+      email: quick.email.trim() || null,
+    }).select("id,name").single();
+    setQuickSaving(false);
+    if (error || !data) return toast.error("Eklenemedi: " + (error?.message || ""));
+    setLocalCustomers((prev) => [...prev, data as Customer].sort((a, b) => a.name.localeCompare(b.name)));
+    setForm((f) => ({ ...f, customer_id: data.id }));
+    setQuick({ name: "", phone: "", email: "" });
+    setQuickOpen(false);
+    toast.success("Müşteri eklendi");
   }
 
   async function submit(e: React.FormEvent) {
@@ -333,10 +357,19 @@ function NewSaleDialog({
             </div>
             <div>
               <Label>Müşteri</Label>
-              <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
+              <Select
+                value={form.customer_id}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setQuickOpen(true); return; }
+                  setForm({ ...form, customer_id: v });
+                }}
+              >
                 <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
                 <SelectContent>
-                  {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    + Yeni Müşteri
+                  </SelectItem>
+                  {localCustomers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -396,6 +429,35 @@ function NewSaleDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <Dialog open={quickOpen} onOpenChange={setQuickOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Yeni Müşteri</DialogTitle></DialogHeader>
+          <form onSubmit={saveQuickCustomer} className="space-y-3">
+            <div>
+              <Label>İsim</Label>
+              <Input value={quick.name} maxLength={120}
+                onChange={(e) => setQuick({ ...quick, name: e.target.value })} required autoFocus />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telefon</Label>
+                <Input value={quick.phone} maxLength={40}
+                  onChange={(e) => setQuick({ ...quick, phone: e.target.value })} />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={quick.email} maxLength={255}
+                  onChange={(e) => setQuick({ ...quick, email: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setQuickOpen(false)}>İptal</Button>
+              <Button type="submit" disabled={quickSaving}>{quickSaving ? "Kaydediliyor..." : "Ekle"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

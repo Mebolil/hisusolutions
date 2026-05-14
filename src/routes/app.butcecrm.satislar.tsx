@@ -95,7 +95,9 @@ function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
@@ -103,14 +105,16 @@ function SalesPage() {
 
   async function load() {
     setLoading(true);
-    const [s, c, ca] = await Promise.all([
+    const [s, c, ca, p] = await Promise.all([
       supabase.from("sales").select("*").order("sale_date", { ascending: false }),
       supabase.from("customers").select("id,name").order("name"),
       supabase.from("campaigns").select("id,name").order("name"),
+      supabase.from("products").select("id,name,quantity,unit_price").order("name"),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
     setCampaigns((ca.data as Campaign[]) || []);
+    setProducts((p.data as Product[]) || []);
     setLoading(false);
   }
 

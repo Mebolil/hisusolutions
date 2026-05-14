@@ -230,6 +230,7 @@ function SalesPage() {
                   <TableHead>Tarih</TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Ürün</TableHead>
+                  <TableHead>Platform</TableHead>
                   <TableHead className="text-right">Miktar</TableHead>
                   <TableHead className="text-right">Tutar</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
@@ -242,7 +243,15 @@ function SalesPage() {
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
                     <TableCell className="max-w-[220px] truncate">{s.product_name}</TableCell>
+                    <TableCell>
+                      {s.platform ? (
+                        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs bg-secondary">
+                          {s.platform}
+                        </span>
+                      ) : <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
                     <TableCell className="text-right">{Number(s.quantity)}</TableCell>
+
                     <TableCell className="text-right font-medium">{formatCurrency(Number(s.total_amount))}</TableCell>
                     <TableCell className="text-right">{formatCurrency(Number(s.paid_amount || 0))}</TableCell>
                     <TableCell>

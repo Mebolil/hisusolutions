@@ -48,7 +48,18 @@ type Sale = {
   payment_status: string;
   campaign_id: string | null;
   platform: string | null;
+  notes?: string | null;
 };
+
+const CARRIERS = ["Yurtiçi Kargo", "MNG Kargo", "Aras Kargo", "PTT Kargo", "Sürat Kargo"];
+const ORDER_STATUSES = ["Hazırlanıyor", "Kargoda", "Teslim Edildi", "İptal", "İade"];
+
+function parseNoteField(notes: string | null | undefined, label: string): string {
+  if (!notes) return "";
+  const re = new RegExp(`^${label}:\\s*(.+)$`, "im");
+  const m = notes.match(re);
+  return m ? m[1].trim() : "";
+}
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 type Product = { id: string; name: string; quantity: number; unit_price: number | null };
@@ -98,6 +109,8 @@ function SalesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [carrierFilter, setCarrierFilter] = useState<string>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
@@ -135,15 +148,17 @@ function SalesPage() {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
       if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
+      if (orderStatusFilter !== "all" && parseNoteField(s.notes, "Sipariş Durumu") !== orderStatusFilter) return false;
+      if (carrierFilter !== "all" && parseNoteField(s.notes, "Kargo Firması") !== carrierFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
-        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""}`.toLowerCase();
+        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""} ${s.notes || ""}`.toLowerCase();
         if (!text.includes(q.toLowerCase())) return false;
       }
       return true;
     });
-  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, platformFilter, orderStatusFilter, carrierFilter, from, to, q, customerMap]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);
@@ -256,7 +271,7 @@ function SalesPage() {
           <CardTitle className="text-base">Filtreler</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <div>
               <Label className="text-xs">Ödeme Durumu</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -274,6 +289,26 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {platformList.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Sipariş Durumu</Label>
+              <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {ORDER_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Kargo Firması</Label>
+              <Select value={carrierFilter} onValueChange={setCarrierFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {CARRIERS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

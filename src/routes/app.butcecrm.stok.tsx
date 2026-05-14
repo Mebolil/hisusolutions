@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
 const PRODUCTS_CSV_FIELDS: CsvField[] = [
@@ -76,6 +77,7 @@ function StockPage() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [lots, setLots] = useState<Lot[]>([]);
   const [lotsLoading, setLotsLoading] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -138,20 +140,28 @@ function StockPage() {
           <h1 className="text-2xl font-bold flex items-center gap-2"><Package className="h-6 w-6 text-primary" /> Stok</h1>
           <p className="text-muted-foreground text-sm">Ürün stok seviyeleri ve hareket geçmişi</p>
         </div>
-        <CsvToolbar
-          slug="stok"
-          table="products"
-          fields={PRODUCTS_CSV_FIELDS}
-          sampleRow={PRODUCTS_CSV_SAMPLE}
-          exportRows={filtered.map((p) => ({
-            name: p.name,
-            category: p.category,
-            quantity: p.quantity,
-            low_stock_threshold: p.low_stock_threshold,
-            unit_price: p.unit_price,
-          }))}
-          onImported={load}
-        />
+        <div className="flex items-center gap-2">
+          <NewProductDialog
+            open={newOpen}
+            setOpen={setNewOpen}
+            categories={categoryNames}
+            onCreated={load}
+          />
+          <CsvToolbar
+            slug="stok"
+            table="products"
+            fields={PRODUCTS_CSV_FIELDS}
+            sampleRow={PRODUCTS_CSV_SAMPLE}
+            exportRows={filtered.map((p) => ({
+              name: p.name,
+              category: p.category,
+              quantity: p.quantity,
+              low_stock_threshold: p.low_stock_threshold,
+              unit_price: p.unit_price,
+            }))}
+            onImported={load}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -328,5 +338,113 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
         <p className={`text-xl font-bold truncate ${valueClass || ""}`}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function NewProductDialog({
+  open, setOpen, categories, onCreated,
+}: {
+  open: boolean; setOpen: (v: boolean) => void;
+  categories: string[]; onCreated: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    newCategory: "",
+    quantity: "0",
+    low_stock_threshold: "5",
+    unit_price: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  function reset() {
+    setForm({ name: "", category: "", newCategory: "", quantity: "0", low_stock_threshold: "5", unit_price: "" });
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
+    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    setSaving(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+    if (!userId) {
+      setSaving(false);
+      return toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın");
+    }
+    const payload = {
+      user_id: userId,
+      name: form.name.trim(),
+      category: cat || null,
+      quantity: Number(form.quantity || 0),
+      low_stock_threshold: Number(form.low_stock_threshold || 0),
+      unit_price: form.unit_price ? Number(form.unit_price) : null,
+    };
+    const { error } = await supabase.from("products").insert(payload);
+    if (!error && form.category === "__new__" && cat) {
+      await supabase.from("product_categories").insert({ name: cat }).then(() => {});
+    }
+    setSaving(false);
+    if (error) return toast.error("Eklenemedi: " + error.message);
+    toast.success("Ürün eklendi");
+    reset();
+    setOpen(false);
+    onCreated();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2"><Plus className="h-4 w-4" /> Ürün Ekle</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Yeni Ürün</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Ürün Adı</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div>
+            <Label>Kategori</Label>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+              <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                <SelectItem value="__new__">+ Yeni kategori</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.category === "__new__" && (
+            <div>
+              <Label>Yeni Kategori Adı</Label>
+              <Input value={form.newCategory}
+                onChange={(e) => setForm({ ...form, newCategory: e.target.value })} required />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Başlangıç Stok</Label>
+              <Input type="number" step="1" value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
+            </div>
+            <div>
+              <Label>Düşük Stok Eşiği</Label>
+              <Input type="number" step="1" value={form.low_stock_threshold}
+                onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} required />
+            </div>
+          </div>
+          <div>
+            <Label>Birim Fiyat (₺)</Label>
+            <Input type="number" step="0.01" value={form.unit_price}
+              onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
+              placeholder="Opsiyonel" />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

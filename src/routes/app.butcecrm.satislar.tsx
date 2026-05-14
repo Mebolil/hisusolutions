@@ -219,7 +219,18 @@ function SalesPage() {
   }
 
   const [editing, setEditing] = useState<Sale | null>(null);
+
+  return (
     <div className="space-y-6">
+      <EditSaleDialog
+        sale={editing}
+        onClose={() => setEditing(null)}
+        platforms={platformList}
+        onSaved={(updated) => {
+          setSales((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+          setEditing(null);
+        }}
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><ShoppingBag className="h-6 w-6 text-primary" /> Satışlar</h1>

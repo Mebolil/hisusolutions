@@ -357,10 +357,19 @@ function NewSaleDialog({
             </div>
             <div>
               <Label>Müşteri</Label>
-              <Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}>
+              <Select
+                value={form.customer_id}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setQuickOpen(true); return; }
+                  setForm({ ...form, customer_id: v });
+                }}
+              >
                 <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
                 <SelectContent>
-                  {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    + Yeni Müşteri
+                  </SelectItem>
+                  {localCustomers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

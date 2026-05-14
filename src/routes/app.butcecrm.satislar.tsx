@@ -104,6 +104,7 @@ function statusBadge(s: string) {
 }
 
 function SalesPage() {
+  const [settings] = useSettings();
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);

@@ -419,9 +419,9 @@ function NewProductDialog({
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div>
-            <Label>Kategori</Label>
-            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-              <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+            <Label>Kategori *</Label>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })} required>
+              <SelectTrigger><SelectValue placeholder="Kategori seç" /></SelectTrigger>
               <SelectContent>
                 {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 <SelectItem value="__new__">+ Yeni kategori</SelectItem>

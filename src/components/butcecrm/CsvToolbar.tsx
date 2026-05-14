@@ -241,22 +241,13 @@ export function CsvToolbar({
         return;
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData?.session;
-      if (!session) {
-        toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın");
-        return;
-      }
-      const userId = session.user.id;
-      const userPayloads = payloads.map((p) => ({ ...p, user_id: userId }));
-
       let inserted = 0;
-      for (let i = 0; i < userPayloads.length; i += 100) {
-        const chunk = userPayloads.slice(i, i + 100);
+      for (let i = 0; i < payloads.length; i += 100) {
+        const chunk = payloads.slice(i, i + 100);
         const { error } = await supabase.from(table).insert(chunk);
         if (error) {
           setErrorReport([
-            `Veritabanı hatası (satır ${i + 2}-${i + 1 + chunk.length}): ${error.message}`,
+            `Veritabanı hatası: ${error.message}`,
             `${inserted} kayıt eklendi, kalanlar eklenemedi.`,
             ...errors,
           ]);

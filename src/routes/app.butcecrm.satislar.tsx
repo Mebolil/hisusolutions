@@ -653,27 +653,73 @@ function NewSaleDialog({
           </div>
           <div>
             <Label>Ürün</Label>
-            <Input value={form.product_name}
-              onChange={(e) => setForm({ ...form, product_name: e.target.value })} required />
+            <Select
+              value={form.product_id || (form.product_name ? "__manual__" : "")}
+              onValueChange={selectProduct}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Stoktan seç veya manuel gir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__manual__" className="text-primary font-medium">
+                  + Manuel Ürün (stokta yok)
+                </SelectItem>
+                {products.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} {p.quantity != null ? `(stok: ${p.quantity})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!form.product_id && (
+              <Input
+                className="mt-2"
+                value={form.product_name}
+                onChange={(e) => setForm({ ...form, product_name: e.target.value })}
+                placeholder="Ürün adı"
+                required
+              />
+            )}
+            {form.product_id && (
+              <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={decrementStock}
+                  onCheckedChange={(v) => setDecrementStock(!!v)}
+                />
+                Satış kaydedilince stoktan düş
+              </label>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <div>
               <Label>Miktar</Label>
               <Input type="number" min="1" value={form.quantity}
                 onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </div>
             <div>
-              <Label>Tutar (₺)</Label>
+              <Label>Birim Fiyat (₺)</Label>
+              <Input type="number" step="0.01" value={form.unit_price}
+                onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
+                placeholder="opsiyonel" />
+            </div>
+            <div>
+              <Label>İskonto (₺)</Label>
+              <Input type="number" step="0.01" value={form.discount}
+                onChange={(e) => setForm({ ...form, discount: e.target.value })}
+                placeholder="0" />
+            </div>
+            <div>
+              <Label>Toplam (₺)</Label>
               <Input type="number" step="0.01" value={form.total_amount}
                 onChange={(e) => setForm({ ...form, total_amount: e.target.value })} required />
             </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Maliyet (₺)</Label>
               <Input type="number" step="0.01" value={form.total_cost}
                 onChange={(e) => setForm({ ...form, total_cost: e.target.value })} />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Ödeme Durumu</Label>
               <Select value={form.payment_status}

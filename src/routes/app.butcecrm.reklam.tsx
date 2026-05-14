@@ -105,7 +105,7 @@ function AdsPage() {
   async function toggleStatus(c: Campaign) {
     const next: Status = c.status === "aktif" ? "pasif" : "aktif";
     const { error } = await supabase.from("campaigns").update({ status: next }).eq("id", c.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success(`Kampanya ${next} olarak işaretlendi`);
     setCampaigns((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: next } : x)));
   }
@@ -277,7 +277,7 @@ function NewCampaignDialog({
     };
     const { error } = await supabase.from("campaigns").insert(payload);
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Kampanya eklendi");
     reset();
     setOpen(false);

@@ -116,7 +116,7 @@ function SalesPage() {
     if (newStatus === "ödendi") patch.paid_amount = Number(sale.total_amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
     const { error } = await supabase.from("sales").update(patch).eq("id", sale.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setSales((prev) => prev.map((s) => (s.id === sale.id ? { ...s, ...patch } as Sale : s)));
   }
@@ -300,7 +300,7 @@ function NewSaleDialog({
       email: quick.email.trim() || null,
     }).select("id,name").single();
     setQuickSaving(false);
-    if (error || !data) return toast.error("Eklenemedi: " + (error?.message || ""));
+    if (error || !data) return toast.error("Eklenemedi: " + friendlyDbError(error));
     setLocalCustomers((prev) => [...prev, data as Customer].sort((a, b) => a.name.localeCompare(b.name)));
     setForm((f) => ({ ...f, customer_id: data.id }));
     setQuick({ name: "", phone: "", email: "" });
@@ -335,7 +335,7 @@ function NewSaleDialog({
     };
     const { error } = await supabase.from("sales").insert(payload);
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Satış eklendi");
     reset();
     setOpen(false);

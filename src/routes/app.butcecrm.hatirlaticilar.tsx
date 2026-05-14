@@ -117,14 +117,14 @@ function RemindersPage() {
   async function toggleDone(r: Reminder, done: boolean) {
     const next: Status = done ? "tamamlandı" : "bekliyor";
     const { error } = await supabase.from("reminders").update({ status: next }).eq("id", r.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     setItems((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: next } : x)));
   }
 
   async function confirmDelete() {
     if (!deleting) return;
     const { error } = await supabase.from("reminders").delete().eq("id", deleting.id);
-    if (error) return toast.error("Silinemedi: " + error.message);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Hatırlatıcı silindi");
     setItems((prev) => prev.filter((x) => x.id !== deleting.id));
     setDeleting(null);
@@ -315,7 +315,7 @@ function NewReminderDialog({
     };
     const { error } = await supabase.from("reminders").insert(payload);
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Hatırlatıcı eklendi");
     reset();
     setOpen(false);

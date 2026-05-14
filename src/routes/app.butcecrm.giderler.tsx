@@ -112,7 +112,7 @@ function ExpensesPage() {
     if (newStatus === "ödendi") patch.paid_amount = Number(exp.amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
     const { error } = await supabase.from("expenses").update(patch).eq("id", exp.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setExpenses((prev) => prev.map((x) => (x.id === exp.id ? { ...x, ...patch } as Expense : x)));
   }
@@ -303,7 +303,7 @@ function NewExpenseDialog({
       await supabase.from("expense_categories").insert({ name: cat }).then(() => {});
     }
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + error.message);
+    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Gider eklendi");
     reset();
     setOpen(false);

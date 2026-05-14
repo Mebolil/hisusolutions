@@ -105,7 +105,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
   async function confirmDelete() {
     if (!deleting) return;
     const { error } = await supabase.from(kind).delete().eq("id", deleting.id);
-    if (error) return toast.error("Silinemedi: " + error.message);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success(`${title} silindi`);
     setItems((prev) => prev.filter((x) => x.id !== deleting.id));
     setDeleting(null);
@@ -228,7 +228,7 @@ function PartyDialog({
       ? await supabase.from(kind).update(payload).eq("id", editing.id)
       : await supabase.from(kind).insert(payload);
     setSaving(false);
-    if (error) return toast.error("Kaydedilemedi: " + error.message);
+    if (error) return toast.error("Kaydedilemedi: " + friendlyDbError(error));
     toast.success(editing ? `${title} güncellendi` : `${title} eklendi`);
     setOpen(false);
     onSaved();

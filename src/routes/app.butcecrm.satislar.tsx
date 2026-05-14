@@ -631,7 +631,24 @@ function NewSaleDialog({
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
     };
-    if (form.notes.trim()) payload.notes = form.notes.trim();
+    // Build a cost-breakdown summary and append to notes for record-keeping
+    const labels: Record<string, string> = {
+      product: "Ürün maliyeti",
+      commission: "Komisyon",
+      shipping: "Kargo",
+      packaging: "Paketleme",
+      tax: "Vergi/Stopaj",
+      other: "Diğer",
+    };
+    const breakdownLines = (Object.keys(labels) as Array<keyof typeof labels>)
+      .filter((k) => Number((costs as Record<string, string>)[k]) > 0)
+      .map((k) => `${labels[k]}: ${Number((costs as Record<string, string>)[k]).toFixed(2)} ₺`);
+    let combinedNotes = form.notes.trim();
+    if (breakdownLines.length) {
+      const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
+      combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
+    }
+    if (combinedNotes) payload.notes = combinedNotes;
     let { error } = await supabase.from("sales").insert(payload);
     // Retry without notes if column doesn't exist
     if (error && form.notes.trim() && /notes/i.test(error.message)) {

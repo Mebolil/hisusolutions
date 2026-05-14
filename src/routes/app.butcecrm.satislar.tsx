@@ -51,6 +51,7 @@ type Sale = {
 };
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
+type Product = { id: string; name: string; quantity: number; unit_price: number | null };
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];

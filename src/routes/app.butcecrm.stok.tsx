@@ -332,6 +332,12 @@ function StockPage() {
           )}
         </DialogContent>
       </Dialog>
+      <EditProductDialog
+        product={editing}
+        categories={categoryNames}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); load(); }}
+      />
     </div>
   );
 }

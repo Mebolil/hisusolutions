@@ -1081,15 +1081,7 @@ function NewSaleDialog({
                     onValueChange={(v) => setExtras({ ...extras, shipping_carrier: v })}>
                     <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Yurtiçi Kargo">Yurtiçi Kargo</SelectItem>
-                      <SelectItem value="MNG Kargo">MNG Kargo</SelectItem>
-                      <SelectItem value="Aras Kargo">Aras Kargo</SelectItem>
-                      <SelectItem value="PTT Kargo">PTT Kargo</SelectItem>
-                      <SelectItem value="Sürat Kargo">Sürat Kargo</SelectItem>
-                      <SelectItem value="UPS">UPS</SelectItem>
-                      <SelectItem value="Hepsijet">Hepsijet</SelectItem>
-                      <SelectItem value="Trendyol Express">Trendyol Express</SelectItem>
-                      <SelectItem value="Diğer">Diğer</SelectItem>
+                      {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

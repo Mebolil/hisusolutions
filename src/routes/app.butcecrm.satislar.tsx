@@ -582,7 +582,7 @@ function NewSaleDialog({
     }
     const total = Number(form.total_amount);
     const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
-    const payload = {
+    const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,
       customer_id: form.customer_id || null,
@@ -594,9 +594,14 @@ function NewSaleDialog({
       payment_status: form.payment_status,
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
-      notes: form.notes.trim() || null,
     };
-    const { error } = await supabase.from("sales").insert(payload);
+    if (form.notes.trim()) payload.notes = form.notes.trim();
+    let { error } = await supabase.from("sales").insert(payload);
+    // Retry without notes if column doesn't exist
+    if (error && form.notes.trim() && /notes/i.test(error.message)) {
+      delete payload.notes;
+      ({ error } = await supabase.from("sales").insert(payload));
+    }
     if (error) {
       setSaving(false);
       return toast.error("Eklenemedi: " + friendlyDbError(error));

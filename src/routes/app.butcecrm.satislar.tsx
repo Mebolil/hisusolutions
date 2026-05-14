@@ -466,24 +466,29 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
 }
 
 function NewSaleDialog({
-  open, setOpen, customers, campaigns, onCreated,
+  open, setOpen, customers, campaigns, products, onCreated,
 }: {
   open: boolean; setOpen: (v: boolean) => void;
-  customers: Customer[]; campaigns: Campaign[]; onCreated: () => void;
+  customers: Customer[]; campaigns: Campaign[]; products: Product[]; onCreated: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     sale_date: today,
     customer_id: "",
+    product_id: "",
     product_name: "",
     quantity: "1",
+    unit_price: "",
+    discount: "",
     total_amount: "",
     total_cost: "",
     paid_amount: "",
     payment_status: "bekliyor" as Status,
     campaign_id: "",
     platform: "",
+    notes: "",
   });
+  const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -497,10 +502,39 @@ function NewSaleDialog({
 
   function reset() {
     setForm({
-      sale_date: today, customer_id: "", product_name: "", quantity: "1",
+      sale_date: today, customer_id: "", product_id: "", product_name: "", quantity: "1",
+      unit_price: "", discount: "",
       total_amount: "", total_cost: "", paid_amount: "",
-      payment_status: "bekliyor", campaign_id: "", platform: "",
+      payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
+    setDecrementStock(true);
+  }
+
+  // Auto-calc total from unit_price * quantity - discount
+  useEffect(() => {
+    const qty = Number(form.quantity) || 0;
+    const up = Number(form.unit_price) || 0;
+    const disc = Number(form.discount) || 0;
+    if (up > 0 && qty > 0) {
+      const t = Math.max(0, up * qty - disc);
+      setForm((f) => (f.total_amount === String(t) ? f : { ...f, total_amount: String(t) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.unit_price, form.quantity, form.discount]);
+
+  function selectProduct(id: string) {
+    if (id === "__manual__") {
+      setForm((f) => ({ ...f, product_id: "", product_name: "" }));
+      return;
+    }
+    const p = products.find((x) => x.id === id);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      product_id: p.id,
+      product_name: p.name,
+      unit_price: p.unit_price != null ? String(p.unit_price) : f.unit_price,
+    }));
   }
 
   function addPlatform(name: string) {

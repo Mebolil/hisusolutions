@@ -312,7 +312,7 @@ function SalesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {ORDER_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -322,7 +322,7 @@ function SalesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {CARRIERS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

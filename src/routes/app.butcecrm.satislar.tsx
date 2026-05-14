@@ -432,7 +432,7 @@ function SalesPage() {
                   <TableHead className="text-right">Kâr</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead className="w-[90px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

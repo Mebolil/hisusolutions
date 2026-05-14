@@ -766,6 +766,15 @@ function NewSaleDialog({
               </Select>
             </div>
           </div>
+          <div>
+            <Label>Notlar (opsiyonel)</Label>
+            <Textarea
+              rows={2}
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Sipariş notu, kargo bilgisi, vb."
+            />
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
             <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>

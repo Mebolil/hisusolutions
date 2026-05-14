@@ -737,6 +737,10 @@ function NewSaleDialog({
     const extraLines = (Object.keys(extraLabels) as Array<keyof typeof extraLabels>)
       .filter((k) => (extras as Record<string, string>)[k].trim() !== "")
       .map((k) => `${extraLabels[k]}: ${(extras as Record<string, string>)[k].trim()}`);
+    if (selectedPaymentMethod?.isCreditCard && installmentPlan) {
+      extraLines.push(`Vade: ${installmentPlan.count} taksit (%${effectiveRate})`);
+      extraLines.push(`Vade Komisyonu: ${extras.commission_incidence === "customer" ? "Müşteriye yansıtıldı" : "Satıcı üstlendi"}`);
+    }
     let combinedNotes = form.notes.trim();
     if (extraLines.length) {
       const header = "[Sipariş Bilgileri]\n" + extraLines.join("\n");

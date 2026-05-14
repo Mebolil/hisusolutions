@@ -59,10 +59,13 @@ function statusBadge(s: string) {
   return map[s] || "bg-secondary text-foreground";
 }
 
+type Product = { id: string; name: string; unit_price: number | null };
+
 function PurchasesPage() {
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [from, setFrom] = useState("");
@@ -72,12 +75,14 @@ function PurchasesPage() {
 
   async function load() {
     setLoading(true);
-    const [p, s] = await Promise.all([
+    const [p, s, pr] = await Promise.all([
       supabase.from("purchases").select("*").order("purchase_date", { ascending: false }),
       supabase.from("suppliers").select("id,name").order("name"),
+      supabase.from("products").select("id,name,unit_price").order("name"),
     ]);
     setPurchases((p.data as Purchase[]) || []);
     setSuppliers((s.data as Supplier[]) || []);
+    setProducts((pr.data as Product[]) || []);
     setLoading(false);
   }
 
@@ -127,7 +132,7 @@ function PurchasesPage() {
         </div>
         <NewPurchaseDialog
           open={open} setOpen={setOpen}
-          suppliers={suppliers} onCreated={load}
+          suppliers={suppliers} products={products} onCreated={load}
         />
       </div>
 
@@ -261,15 +266,16 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
 }
 
 function NewPurchaseDialog({
-  open, setOpen, suppliers, onCreated,
+  open, setOpen, suppliers, products, onCreated,
 }: {
   open: boolean; setOpen: (v: boolean) => void;
-  suppliers: Supplier[]; onCreated: () => void;
+  suppliers: Supplier[]; products: Product[]; onCreated: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     purchase_date: today,
     supplier_id: "",
+    product_id: "",
     product_name: "",
     quantity: "1",
     unit_price: "",
@@ -277,15 +283,61 @@ function NewPurchaseDialog({
     payment_status: "bekliyor" as Status,
   });
   const [saving, setSaving] = useState(false);
+  const [localSuppliers, setLocalSuppliers] = useState<Supplier[]>(suppliers);
+  const [supOpen, setSupOpen] = useState(false);
+  const [sup, setSup] = useState({
+    name: "", phone: "", email: "", address: "",
+    tax_no: "", tax_office: "", contact_person: "",
+  });
+  const [supSaving, setSupSaving] = useState(false);
+
+  useEffect(() => { setLocalSuppliers(suppliers); }, [suppliers]);
 
   function reset() {
     setForm({
-      purchase_date: today, supplier_id: "", product_name: "", quantity: "1",
-      unit_price: "", paid_amount: "", payment_status: "bekliyor",
+      purchase_date: today, supplier_id: "", product_id: "", product_name: "",
+      quantity: "1", unit_price: "", paid_amount: "", payment_status: "bekliyor",
     });
   }
 
   const computedAmount = (Number(form.quantity) || 0) * (Number(form.unit_price) || 0);
+
+  function selectProduct(id: string) {
+    if (id === "__new__") {
+      setForm((f) => ({ ...f, product_id: "__new__", product_name: "" }));
+      return;
+    }
+    const p = products.find((x) => x.id === id);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      product_id: id,
+      product_name: p.name,
+      unit_price: p.unit_price != null ? String(p.unit_price) : f.unit_price,
+    }));
+  }
+
+  async function saveQuickSupplier(e: React.FormEvent) {
+    e.preventDefault();
+    if (!sup.name.trim()) return toast.error("İsim zorunludur");
+    setSupSaving(true);
+    const { data, error } = await supabase.from("suppliers").insert({
+      name: sup.name.trim(),
+      phone: sup.phone.trim() || null,
+      email: sup.email.trim() || null,
+      address: sup.address.trim() || null,
+      tax_no: sup.tax_no.trim() || null,
+      tax_office: sup.tax_office.trim() || null,
+      contact_person: sup.contact_person.trim() || null,
+    }).select("id,name").single();
+    setSupSaving(false);
+    if (error || !data) return toast.error("Eklenemedi: " + friendlyDbError(error));
+    setLocalSuppliers((prev) => [...prev, data as Supplier].sort((a, b) => a.name.localeCompare(b.name)));
+    setForm((f) => ({ ...f, supplier_id: data.id }));
+    setSup({ name: "", phone: "", email: "", address: "", tax_no: "", tax_office: "", contact_person: "" });
+    setSupOpen(false);
+    toast.success("Tedarikçi eklendi");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -332,18 +384,46 @@ function NewPurchaseDialog({
             </div>
             <div>
               <Label>Tedarikçi</Label>
-              <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
+              <Select
+                value={form.supplier_id}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setSupOpen(true); return; }
+                  setForm({ ...form, supplier_id: v });
+                }}
+              >
                 <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
                 <SelectContent>
-                  {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    + Yeni Tedarikçi
+                  </SelectItem>
+                  {localSuppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div>
             <Label>Ürün</Label>
-            <Input value={form.product_name}
-              onChange={(e) => setForm({ ...form, product_name: e.target.value })} required />
+            <Select
+              value={form.product_id}
+              onValueChange={selectProduct}
+            >
+              <SelectTrigger><SelectValue placeholder="Stoktan seç veya yeni ürün" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__new__" className="text-primary font-medium">
+                  + Yeni / Listede Olmayan Ürün
+                </SelectItem>
+                {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {form.product_id === "__new__" && (
+              <Input
+                className="mt-2"
+                placeholder="Ürün adı"
+                value={form.product_name}
+                onChange={(e) => setForm({ ...form, product_name: e.target.value })}
+                required
+              />
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -385,6 +465,52 @@ function NewPurchaseDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <Dialog open={supOpen} onOpenChange={setSupOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Yeni Tedarikçi</DialogTitle></DialogHeader>
+          <form onSubmit={saveQuickSupplier} className="space-y-3">
+            <div>
+              <Label>Firma / Tedarikçi Adı</Label>
+              <Input value={sup.name} maxLength={120} required autoFocus
+                onChange={(e) => setSup({ ...sup, name: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Vergi No / TCKN</Label>
+                <Input value={sup.tax_no} maxLength={20}
+                  onChange={(e) => setSup({ ...sup, tax_no: e.target.value })} />
+              </div>
+              <div>
+                <Label>Vergi Dairesi</Label>
+                <Input value={sup.tax_office} maxLength={80}
+                  onChange={(e) => setSup({ ...sup, tax_office: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Yetkili Kişi</Label>
+                <Input value={sup.contact_person} maxLength={80}
+                  onChange={(e) => setSup({ ...sup, contact_person: e.target.value })} />
+              </div>
+              <div>
+                <Label>Telefon</Label>
+                <Input value={sup.phone} maxLength={40}
+                  onChange={(e) => setSup({ ...sup, phone: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={sup.email} maxLength={255}
+                onChange={(e) => setSup({ ...sup, email: e.target.value })} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setSupOpen(false)}>İptal</Button>
+              <Button type="submit" disabled={supSaving}>{supSaving ? "Kaydediliyor..." : "Ekle"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

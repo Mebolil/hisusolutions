@@ -883,6 +883,101 @@ function NewSaleDialog({
             </div>
           )}
 
+          <div>
+            <button
+              type="button"
+              onClick={() => setExtrasOpen((v) => !v)}
+              className="text-xs text-primary hover:underline"
+            >
+              {extrasOpen ? "− Sipariş bilgilerini gizle" : "+ Sipariş bilgileri ekle (Sipariş No, Kargo, Fatura...)"}
+            </button>
+          </div>
+
+          {extrasOpen && (
+            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">SİPARİŞ & KARGO BİLGİLERİ</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Sipariş No</Label>
+                  <Input value={extras.order_no} maxLength={60}
+                    onChange={(e) => setExtras({ ...extras, order_no: e.target.value })}
+                    placeholder="Örn. TY-12345" />
+                </div>
+                <div>
+                  <Label className="text-xs">Fatura No</Label>
+                  <Input value={extras.invoice_no} maxLength={60}
+                    onChange={(e) => setExtras({ ...extras, invoice_no: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Ödeme Yöntemi</Label>
+                  <Select value={extras.payment_method}
+                    onValueChange={(v) => setExtras({ ...extras, payment_method: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Kredi Kartı">Kredi Kartı</SelectItem>
+                      <SelectItem value="Havale/EFT">Havale/EFT</SelectItem>
+                      <SelectItem value="Kapıda Ödeme">Kapıda Ödeme</SelectItem>
+                      <SelectItem value="Nakit">Nakit</SelectItem>
+                      <SelectItem value="Çek/Senet">Çek/Senet</SelectItem>
+                      <SelectItem value="Diğer">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Sipariş Durumu</Label>
+                  <Select value={extras.order_status}
+                    onValueChange={(v) => setExtras({ ...extras, order_status: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Hazırlanıyor">Hazırlanıyor</SelectItem>
+                      <SelectItem value="Kargoda">Kargoda</SelectItem>
+                      <SelectItem value="Teslim Edildi">Teslim Edildi</SelectItem>
+                      <SelectItem value="İptal">İptal</SelectItem>
+                      <SelectItem value="İade">İade</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Kargo Firması</Label>
+                  <Select value={extras.shipping_carrier}
+                    onValueChange={(v) => setExtras({ ...extras, shipping_carrier: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yurtiçi Kargo">Yurtiçi Kargo</SelectItem>
+                      <SelectItem value="MNG Kargo">MNG Kargo</SelectItem>
+                      <SelectItem value="Aras Kargo">Aras Kargo</SelectItem>
+                      <SelectItem value="PTT Kargo">PTT Kargo</SelectItem>
+                      <SelectItem value="Sürat Kargo">Sürat Kargo</SelectItem>
+                      <SelectItem value="UPS">UPS</SelectItem>
+                      <SelectItem value="Hepsijet">Hepsijet</SelectItem>
+                      <SelectItem value="Trendyol Express">Trendyol Express</SelectItem>
+                      <SelectItem value="Diğer">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Kargo Takip No</Label>
+                  <Input value={extras.tracking_no} maxLength={80}
+                    onChange={(e) => setExtras({ ...extras, tracking_no: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Teslim Tarihi</Label>
+                  <Input type="date" value={extras.delivery_date}
+                    onChange={(e) => setExtras({ ...extras, delivery_date: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Teslimat Adresi</Label>
+                  <Input value={extras.shipping_address} maxLength={255}
+                    onChange={(e) => setExtras({ ...extras, shipping_address: e.target.value })}
+                    placeholder="İl / İlçe veya tam adres" />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Bu bilgiler satışın notlarına yapısal olarak eklenir.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3">
             <div>
               <Label>Tahsil Edilen (₺)</Label>

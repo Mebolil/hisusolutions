@@ -380,6 +380,7 @@ function NewSaleDialog({
       paid_amount: paid,
       payment_status: form.payment_status,
       campaign_id: form.campaign_id || null,
+      platform: form.platform || null,
     };
     const { error } = await supabase.from("sales").insert(payload);
     setSaving(false);

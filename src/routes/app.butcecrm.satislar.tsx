@@ -148,15 +148,17 @@ function SalesPage() {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
       if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
+      if (orderStatusFilter !== "all" && parseNoteField(s.notes, "Sipariş Durumu") !== orderStatusFilter) return false;
+      if (carrierFilter !== "all" && parseNoteField(s.notes, "Kargo Firması") !== carrierFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
-        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""}`.toLowerCase();
+        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""} ${s.notes || ""}`.toLowerCase();
         if (!text.includes(q.toLowerCase())) return false;
       }
       return true;
     });
-  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, platformFilter, orderStatusFilter, carrierFilter, from, to, q, customerMap]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);

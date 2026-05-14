@@ -377,7 +377,8 @@ function NewProductDialog({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
-    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const cat = (form.category === "__new__" ? form.newCategory.trim() : form.category).trim();
+    if (!cat) return toast.error("Kategori zorunludur");
     setSaving(true);
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user.id;
@@ -418,9 +419,9 @@ function NewProductDialog({
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div>
-            <Label>Kategori</Label>
-            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-              <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+            <Label>Kategori *</Label>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })} required>
+              <SelectTrigger><SelectValue placeholder="Kategori seç" /></SelectTrigger>
               <SelectContent>
                 {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 <SelectItem value="__new__">+ Yeni kategori</SelectItem>

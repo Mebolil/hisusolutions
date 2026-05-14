@@ -48,7 +48,18 @@ type Sale = {
   payment_status: string;
   campaign_id: string | null;
   platform: string | null;
+  notes?: string | null;
 };
+
+const CARRIERS = ["Yurtiçi Kargo", "MNG Kargo", "Aras Kargo", "PTT Kargo", "Sürat Kargo"];
+const ORDER_STATUSES = ["Hazırlanıyor", "Kargoda", "Teslim Edildi", "İptal", "İade"];
+
+function parseNoteField(notes: string | null | undefined, label: string): string {
+  if (!notes) return "";
+  const re = new RegExp(`^${label}:\\s*(.+)$`, "im");
+  const m = notes.match(re);
+  return m ? m[1].trim() : "";
+}
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 type Product = { id: string; name: string; quantity: number; unit_price: number | null };

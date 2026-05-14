@@ -78,6 +78,7 @@ function StockPage() {
   const [lots, setLots] = useState<Lot[]>([]);
   const [lotsLoading, setLotsLoading] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
 
   async function load() {
     setLoading(true);

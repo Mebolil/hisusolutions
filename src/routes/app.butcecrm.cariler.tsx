@@ -26,6 +26,9 @@ type Party = {
   phone: string | null;
   email: string | null;
   address: string | null;
+  tax_no: string | null;
+  tax_office: string | null;
+  contact_person: string | null;
 };
 type Kind = "customers" | "suppliers";
 
@@ -34,6 +37,9 @@ const partySchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   email: z.string().trim().email("Geçersiz email").max(255).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
+  tax_no: z.string().trim().max(20).optional().or(z.literal("")),
+  tax_office: z.string().trim().max(80).optional().or(z.literal("")),
+  contact_person: z.string().trim().max(80).optional().or(z.literal("")),
 });
 
 export const Route = createFileRoute("/app/butcecrm/cariler")({

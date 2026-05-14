@@ -528,6 +528,33 @@ function NewSaleDialog({
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={newPlatformOpen} onOpenChange={setNewPlatformOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Yeni Platform</DialogTitle></DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!newPlatformName.trim()) return;
+              addPlatform(newPlatformName);
+              setNewPlatformName("");
+              setNewPlatformOpen(false);
+            }}
+            className="space-y-3"
+          >
+            <div>
+              <Label>Platform adı</Label>
+              <Input value={newPlatformName} maxLength={60} autoFocus
+                onChange={(e) => setNewPlatformName(e.target.value)}
+                placeholder="Örn. Çiçeksepeti" required />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setNewPlatformOpen(false)}>İptal</Button>
+              <Button type="submit">Ekle</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

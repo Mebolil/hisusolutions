@@ -377,7 +377,8 @@ function NewProductDialog({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
-    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const cat = (form.category === "__new__" ? form.newCategory.trim() : form.category).trim();
+    if (!cat) return toast.error("Kategori zorunludur");
     setSaving(true);
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user.id;

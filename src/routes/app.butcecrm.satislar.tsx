@@ -488,6 +488,16 @@ function NewSaleDialog({
     platform: "",
     notes: "",
   });
+  const [extras, setExtras] = useState({
+    order_no: "",
+    invoice_no: "",
+    payment_method: "",
+    shipping_carrier: "",
+    tracking_no: "",
+    order_status: "",
+    delivery_date: "",
+    shipping_address: "",
+  });
   const [costs, setCosts] = useState({
     product: "",
     commission: "",
@@ -498,6 +508,7 @@ function NewSaleDialog({
     other: "",
   });
   const [costsOpen, setCostsOpen] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
@@ -517,8 +528,13 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
+    setExtras({
+      order_no: "", invoice_no: "", payment_method: "", shipping_carrier: "",
+      tracking_no: "", order_status: "", delivery_date: "", shipping_address: "",
+    });
     setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
     setCostsOpen(false);
+    setExtrasOpen(false);
     setDecrementStock(true);
   }
 
@@ -643,7 +659,24 @@ function NewSaleDialog({
     const breakdownLines = (Object.keys(labels) as Array<keyof typeof labels>)
       .filter((k) => Number((costs as Record<string, string>)[k]) > 0)
       .map((k) => `${labels[k]}: ${Number((costs as Record<string, string>)[k]).toFixed(2)} ₺`);
+    const extraLabels: Record<string, string> = {
+      order_no: "Sipariş No",
+      invoice_no: "Fatura No",
+      payment_method: "Ödeme Yöntemi",
+      shipping_carrier: "Kargo Firması",
+      tracking_no: "Kargo Takip No",
+      order_status: "Sipariş Durumu",
+      delivery_date: "Teslim Tarihi",
+      shipping_address: "Teslimat Adresi",
+    };
+    const extraLines = (Object.keys(extraLabels) as Array<keyof typeof extraLabels>)
+      .filter((k) => (extras as Record<string, string>)[k].trim() !== "")
+      .map((k) => `${extraLabels[k]}: ${(extras as Record<string, string>)[k].trim()}`);
     let combinedNotes = form.notes.trim();
+    if (extraLines.length) {
+      const header = "[Sipariş Bilgileri]\n" + extraLines.join("\n");
+      combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
+    }
     if (breakdownLines.length) {
       const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
       combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
@@ -846,6 +879,101 @@ function NewSaleDialog({
               </div>
               <p className="text-[11px] text-muted-foreground">
                 Kalemler doldurulunca "Toplam Maliyet" otomatik hesaplanır. Detaylar satışın notlarına eklenir.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setExtrasOpen((v) => !v)}
+              className="text-xs text-primary hover:underline"
+            >
+              {extrasOpen ? "− Sipariş bilgilerini gizle" : "+ Sipariş bilgileri ekle (Sipariş No, Kargo, Fatura...)"}
+            </button>
+          </div>
+
+          {extrasOpen && (
+            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">SİPARİŞ & KARGO BİLGİLERİ</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Sipariş No</Label>
+                  <Input value={extras.order_no} maxLength={60}
+                    onChange={(e) => setExtras({ ...extras, order_no: e.target.value })}
+                    placeholder="Örn. TY-12345" />
+                </div>
+                <div>
+                  <Label className="text-xs">Fatura No</Label>
+                  <Input value={extras.invoice_no} maxLength={60}
+                    onChange={(e) => setExtras({ ...extras, invoice_no: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Ödeme Yöntemi</Label>
+                  <Select value={extras.payment_method}
+                    onValueChange={(v) => setExtras({ ...extras, payment_method: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Kredi Kartı">Kredi Kartı</SelectItem>
+                      <SelectItem value="Havale/EFT">Havale/EFT</SelectItem>
+                      <SelectItem value="Kapıda Ödeme">Kapıda Ödeme</SelectItem>
+                      <SelectItem value="Nakit">Nakit</SelectItem>
+                      <SelectItem value="Çek/Senet">Çek/Senet</SelectItem>
+                      <SelectItem value="Diğer">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Sipariş Durumu</Label>
+                  <Select value={extras.order_status}
+                    onValueChange={(v) => setExtras({ ...extras, order_status: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Hazırlanıyor">Hazırlanıyor</SelectItem>
+                      <SelectItem value="Kargoda">Kargoda</SelectItem>
+                      <SelectItem value="Teslim Edildi">Teslim Edildi</SelectItem>
+                      <SelectItem value="İptal">İptal</SelectItem>
+                      <SelectItem value="İade">İade</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Kargo Firması</Label>
+                  <Select value={extras.shipping_carrier}
+                    onValueChange={(v) => setExtras({ ...extras, shipping_carrier: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yurtiçi Kargo">Yurtiçi Kargo</SelectItem>
+                      <SelectItem value="MNG Kargo">MNG Kargo</SelectItem>
+                      <SelectItem value="Aras Kargo">Aras Kargo</SelectItem>
+                      <SelectItem value="PTT Kargo">PTT Kargo</SelectItem>
+                      <SelectItem value="Sürat Kargo">Sürat Kargo</SelectItem>
+                      <SelectItem value="UPS">UPS</SelectItem>
+                      <SelectItem value="Hepsijet">Hepsijet</SelectItem>
+                      <SelectItem value="Trendyol Express">Trendyol Express</SelectItem>
+                      <SelectItem value="Diğer">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Kargo Takip No</Label>
+                  <Input value={extras.tracking_no} maxLength={80}
+                    onChange={(e) => setExtras({ ...extras, tracking_no: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Teslim Tarihi</Label>
+                  <Input type="date" value={extras.delivery_date}
+                    onChange={(e) => setExtras({ ...extras, delivery_date: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Teslimat Adresi</Label>
+                  <Input value={extras.shipping_address} maxLength={255}
+                    onChange={(e) => setExtras({ ...extras, shipping_address: e.target.value })}
+                    placeholder="İl / İlçe veya tam adres" />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Bu bilgiler satışın notlarına yapısal olarak eklenir.
               </p>
             </div>
           )}

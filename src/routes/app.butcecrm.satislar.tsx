@@ -464,14 +464,34 @@ function NewSaleDialog({
                 placeholder="Boşsa duruma göre hesaplanır" />
             </div>
           </div>
-          <div>
-            <Label>Kampanya (opsiyonel)</Label>
-            <Select value={form.campaign_id} onValueChange={(v) => setForm({ ...form, campaign_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
-              <SelectContent>
-                {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Platform</Label>
+              <Select
+                value={form.platform}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setNewPlatformOpen(true); return; }
+                  setForm({ ...form, platform: v });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    + Yeni Platform
+                  </SelectItem>
+                  {platforms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Kampanya (opsiyonel)</Label>
+              <Select value={form.campaign_id} onValueChange={(v) => setForm({ ...form, campaign_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                <SelectContent>
+                  {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>

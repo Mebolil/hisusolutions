@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History, Plus } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
@@ -78,6 +78,7 @@ function StockPage() {
   const [lots, setLots] = useState<Lot[]>([]);
   const [lotsLoading, setLotsLoading] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
 
   async function load() {
     setLoading(true);
@@ -273,9 +274,14 @@ function StockPage() {
                         <span className={`text-xs px-2 py-0.5 rounded border ${STATE_BADGE[st]}`}>{STATE_LABEL[st]}</span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => openHistory(p)} className="gap-1">
-                          <History className="h-3.5 w-3.5" /> Geçmiş
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(p)} className="gap-1">
+                            <Pencil className="h-3.5 w-3.5" /> Düzenle
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => openHistory(p)} className="gap-1">
+                            <History className="h-3.5 w-3.5" /> Geçmiş
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -326,6 +332,12 @@ function StockPage() {
           )}
         </DialogContent>
       </Dialog>
+      <EditProductDialog
+        product={editing}
+        categories={categoryNames}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); load(); }}
+      />
     </div>
   );
 }
@@ -442,6 +454,143 @@ function NewProductDialog({
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
             <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditProductDialog({
+  product, categories, onClose, onSaved,
+}: {
+  product: Product | null;
+  categories: string[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "", category: "", newCategory: "",
+    quantity: "0", low_stock_threshold: "0", unit_price: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      setForm({
+        name: product.name,
+        category: product.category || "",
+        newCategory: "",
+        quantity: String(product.quantity ?? 0),
+        low_stock_threshold: String(product.low_stock_threshold ?? 0),
+        unit_price: product.unit_price != null ? String(product.unit_price) : "",
+      });
+    }
+  }, [product]);
+
+  if (!product) return null;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!product) return;
+    if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
+    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const newQty = Number(form.quantity || 0);
+    const oldQty = Number(product.quantity || 0);
+    const diff = newQty - oldQty;
+
+    setSaving(true);
+    const { error } = await supabase.from("products").update({
+      name: form.name.trim(),
+      category: cat || null,
+      quantity: newQty,
+      low_stock_threshold: Number(form.low_stock_threshold || 0),
+      unit_price: form.unit_price ? Number(form.unit_price) : null,
+    }).eq("id", product.id);
+
+    if (!error && diff !== 0) {
+      await supabase.from("stock_lots").insert({
+        product_id: product.id,
+        quantity: diff,
+        unit_cost: form.unit_price ? Number(form.unit_price) : 0,
+        note: "Manuel düzeltme",
+      });
+    }
+    if (!error && form.category === "__new__" && cat) {
+      await supabase.from("product_categories").insert({ name: cat }).then(() => {});
+    }
+    setSaving(false);
+    if (error) return toast.error("Güncellenemedi: " + error.message);
+    toast.success("Ürün güncellendi");
+    onSaved();
+  }
+
+  async function handleDelete() {
+    if (!product) return;
+    if (!confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
+    setSaving(true);
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    setSaving(false);
+    if (error) return toast.error("Silinemedi: " + error.message);
+    toast.success("Ürün silindi");
+    onSaved();
+  }
+
+  return (
+    <Dialog open={!!product} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Ürünü Düzenle</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Ürün Adı</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div>
+            <Label>Kategori</Label>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+              <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                <SelectItem value="__new__">+ Yeni kategori</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.category === "__new__" && (
+            <div>
+              <Label>Yeni Kategori Adı</Label>
+              <Input value={form.newCategory}
+                onChange={(e) => setForm({ ...form, newCategory: e.target.value })} required />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Mevcut Stok</Label>
+              <Input type="number" step="1" value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
+              <p className="text-xs text-muted-foreground mt-1">
+                Değişim hareket olarak kaydedilir
+              </p>
+            </div>
+            <div>
+              <Label>Düşük Stok Eşiği</Label>
+              <Input type="number" step="1" value={form.low_stock_threshold}
+                onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} required />
+            </div>
+          </div>
+          <div>
+            <Label>Birim Fiyat (₺)</Label>
+            <Input type="number" step="0.01" value={form.unit_price}
+              onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
+              placeholder="Opsiyonel" />
+          </div>
+          <DialogFooter className="flex sm:justify-between gap-2">
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={saving}>
+              Sil
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>İptal</Button>
+              <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -429,6 +429,35 @@ function NewSaleDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <Dialog open={quickOpen} onOpenChange={setQuickOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Yeni Müşteri</DialogTitle></DialogHeader>
+          <form onSubmit={saveQuickCustomer} className="space-y-3">
+            <div>
+              <Label>İsim</Label>
+              <Input value={quick.name} maxLength={120}
+                onChange={(e) => setQuick({ ...quick, name: e.target.value })} required autoFocus />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telefon</Label>
+                <Input value={quick.phone} maxLength={40}
+                  onChange={(e) => setQuick({ ...quick, phone: e.target.value })} />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={quick.email} maxLength={255}
+                  onChange={(e) => setQuick({ ...quick, email: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setQuickOpen(false)}>İptal</Button>
+              <Button type="submit" disabled={quickSaving}>{quickSaving ? "Kaydediliyor..." : "Ekle"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

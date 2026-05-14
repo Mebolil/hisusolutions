@@ -40,12 +40,33 @@ type Sale = {
   paid_amount: number | null;
   payment_status: string;
   campaign_id: string | null;
+  platform: string | null;
 };
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
+
+const DEFAULT_PLATFORMS = ["Trendyol", "Hepsiburada", "Amazon", "N11", "Kendi Sitem"];
+const PLATFORMS_LS_KEY = "butcecrm:sale-platforms";
+
+function loadPlatforms(): string[] {
+  if (typeof window === "undefined") return DEFAULT_PLATFORMS;
+  try {
+    const raw = window.localStorage.getItem(PLATFORMS_LS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr;
+    }
+  } catch {}
+  return DEFAULT_PLATFORMS;
+}
+function savePlatforms(list: string[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PLATFORMS_LS_KEY, JSON.stringify(list));
+}
+
 
 export const Route = createFileRoute("/app/butcecrm/satislar")({
   head: () => ({ meta: [{ title: "BütçeCRM — Satışlar" }] }),
@@ -209,6 +230,7 @@ function SalesPage() {
                   <TableHead>Tarih</TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Ürün</TableHead>
+                  <TableHead>Platform</TableHead>
                   <TableHead className="text-right">Miktar</TableHead>
                   <TableHead className="text-right">Tutar</TableHead>
                   <TableHead className="text-right">Tahsil</TableHead>
@@ -221,7 +243,15 @@ function SalesPage() {
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
                     <TableCell className="max-w-[220px] truncate">{s.product_name}</TableCell>
+                    <TableCell>
+                      {s.platform ? (
+                        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs bg-secondary">
+                          {s.platform}
+                        </span>
+                      ) : <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
                     <TableCell className="text-right">{Number(s.quantity)}</TableCell>
+
                     <TableCell className="text-right font-medium">{formatCurrency(Number(s.total_amount))}</TableCell>
                     <TableCell className="text-right">{formatCurrency(Number(s.paid_amount || 0))}</TableCell>
                     <TableCell>
@@ -273,12 +303,16 @@ function NewSaleDialog({
     paid_amount: "",
     payment_status: "bekliyor" as Status,
     campaign_id: "",
+    platform: "",
   });
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ name: "", phone: "", email: "" });
   const [quickSaving, setQuickSaving] = useState(false);
+  const [platforms, setPlatforms] = useState<string[]>(loadPlatforms);
+  const [newPlatformOpen, setNewPlatformOpen] = useState(false);
+  const [newPlatformName, setNewPlatformName] = useState("");
 
   useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
@@ -286,9 +320,23 @@ function NewSaleDialog({
     setForm({
       sale_date: today, customer_id: "", product_name: "", quantity: "1",
       total_amount: "", total_cost: "", paid_amount: "",
-      payment_status: "bekliyor", campaign_id: "",
+      payment_status: "bekliyor", campaign_id: "", platform: "",
     });
   }
+
+  function addPlatform(name: string) {
+    const v = name.trim();
+    if (!v) return;
+    if (platforms.includes(v)) {
+      setForm((f) => ({ ...f, platform: v }));
+      return;
+    }
+    const next = [...platforms, v];
+    setPlatforms(next);
+    savePlatforms(next);
+    setForm((f) => ({ ...f, platform: v }));
+  }
+
 
   async function saveQuickCustomer(e: React.FormEvent) {
     e.preventDefault();
@@ -332,6 +380,7 @@ function NewSaleDialog({
       paid_amount: paid,
       payment_status: form.payment_status,
       campaign_id: form.campaign_id || null,
+      platform: form.platform || null,
     };
     const { error } = await supabase.from("sales").insert(payload);
     setSaving(false);
@@ -415,14 +464,34 @@ function NewSaleDialog({
                 placeholder="Boşsa duruma göre hesaplanır" />
             </div>
           </div>
-          <div>
-            <Label>Kampanya (opsiyonel)</Label>
-            <Select value={form.campaign_id} onValueChange={(v) => setForm({ ...form, campaign_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
-              <SelectContent>
-                {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Platform</Label>
+              <Select
+                value={form.platform}
+                onValueChange={(v) => {
+                  if (v === "__new__") { setNewPlatformOpen(true); return; }
+                  setForm({ ...form, platform: v });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    + Yeni Platform
+                  </SelectItem>
+                  {platforms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Kampanya (opsiyonel)</Label>
+              <Select value={form.campaign_id} onValueChange={(v) => setForm({ ...form, campaign_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                <SelectContent>
+                  {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
@@ -455,6 +524,33 @@ function NewSaleDialog({
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setQuickOpen(false)}>İptal</Button>
               <Button type="submit" disabled={quickSaving}>{quickSaving ? "Kaydediliyor..." : "Ekle"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={newPlatformOpen} onOpenChange={setNewPlatformOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Yeni Platform</DialogTitle></DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!newPlatformName.trim()) return;
+              addPlatform(newPlatformName);
+              setNewPlatformName("");
+              setNewPlatformOpen(false);
+            }}
+            className="space-y-3"
+          >
+            <div>
+              <Label>Platform adı</Label>
+              <Input value={newPlatformName} maxLength={60} autoFocus
+                onChange={(e) => setNewPlatformName(e.target.value)}
+                placeholder="Örn. Çiçeksepeti" required />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setNewPlatformOpen(false)}>İptal</Button>
+              <Button type="submit">Ekle</Button>
             </DialogFooter>
           </form>
         </DialogContent>

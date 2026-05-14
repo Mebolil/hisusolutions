@@ -488,6 +488,16 @@ function NewSaleDialog({
     platform: "",
     notes: "",
   });
+  const [extras, setExtras] = useState({
+    order_no: "",
+    invoice_no: "",
+    payment_method: "",
+    shipping_carrier: "",
+    tracking_no: "",
+    order_status: "",
+    delivery_date: "",
+    shipping_address: "",
+  });
   const [costs, setCosts] = useState({
     product: "",
     commission: "",
@@ -498,6 +508,7 @@ function NewSaleDialog({
     other: "",
   });
   const [costsOpen, setCostsOpen] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
@@ -517,8 +528,13 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
+    setExtras({
+      order_no: "", invoice_no: "", payment_method: "", shipping_carrier: "",
+      tracking_no: "", order_status: "", delivery_date: "", shipping_address: "",
+    });
     setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
     setCostsOpen(false);
+    setExtrasOpen(false);
     setDecrementStock(true);
   }
 

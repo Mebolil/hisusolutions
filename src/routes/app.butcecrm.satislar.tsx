@@ -610,17 +610,34 @@ function NewSaleDialog({
     setDecrementStock(true);
   }
 
-  // Auto-calc total from unit_price * quantity - discount
+  // Auto-calc total from unit_price * quantity - discount (+ vade komisyonu if customer pays it)
   useEffect(() => {
     const qty = Number(form.quantity) || 0;
     const up = Number(form.unit_price) || 0;
     const disc = Number(form.discount) || 0;
     if (up > 0 && qty > 0) {
-      const t = Math.max(0, up * qty - disc);
+      const base = Math.max(0, up * qty - disc);
+      const addToCustomer =
+        effectiveRate > 0 && extras.commission_incidence === "customer"
+          ? base * effectiveRate / 100
+          : 0;
+      const t = +(base + addToCustomer).toFixed(2);
       setForm((f) => (f.total_amount === String(t) ? f : { ...f, total_amount: String(t) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.unit_price, form.quantity, form.discount]);
+  }, [form.unit_price, form.quantity, form.discount, effectiveRate, extras.commission_incidence]);
+
+  // If commission incidence = seller AND a rate applies, push it into costs.commission
+  useEffect(() => {
+    if (effectiveRate <= 0 || extras.commission_incidence !== "seller") return;
+    const qty = Number(form.quantity) || 0;
+    const up = Number(form.unit_price) || 0;
+    const disc = Number(form.discount) || 0;
+    const base = Math.max(0, up * qty - disc);
+    if (base <= 0) return;
+    const c = (base * effectiveRate / 100).toFixed(2);
+    setCosts((p) => (p.commission === c ? p : { ...p, commission: c, commission_pct: "" }));
+  }, [effectiveRate, extras.commission_incidence, form.unit_price, form.quantity, form.discount]);
 
   // Auto-calc commission from percentage of total_amount
   useEffect(() => {

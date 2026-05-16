@@ -319,9 +319,12 @@ function NewPurchaseDialog({
 
   async function saveQuickSupplier(e: React.FormEvent) {
     e.preventDefault();
-    if (!sup.name.trim()) return toast.error("İsim zorunludur");
+    if (!sup.name.trim()) return toast.error("Firma ismi zorunludur");
     setSupSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSupSaving(false); return toast.error("Oturum bulunamadı"); }
     const { data, error } = await supabase.from("suppliers").insert({
+      user_id: session.user.id,
       name: sup.name.trim(),
       phone: sup.phone.trim() || null,
       email: sup.email.trim() || null,

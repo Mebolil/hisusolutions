@@ -54,6 +54,10 @@ export function friendlyDbError(error: unknown, fallback = "Bir hata oluştu"): 
   }
   // PGRST116: no rows
   if (code === "PGRST116") return "Kayıt bulunamadı";
+  // Schema cache / column not found
+  if (/could not find.*column|schema cache/i.test(msg)) return "Veritabanı yapısında beklenmeyen bir sorun oluştu, lütfen tekrar deneyin";
+  // Generic postgres errors — don't expose raw English
+  if (code.startsWith("42") || code.startsWith("22") || code.startsWith("23")) return fallback;
 
-  return msg || fallback;
+  return fallback;
 }

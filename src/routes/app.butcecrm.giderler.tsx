@@ -37,8 +37,10 @@ type Expense = {
   paid_amount: number | null;
   payment_status: string;
   note: string | null;
+  sale_id: string | null;
 };
 type Category = { id: string; name: string };
+type SaleRef = { id: string; product_name: string; sale_date: string };
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
@@ -61,6 +63,7 @@ function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [sales, setSales] = useState<SaleRef[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [catFilter, setCatFilter] = useState("all");
   const [from, setFrom] = useState("");
@@ -70,12 +73,14 @@ function ExpensesPage() {
 
   async function load() {
     setLoading(true);
-    const [e, c] = await Promise.all([
+    const [e, c, s] = await Promise.all([
       supabase.from("expenses").select("*").order("expense_date", { ascending: false }),
       supabase.from("expense_categories").select("id,name").order("name"),
+      supabase.from("sales").select("id,product_name,sale_date").order("sale_date", { ascending: false }).limit(200),
     ]);
     setExpenses((e.data as Expense[]) || []);
     setCategories((c.data as Category[]) || []);
+    setSales((s.data as SaleRef[]) || []);
     setLoading(false);
   }
 
@@ -128,6 +133,7 @@ function ExpensesPage() {
           open={open}
           setOpen={setOpen}
           categories={categoryNames}
+          sales={sales}
           onCreated={load}
         />
       </div>
@@ -257,10 +263,10 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
 }
 
 function NewExpenseDialog({
-  open, setOpen, categories, onCreated,
+  open, setOpen, categories, sales, onCreated,
 }: {
   open: boolean; setOpen: (v: boolean) => void;
-  categories: string[]; onCreated: () => void;
+  categories: string[]; sales: SaleRef[]; onCreated: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
@@ -271,13 +277,14 @@ function NewExpenseDialog({
     paid_amount: "",
     payment_status: "bekliyor" as Status,
     note: "",
+    sale_id: "",
   });
   const [saving, setSaving] = useState(false);
 
   function reset() {
     setForm({
       expense_date: today, category: "", newCategory: "", amount: "",
-      paid_amount: "", payment_status: "bekliyor", note: "",
+      paid_amount: "", payment_status: "bekliyor", note: "", sale_id: "",
     });
   }
 
@@ -300,6 +307,7 @@ function NewExpenseDialog({
       paid_amount: paid,
       payment_status: form.payment_status,
       note: form.note || "",
+      sale_id: form.sale_id || null,
     };
     const { error } = await supabase.from("expenses").insert(payload);
     if (!error && form.category === "__new__" && cat) {
@@ -365,6 +373,20 @@ function NewExpenseDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>İlgili Satış (Opsiyonel)</Label>
+            <Select value={form.sale_id} onValueChange={(v) => setForm({ ...form, sale_id: v === "__none__" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="Bağımsız gider" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Bağımsız gider</SelectItem>
+                {sales.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.sale_date.slice(0, 10)} — {s.product_name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

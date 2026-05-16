@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { parseISO, differenceInDays } from "date-fns";
 import { friendlyDbError } from "@/lib/butcecrm-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const SALES_CSV_SAMPLE = ["2025-05-01", "Örnek Ürün", 1, 100, 60, 100, "öden
 type Sale = {
   id: string;
   sale_date: string;
+  due_date: string | null;
   customer_id: string | null;
   product_name: string;
   quantity: number;
@@ -406,6 +408,7 @@ function SalesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Tarih</TableHead>
+                  <TableHead>Vade</TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Ürün</TableHead>
                   <TableHead>Platform</TableHead>
@@ -424,6 +427,16 @@ function SalesPage() {
                   return (
                   <TableRow key={s.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {s.due_date ? (() => {
+                        const overdue = s.payment_status !== "ödendi" ? differenceInDays(new Date(), parseISO(s.due_date)) : -1;
+                        return (
+                          <span className={overdue > 0 ? "text-red-600 font-medium" : "text-muted-foreground"}>
+                            {formatDate(s.due_date)}{overdue > 0 && ` (${overdue}g geçti)`}
+                          </span>
+                        );
+                      })() : <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
                     <TableCell className="max-w-[220px] truncate">{s.product_name}</TableCell>
                     <TableCell>
@@ -509,6 +522,7 @@ function NewSaleDialog({
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     sale_date: today,
+    due_date: "",
     customer_id: "",
     product_id: "",
     product_name: "",
@@ -574,7 +588,7 @@ function NewSaleDialog({
 
   function reset() {
     setForm({
-      sale_date: today, customer_id: "", product_id: "", product_name: "", quantity: "1",
+      sale_date: today, due_date: "", customer_id: "", product_id: "", product_name: "", quantity: "1",
       unit_price: "", discount: "",
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
@@ -702,6 +716,7 @@ function NewSaleDialog({
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,
+      due_date: form.due_date || null,
       customer_id: form.customer_id || null,
       product_name: form.product_name,
       quantity: Number(form.quantity) || 1,
@@ -788,28 +803,33 @@ function NewSaleDialog({
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Tarih</Label>
+              <Label>Satış Tarihi</Label>
               <Input type="date" value={form.sale_date}
                 onChange={(e) => setForm({ ...form, sale_date: e.target.value })} required />
             </div>
             <div>
-              <Label>Müşteri</Label>
-              <Select
-                value={form.customer_id}
-                onValueChange={(v) => {
-                  if (v === "__new__") { setQuickOpen(true); return; }
-                  setForm({ ...form, customer_id: v });
-                }}
-              >
-                <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__new__" className="text-primary font-medium">
-                    + Yeni Müşteri
-                  </SelectItem>
-                  {localCustomers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Ödeme Vadesi</Label>
+              <Input type="date" value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
             </div>
+          </div>
+          <div>
+            <Label>Müşteri</Label>
+            <Select
+              value={form.customer_id}
+              onValueChange={(v) => {
+                if (v === "__new__") { setQuickOpen(true); return; }
+                setForm({ ...form, customer_id: v });
+              }}
+            >
+              <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__new__" className="text-primary font-medium">
+                  + Yeni Müşteri
+                </SelectItem>
+                {localCustomers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Ürün</Label>
@@ -1224,6 +1244,7 @@ function EditSaleDialog({
     setSaving(true);
     const payload: Record<string, unknown> = {
       sale_date: form.sale_date,
+      due_date: form.due_date || null,
       product_name: form.product_name,
       quantity: Number(form.quantity) || 0,
       total_amount: Number(form.total_amount) || 0,
@@ -1252,9 +1273,14 @@ function EditSaleDialog({
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs">Tarih</Label>
+            <Label className="text-xs">Satış Tarihi</Label>
             <Input type="date" value={form.sale_date}
               onChange={(e) => setForm({ ...form, sale_date: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Ödeme Vadesi</Label>
+            <Input type="date" value={form.due_date || ""}
+              onChange={(e) => setForm({ ...form, due_date: e.target.value || null })} />
           </div>
           <div>
             <Label className="text-xs">Platform</Label>

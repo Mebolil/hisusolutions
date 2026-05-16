@@ -1,14 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
+import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -69,49 +60,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
-      { name: "description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
-      { name: "author", content: "Hisu Solutions" },
-      { property: "og:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
-      { property: "og:description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
-      { name: "twitter:description", content: "SaaS değil, AaaS. Otomasyon, BütçeCRM ve özel tasarım web siteleri — anahtar teslim." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6f222516-de88-4e24-9723-0457736fa9de/id-preview-b5bf80c9--6ec28e2b-6589-4327-90c6-77377ef22b57.lovable.app-1778325988471.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6f222516-de88-4e24-9723-0457736fa9de/id-preview-b5bf80c9--6ec28e2b-6589-4327-90c6-77377ef22b57.lovable.app-1778325988471.png" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();

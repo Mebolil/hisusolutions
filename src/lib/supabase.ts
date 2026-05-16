@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://dvrgeihpecdbtthvianx.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_b31b-1Ts3_mt4SHC4ulLRQ_o8qXAvzD";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_KEY as string;
 
 export const REMEMBER_ME_KEY = "sb-remember-me";
 

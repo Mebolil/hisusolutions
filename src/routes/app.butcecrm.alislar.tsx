@@ -59,7 +59,7 @@ function statusBadge(s: string) {
   return map[s] || "bg-secondary text-foreground";
 }
 
-type Product = { id: string; name: string; unit_price: number | null };
+type Product = { id: string; name: string; unit_price: number | null; quantity: number | null };
 
 function PurchasesPage() {
   const [loading, setLoading] = useState(true);
@@ -78,7 +78,7 @@ function PurchasesPage() {
     const [p, s, pr] = await Promise.all([
       supabase.from("purchases").select("*").order("purchase_date", { ascending: false }),
       supabase.from("suppliers").select("id,name").order("name"),
-      supabase.from("products").select("id,name,unit_price").order("name"),
+      supabase.from("products").select("id,name,unit_price,quantity").order("name"),
     ]);
     setPurchases((p.data as Purchase[]) || []);
     setSuppliers((s.data as Supplier[]) || []);
@@ -366,8 +366,23 @@ function NewPurchaseDialog({
       payment_status: form.payment_status,
     };
     const { error } = await supabase.from("purchases").insert(payload);
+    if (error) { setSaving(false); return toast.error("Eklenemedi: " + friendlyDbError(error)); }
+
+    // Eşleşen ürünün stok miktarını ve birim fiyatını güncelle
+    const matched = products.find(
+      (p) => p.name.trim().toLowerCase() === form.product_name.trim().toLowerCase()
+    );
+    if (matched) {
+      await supabase
+        .from("products")
+        .update({
+          quantity: (matched.quantity ?? 0) + (Number(form.quantity) || 1),
+          unit_price: Number(form.unit_price),
+        })
+        .eq("id", matched.id);
+    }
+
     setSaving(false);
-    if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Alış eklendi");
     reset();
     setOpen(false);

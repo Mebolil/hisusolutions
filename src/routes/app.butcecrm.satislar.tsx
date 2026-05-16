@@ -686,7 +686,10 @@ function NewSaleDialog({
     e.preventDefault();
     if (!quick.name.trim()) return toast.error("İsim zorunludur");
     setQuickSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setQuickSaving(false); return toast.error("Oturum bulunamadı"); }
     const { data, error } = await supabase.from("customers").insert({
+      user_id: session.user.id,
       name: quick.name.trim(),
       phone: quick.phone.trim() || null,
       email: quick.email.trim() || null,

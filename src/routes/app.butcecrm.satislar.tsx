@@ -1185,7 +1185,7 @@ function NewSaleDialog({
               </div>
               <div>
                 <Label>Email</Label>
-                <Input type="email" value={quick.email} maxLength={255}
+                <Input value={quick.email} maxLength={255}
                   onChange={(e) => setQuick({ ...quick, email: e.target.value })} />
               </div>
             </div>

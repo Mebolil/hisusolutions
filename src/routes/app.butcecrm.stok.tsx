@@ -497,14 +497,13 @@ function EditProductDialog({
     if (!product) return;
     if (!form.name.trim()) return toast.error("Ürün adı zorunludur");
     const cat = (form.category === "__new__" ? form.newCategory.trim() : form.category).trim();
-    if (!cat) return toast.error("Kategori zorunludur");
     const newQty = Number(form.quantity || 0);
     const oldQty = Number(product.quantity || 0);
     const diff = newQty - oldQty;
 
     setSaving(true);
     const newName = form.name.trim();
-    if (newName !== product.name || cat !== (product.category || "")) {
+    if (cat && (newName !== product.name || cat !== (product.category || ""))) {
       const { data: dup } = await supabase
         .from("products")
         .select("id")
@@ -519,7 +518,7 @@ function EditProductDialog({
     }
     const { error } = await supabase.from("products").update({
       name: newName,
-      category: cat,
+      category: cat || null,
       quantity: newQty,
       low_stock_threshold: Number(form.low_stock_threshold || 0),
       unit_price: form.unit_price ? Number(form.unit_price) : null,
@@ -576,7 +575,7 @@ function EditProductDialog({
             <div>
               <Label>Yeni Kategori Adı</Label>
               <Input value={form.newCategory}
-                onChange={(e) => setForm({ ...form, newCategory: e.target.value })} required />
+                onChange={(e) => setForm({ ...form, newCategory: e.target.value })} />
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">

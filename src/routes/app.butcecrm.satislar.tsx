@@ -94,8 +94,6 @@ function SalesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
-  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
-  const [carrierFilter, setCarrierFilter] = useState<string>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
@@ -133,8 +131,6 @@ function SalesPage() {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
       if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
-      if (orderStatusFilter !== "all" && parseNoteField(s.notes, "Sipariş Durumu") !== orderStatusFilter) return false;
-      if (carrierFilter !== "all" && parseNoteField(s.notes, "Kargo Firması") !== carrierFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
@@ -143,7 +139,7 @@ function SalesPage() {
       }
       return true;
     });
-  }, [sales, statusFilter, platformFilter, orderStatusFilter, carrierFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);
@@ -285,26 +281,6 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {platformList.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Sipariş Durumu</Label>
-              <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Kargo Firması</Label>
-              <Select value={carrierFilter} onValueChange={setCarrierFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -537,18 +513,6 @@ function NewSaleDialog({
     platform: "",
     notes: "",
   });
-  const [extras, setExtras] = useState({
-    order_no: "",
-    invoice_no: "",
-    payment_method: "",
-    shipping_carrier: "",
-    tracking_no: "",
-    order_status: "",
-    delivery_date: "",
-    shipping_address: "",
-    installments: "1",
-    commission_incidence: "customer" as "customer" | "seller",
-  });
   const [costs, setCosts] = useState({
     product: "",
     commission: "",
@@ -559,7 +523,6 @@ function NewSaleDialog({
     other: "",
   });
   const [costsOpen, setCostsOpen] = useState(false);
-  const [extrasOpen, setExtrasOpen] = useState(false);
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
@@ -570,20 +533,6 @@ function NewSaleDialog({
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
 
-  // Selected payment method object + applicable rate (CC vade rate, or fixed rate)
-  const selectedPaymentMethod = useMemo(
-    () => settings.paymentMethods.find((m) => m.name === extras.payment_method),
-    [settings.paymentMethods, extras.payment_method],
-  );
-  const installmentPlan = useMemo(() => {
-    if (!selectedPaymentMethod?.isCreditCard) return null;
-    const c = parseInt(extras.installments, 10) || 1;
-    return settings.installmentPlans.find((p) => p.count === c)
-      || { count: c, rate: 0 };
-  }, [selectedPaymentMethod, extras.installments, settings.installmentPlans]);
-  const effectiveRate = installmentPlan?.rate ?? selectedPaymentMethod?.rate ?? 0;
-
-
   useEffect(() => { setLocalCustomers(customers); }, [customers]);
 
   function reset() {
@@ -593,45 +542,22 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
-    setExtras({
-      order_no: "", invoice_no: "", payment_method: "", shipping_carrier: "",
-      tracking_no: "", order_status: "", delivery_date: "", shipping_address: "",
-      installments: "1", commission_incidence: "customer",
-    });
     setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
     setCostsOpen(false);
-    setExtrasOpen(false);
     setDecrementStock(true);
   }
 
-  // Auto-calc total from unit_price * quantity - discount (+ vade komisyonu if customer pays it)
+  // Auto-calc total from unit_price * quantity - discount
   useEffect(() => {
     const qty = Number(form.quantity) || 0;
     const up = Number(form.unit_price) || 0;
     const disc = Number(form.discount) || 0;
     if (up > 0 && qty > 0) {
-      const base = Math.max(0, up * qty - disc);
-      const addToCustomer =
-        effectiveRate > 0 && extras.commission_incidence === "customer"
-          ? base * effectiveRate / 100
-          : 0;
-      const t = +(base + addToCustomer).toFixed(2);
+      const t = +(Math.max(0, up * qty - disc)).toFixed(2);
       setForm((f) => (f.total_amount === String(t) ? f : { ...f, total_amount: String(t) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.unit_price, form.quantity, form.discount, effectiveRate, extras.commission_incidence]);
-
-  // If commission incidence = seller AND a rate applies, push it into costs.commission
-  useEffect(() => {
-    if (effectiveRate <= 0 || extras.commission_incidence !== "seller") return;
-    const qty = Number(form.quantity) || 0;
-    const up = Number(form.unit_price) || 0;
-    const disc = Number(form.discount) || 0;
-    const base = Math.max(0, up * qty - disc);
-    if (base <= 0) return;
-    const c = (base * effectiveRate / 100).toFixed(2);
-    setCosts((p) => (p.commission === c ? p : { ...p, commission: c, commission_pct: "" }));
-  }, [effectiveRate, extras.commission_incidence, form.unit_price, form.quantity, form.discount]);
+  }, [form.unit_price, form.quantity, form.discount]);
 
   // Auto-calc commission from percentage of total_amount
   useEffect(() => {
@@ -742,28 +668,7 @@ function NewSaleDialog({
     const breakdownLines = (Object.keys(labels) as Array<keyof typeof labels>)
       .filter((k) => Number((costs as Record<string, string>)[k]) > 0)
       .map((k) => `${labels[k]}: ${Number((costs as Record<string, string>)[k]).toFixed(2)} ₺`);
-    const extraLabels: Record<string, string> = {
-      order_no: "Sipariş No",
-      invoice_no: "Fatura No",
-      payment_method: "Ödeme Yöntemi",
-      shipping_carrier: "Kargo Firması",
-      tracking_no: "Kargo Takip No",
-      order_status: "Sipariş Durumu",
-      delivery_date: "Teslim Tarihi",
-      shipping_address: "Teslimat Adresi",
-    };
-    const extraLines = (Object.keys(extraLabels) as Array<keyof typeof extraLabels>)
-      .filter((k) => (extras as Record<string, string>)[k].trim() !== "")
-      .map((k) => `${extraLabels[k]}: ${(extras as Record<string, string>)[k].trim()}`);
-    if (selectedPaymentMethod?.isCreditCard && installmentPlan) {
-      extraLines.push(`Vade: ${installmentPlan.count} taksit (%${effectiveRate})`);
-      extraLines.push(`Vade Komisyonu: ${extras.commission_incidence === "customer" ? "Müşteriye yansıtıldı" : "Satıcı üstlendi"}`);
-    }
     let combinedNotes = form.notes.trim();
-    if (extraLines.length) {
-      const header = "[Sipariş Bilgileri]\n" + extraLines.join("\n");
-      combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
-    }
     if (breakdownLines.length) {
       const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
       combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
@@ -971,146 +876,6 @@ function NewSaleDialog({
               </div>
               <p className="text-[11px] text-muted-foreground">
                 Kalemler doldurulunca "Toplam Maliyet" otomatik hesaplanır. Detaylar satışın notlarına eklenir.
-              </p>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="button"
-              onClick={() => setExtrasOpen((v) => !v)}
-              className="text-xs text-primary hover:underline"
-            >
-              {extrasOpen ? "− Sipariş bilgilerini gizle" : "+ Sipariş bilgileri ekle (Sipariş No, Kargo, Fatura...)"}
-            </button>
-          </div>
-
-          {extrasOpen && (
-            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">SİPARİŞ & KARGO BİLGİLERİ</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Sipariş No</Label>
-                  <Input value={extras.order_no} maxLength={60}
-                    onChange={(e) => setExtras({ ...extras, order_no: e.target.value })}
-                    placeholder="Örn. TY-12345" />
-                </div>
-                <div>
-                  <Label className="text-xs">Fatura No</Label>
-                  <Input value={extras.invoice_no} maxLength={60}
-                    onChange={(e) => setExtras({ ...extras, invoice_no: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Ödeme Yöntemi</Label>
-                  <Select value={extras.payment_method}
-                    onValueChange={(v) => setExtras({ ...extras, payment_method: v, installments: "1" })}>
-                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
-                    <SelectContent>
-                      {settings.paymentMethods.map((m) => (
-                        <SelectItem key={m.name} value={m.name}>
-                          {m.name}{m.isCreditCard ? " 💳" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Link to="/app/butcecrm/ayarlar" className="text-[10px] text-muted-foreground hover:text-primary mt-1 inline-block">
-                    Yöntemleri yönet →
-                  </Link>
-                </div>
-                {selectedPaymentMethod?.isCreditCard && (
-                  <>
-                    <div>
-                      <Label className="text-xs">Vade (Taksit)</Label>
-                      <Select value={extras.installments}
-                        onValueChange={(v) => setExtras({ ...extras, installments: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {settings.installmentPlans
-                            .slice().sort((a, b) => a.count - b.count)
-                            .map((p) => (
-                              <SelectItem key={p.count} value={String(p.count)}>
-                                {p.count} taksit (%{p.rate})
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Komisyonu Kim Üstlensin</Label>
-                      <Select value={extras.commission_incidence}
-                        onValueChange={(v: "customer" | "seller") =>
-                          setExtras({ ...extras, commission_incidence: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="customer">Müşteriye yansıt (toplam artar)</SelectItem>
-                          <SelectItem value="seller">Satıcı üstlensin (maliyete eklenir)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {effectiveRate > 0 && Number(form.total_amount) > 0 && installmentPlan && (
-                      <div className="md:col-span-2 rounded-md border bg-muted/30 p-2 text-xs space-y-1">
-                        {(() => {
-                          const qty = Number(form.quantity) || 0;
-                          const up = Number(form.unit_price) || 0;
-                          const disc = Number(form.discount) || 0;
-                          const base = Math.max(0, up * qty - disc);
-                          const commission = +(base * effectiveRate / 100).toFixed(2);
-                          const total = extras.commission_incidence === "customer"
-                            ? base + commission : base;
-                          const perInstallment = installmentPlan.count > 0
-                            ? +(total / installmentPlan.count).toFixed(2) : 0;
-                          return (
-                            <>
-                              <div>Ara toplam: <b>{formatCurrency(base)}</b></div>
-                              <div>Komisyon ({installmentPlan.count}×, %{effectiveRate}): <b>{formatCurrency(commission)}</b></div>
-                              <div>Toplam: <b>{formatCurrency(total)}</b></div>
-                              <div>Taksit başına: <b>{formatCurrency(perInstallment)}</b> × {installmentPlan.count} ay</div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </>
-                )}
-                <div>
-                  <Label className="text-xs">Sipariş Durumu</Label>
-                  <Select value={extras.order_status}
-                    onValueChange={(v) => setExtras({ ...extras, order_status: v })}>
-                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
-                    <SelectContent>
-                      {settings.orderStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Kargo Firması</Label>
-                  <Select value={extras.shipping_carrier}
-                    onValueChange={(v) => setExtras({ ...extras, shipping_carrier: v })}>
-                    <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
-                    <SelectContent>
-                      {settings.carriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Kargo Takip No</Label>
-                  <Input value={extras.tracking_no} maxLength={80}
-                    onChange={(e) => setExtras({ ...extras, tracking_no: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Teslim Tarihi</Label>
-                  <Input type="date" value={extras.delivery_date}
-                    onChange={(e) => setExtras({ ...extras, delivery_date: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Teslimat Adresi</Label>
-                  <Input value={extras.shipping_address} maxLength={255}
-                    onChange={(e) => setExtras({ ...extras, shipping_address: e.target.value })}
-                    placeholder="İl / İlçe veya tam adres" />
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Bu bilgiler satışın notlarına yapısal olarak eklenir.
               </p>
             </div>
           )}

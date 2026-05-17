@@ -955,6 +955,31 @@ function NewSaleDialog({
             )}
           </div>
 
+          {/* Dynamic profit summary */}
+          {(() => {
+            const gelir = Number(form.total_amount) || 0;
+            const maliyet = breakdownSum > 0 ? breakdownSum : (Number(form.total_cost) || 0);
+            const kar = gelir - maliyet;
+            return (
+              <div className="rounded-md border bg-muted/40 divide-y text-sm">
+                <div className="flex justify-between px-3 py-2">
+                  <span className="text-muted-foreground">Gelir</span>
+                  <span className="font-medium">{formatCurrency(gelir)}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2">
+                  <span className="text-muted-foreground">Toplam Maliyet</span>
+                  <span className="font-medium text-red-500">-{formatCurrency(maliyet)}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2 font-semibold">
+                  <span>Net Kâr</span>
+                  <span className={kar >= 0 ? "text-emerald-600" : "text-red-600"}>
+                    {formatCurrency(kar)}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Platform</Label>

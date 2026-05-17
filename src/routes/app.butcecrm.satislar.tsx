@@ -534,6 +534,7 @@ function NewSaleDialog({
   const defaultCosts = (): CostItem[] =>
     settings.costItems.map((label) => ({ id: label, label, amount: "" }));
   const [costs, setCosts] = useState<CostItem[]>(defaultCosts());
+  const [lastPurchasePrice, setLastPurchasePrice] = useState<number | null>(null);
   const [commissionPct, setCommissionPct] = useState("");
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -556,6 +557,7 @@ function NewSaleDialog({
     });
     setCosts(defaultCosts());
     setCommissionPct("");
+    setLastPurchasePrice(null);
     setDecrementStock(true);
   }
 
@@ -581,6 +583,19 @@ function NewSaleDialog({
     }
   }, [commissionPct, form.total_amount]);
 
+  // When quantity changes and we have a purchase price, update Ürün Maliyeti
+  useEffect(() => {
+    if (lastPurchasePrice == null) return;
+    const qty = Number(form.quantity) || 1;
+    setCosts((prev) =>
+      prev.map((c) =>
+        /ürün maliyeti/i.test(c.label)
+          ? { ...c, amount: (lastPurchasePrice * qty).toFixed(2) }
+          : c
+      )
+    );
+  }, [form.quantity, lastPurchasePrice]);
+
   // Sum cost breakdown -> total_cost
   const breakdownSum = useMemo(() => costs.reduce((s, item) => s + (Number(item.amount) || 0), 0), [costs]);
 
@@ -591,9 +606,10 @@ function NewSaleDialog({
     }
   }, [breakdownSum, costs]);
 
-  function selectProduct(id: string) {
+  async function selectProduct(id: string) {
     if (id === "__manual__") {
       setForm((f) => ({ ...f, product_id: "", product_name: "" }));
+      setLastPurchasePrice(null);
       return;
     }
     const p = products.find((x) => x.id === id);
@@ -604,6 +620,26 @@ function NewSaleDialog({
       product_name: p.name,
       unit_price: p.unit_price != null ? String(p.unit_price) : f.unit_price,
     }));
+    // Fetch latest purchase unit_price for this product
+    const { data } = await supabase
+      .from("purchases")
+      .select("unit_price")
+      .eq("product_id", id)
+      .order("purchase_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const purchasePrice = data?.unit_price ? Number(data.unit_price) : null;
+    setLastPurchasePrice(purchasePrice);
+    if (purchasePrice != null) {
+      const qty = Number(form.quantity) || 1;
+      setCosts((prev) =>
+        prev.map((c) =>
+          /ürün maliyeti/i.test(c.label)
+            ? { ...c, amount: (purchasePrice * qty).toFixed(2) }
+            : c
+        )
+      );
+    }
   }
 
   function addPlatform(name: string) {

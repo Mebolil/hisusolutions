@@ -13,7 +13,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, BarChart, AreaChart, Area, ReferenceLine, ReferenceDot,
+  PieChart, Pie, Cell, BarChart, AreaChart, Area, ReferenceLine, ReferenceDot, ReferenceArea,
 } from "recharts";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear,
@@ -1128,39 +1128,60 @@ function ReportsPage() {
                 </div>
               </CardContent>
             </Card>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Katkı Payı / Satış</p>
-                    <p className={`text-xl font-bold ${breakeven.contribution >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(breakeven.contribution)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Gelir − Değişken Maliyet</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Başa Baş Noktası</p>
-                    <p className="text-xl font-bold">{breakeven.units > 0 ? `${breakeven.units} satış` : "—"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(breakeven.revenue)} ciro</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Bu Dönem Satış Adedi</p>
-                    <p className={`text-xl font-bold ${breakeven.current >= breakeven.units ? "text-emerald-600" : "text-red-600"}`}>{breakeven.current}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{breakeven.current >= breakeven.units ? "✅ Kâr bölgesinde" : `❌ ${breakeven.units - breakeven.current} satış eksik`}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Güvenlik Marjı</p>
-                    <p className={`text-xl font-bold ${breakeven.safetyMargin >= 20 ? "text-emerald-600" : breakeven.safetyMargin >= 0 ? "text-amber-600" : "text-red-600"}`}>
-                      {breakeven.safetyMargin > 0 ? `%${breakeven.safetyMargin.toFixed(1)}` : "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Başa baştan ne kadar uzakta</p>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="grid grid-cols-2 gap-4 content-start">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Katkı Payı / Satış</p>
+                  <p className={`text-xl font-bold ${breakeven.contribution >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(breakeven.contribution)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Her satışın sabit giderlere katkısı</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Katkı Payı Oranı</p>
+                  <p className={`text-xl font-bold ${breakeven.avgRev > 0 && (breakeven.contribution / breakeven.avgRev) >= 0.3 ? "text-emerald-600" : "text-amber-600"}`}>
+                    {breakeven.avgRev > 0 ? `%${((breakeven.contribution / breakeven.avgRev) * 100).toFixed(1)}` : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Her ₺100 gelirin kâra katkısı</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Başa Baş Noktası</p>
+                  <p className="text-xl font-bold">{breakeven.units > 0 ? `${breakeven.units} satış` : "—"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatCurrency(breakeven.revenue)} ciro</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Bu Dönem Satış Adedi</p>
+                  <p className={`text-xl font-bold ${breakeven.current >= breakeven.units ? "text-emerald-600" : "text-red-600"}`}>{breakeven.current}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{breakeven.current >= breakeven.units ? "✅ Kâr bölgesinde" : `❌ ${breakeven.units - breakeven.current} satış eksik`}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Güvenlik Marjı</p>
+                  <p className={`text-xl font-bold ${breakeven.safetyMargin >= 20 ? "text-emerald-600" : breakeven.safetyMargin >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                    {breakeven.safetyMargin > 0 ? `%${breakeven.safetyMargin.toFixed(1)}` : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Şu anki satışın başa başı ne kadar aştığı</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-xs text-muted-foreground">Dönem Net Kâr / Zarar</p>
+                  {(() => {
+                    const netProfit = (breakeven.current - breakeven.units) * breakeven.contribution;
+                    return (
+                      <>
+                        <p className={`text-xl font-bold ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(netProfit)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{netProfit >= 0 ? "Başa baş üstü kâr" : "Başa baş altı zarar"}</p>
+                      </>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </div>
           </div>
           {breakeven.units > 0 && (() => {
@@ -1177,45 +1198,67 @@ function ReportsPage() {
               "Toplam Maliyet": breakeven.fixed + u * breakeven.avgVar,
             }));
             const beY = breakeven.units * breakeven.avgRev;
+            const maxY = maxUnits * breakeven.avgRev * 1.05;
             return (
               <Card>
-                <CardHeader><CardTitle className="text-base">Gelir vs Maliyet Grafiği</CardTitle></CardHeader>
+                <CardHeader>
+                  <CardTitle className="text-base">Başabaş Grafiği</CardTitle>
+                  <p className="text-xs text-muted-foreground">Yeşil bölge = kâr, kırmızı bölge = zarar. İki çizginin kesiştiği nokta başabaş noktasıdır.</p>
+                </CardHeader>
                 <CardContent>
-                  <div className="h-80">
+                  <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={chartData} margin={{ bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="units" className="text-xs" label={{ value: "Satış Adedi", position: "insideBottom", offset: -10 }} />
-                        <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} width={60} />
+                      <ComposedChart data={chartData} margin={{ top: 10, bottom: 25, left: 10, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+                        <XAxis dataKey="units" className="text-xs" label={{ value: "Satış Adedi", position: "insideBottom", offset: -12 }} />
+                        <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} width={65} />
                         <Tooltip
                           formatter={(v, name) => [formatCurrency(Number(v)), name]}
                           labelFormatter={(l) => `${l} satış`}
                         />
-                        <Legend />
+                        <Legend verticalAlign="top" />
+                        {/* Zarar bölgesi: 0 → başabaş */}
+                        <ReferenceArea x1={0} x2={breakeven.units} y1={0} y2={maxY} fill="#fee2e2" fillOpacity={0.35} />
+                        {/* Kâr bölgesi: başabaş → max */}
+                        <ReferenceArea x1={breakeven.units} x2={maxUnits} y1={0} y2={maxY} fill="#d1fae5" fillOpacity={0.35} />
+                        <Line dataKey="Toplam Gelir" stroke="#10b981" strokeWidth={2.5} dot={false} />
+                        <Line dataKey="Toplam Maliyet" stroke="#ef4444" strokeWidth={2.5} dot={false} />
                         <ReferenceLine
                           x={breakeven.units}
                           stroke="#6366f1"
                           strokeDasharray="5 3"
-                          label={{ value: `Başa Baş: ${breakeven.units}`, position: "top", fontSize: 11, fill: "#6366f1" }}
+                          strokeWidth={2}
+                          label={{ value: `Başabaş: ${breakeven.units} satış`, position: "insideTopLeft", fontSize: 11, fill: "#6366f1" }}
                         />
                         {breakeven.current > 0 && breakeven.current !== breakeven.units && (
                           <ReferenceLine
                             x={breakeven.current}
                             stroke="#3b82f6"
                             strokeDasharray="5 3"
+                            strokeWidth={2}
                             label={{ value: `Şu An: ${breakeven.current}`, position: "insideTopRight", fontSize: 11, fill: "#3b82f6" }}
                           />
                         )}
-                        <Line dataKey="Toplam Gelir" stroke="#10b981" strokeWidth={2.5} dot={false} />
-                        <Line dataKey="Toplam Maliyet" stroke="#ef4444" strokeWidth={2.5} dot={false} />
-                        <ReferenceDot x={breakeven.units} y={beY} r={6} fill="#6366f1" stroke="#fff" strokeWidth={2} />
+                        <ReferenceDot x={breakeven.units} y={beY} r={7} fill="#6366f1" stroke="#fff" strokeWidth={2} />
+                        {breakeven.current > 0 && (
+                          <ReferenceDot
+                            x={breakeven.current}
+                            y={breakeven.current * breakeven.avgRev}
+                            r={7}
+                            fill="#3b82f6"
+                            stroke="#fff"
+                            strokeWidth={2}
+                          />
+                        )}
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
-                  <p className="text-xs text-muted-foreground text-center mt-1">
-                    Mor nokta = başa baş ({breakeven.units} satış, {formatCurrency(beY)})
-                    {breakeven.current > 0 && ` · Mavi çizgi = bu dönem gerçekleşen (${breakeven.current} satış)`}
-                  </p>
+                  <div className="flex flex-wrap gap-4 justify-center mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-indigo-500" /> Mor nokta = başabaş ({breakeven.units} satış, {formatCurrency(beY)})</span>
+                    {breakeven.current > 0 && <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-blue-500" /> Mavi nokta = bu dönem ({breakeven.current} satış)</span>}
+                    <span className="flex items-center gap-1"><span className="inline-block w-4 h-3 rounded bg-red-200" /> Zarar bölgesi</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-4 h-3 rounded bg-emerald-200" /> Kâr bölgesi</span>
+                  </div>
                 </CardContent>
               </Card>
             );

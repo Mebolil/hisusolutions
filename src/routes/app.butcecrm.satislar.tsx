@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
@@ -534,6 +534,8 @@ function NewSaleDialog({
   const defaultCosts = (): CostItem[] =>
     settings.costItems.map((label) => ({ id: label, label, amount: "" }));
   const [costs, setCosts] = useState<CostItem[]>(defaultCosts());
+  const costsRef = useRef(costs);
+  costsRef.current = costs; // always latest, safe to read in async handlers
   const [lastPurchasePrice, setLastPurchasePrice] = useState<number | null>(null);
   const [commissionPct, setCommissionPct] = useState("");
   const [decrementStock, setDecrementStock] = useState(true);
@@ -689,8 +691,9 @@ function NewSaleDialog({
     const paid = form.payment_status === "ödendi" ? total
                : form.payment_status === "bekliyor" ? 0
                : (Number(form.paid_amount) || 0);
-    // Compute cost fresh from costs array to avoid stale closure issues
-    const costSum = costs.reduce((s, item) => s + (Number(item.amount) || 0), 0);
+    // Use ref to get the latest costs even if the closure is stale
+    const latestCosts = costsRef.current;
+    const costSum = latestCosts.reduce((s, item) => s + (Number(item.amount) || 0), 0);
     const finalCost = costSum > 0 ? costSum : (form.total_cost ? Number(form.total_cost) : 0);
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
@@ -707,7 +710,7 @@ function NewSaleDialog({
       platform: form.platform || null,
     };
     // Build a cost-breakdown summary and append to notes for record-keeping
-    const breakdownLines = costs
+    const breakdownLines = latestCosts
       .filter((item) => Number(item.amount) > 0)
       .map((item) => `${item.label}: ${Number(item.amount).toFixed(2)} ₺`);
     let combinedNotes = form.notes.trim();

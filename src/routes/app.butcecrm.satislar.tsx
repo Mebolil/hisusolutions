@@ -195,8 +195,25 @@ function SalesPage() {
   async function deleteSale(sale: Sale) {
     const { error } = await supabase.from("sales").delete().eq("id", sale.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
-    toast.success("Satış silindi");
     setSales((prev) => prev.filter((s) => s.id !== sale.id));
+
+    // Restore stock for the matching product
+    const matched = products.find(
+      (p) => p.name.trim().toLowerCase() === sale.product_name.trim().toLowerCase()
+    );
+    if (matched) {
+      const newQty = (matched.quantity ?? 0) + (Number(sale.quantity) || 0);
+      const { error: stockErr } = await supabase
+        .from("products").update({ quantity: newQty }).eq("id", matched.id);
+      if (stockErr) {
+        toast.warning("Satış silindi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
+      } else {
+        setProducts((prev) => prev.map((p) => p.id === matched.id ? { ...p, quantity: newQty } : p));
+        toast.success("Satış silindi, stok geri yüklendi");
+      }
+    } else {
+      toast.success("Satış silindi");
+    }
   }
 
   const [editing, setEditing] = useState<Sale | null>(null);

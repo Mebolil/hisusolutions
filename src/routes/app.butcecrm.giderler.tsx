@@ -15,7 +15,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt } from "lucide-react";
+import { Plus, Search, Receipt, RefreshCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 import { useSettings } from "@/lib/butcecrm-settings";
@@ -30,6 +31,9 @@ const EXPENSES_CSV_FIELDS: CsvField[] = [
 ];
 const EXPENSES_CSV_SAMPLE = ["2025-05-01", "Kira", 5000, 5000, "ödendi", "Mayıs ayı"];
 
+const RECURRENCE_OPTIONS = ["Günlük", "Haftalık", "Aylık", "Senelik"] as const;
+type RecurrenceInterval = (typeof RECURRENCE_OPTIONS)[number];
+
 type Expense = {
   id: string;
   expense_date: string;
@@ -39,6 +43,8 @@ type Expense = {
   payment_status: string;
   note: string | null;
   sale_id: string | null;
+  is_recurring: boolean | null;
+  recurrence_interval: RecurrenceInterval | null;
 };
 type Category = { id: string; name: string };
 type SaleRef = { id: string; product_name: string; sale_date: string };
@@ -227,7 +233,16 @@ function ExpensesPage() {
                 {filtered.map((e) => (
                   <TableRow key={e.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(e.expense_date)}</TableCell>
-                    <TableCell className="max-w-[180px] truncate">{e.category || "-"}</TableCell>
+                    <TableCell className="max-w-[180px]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate">{e.category || "-"}</span>
+                        {e.is_recurring && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200 rounded px-1.5 py-0.5 shrink-0">
+                            <RefreshCw className="h-2.5 w-2.5" />{e.recurrence_interval}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[260px] truncate text-muted-foreground">{e.note || "-"}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(Number(e.amount))}</TableCell>
                     <TableCell className="text-right">{formatCurrency(Number(e.paid_amount || 0))}</TableCell>
@@ -282,6 +297,8 @@ function NewExpenseDialog({
     payment_status: "bekliyor" as Status,
     note: "",
     sale_id: "",
+    is_recurring: false,
+    recurrence_interval: "Aylık" as RecurrenceInterval,
   });
   const [saving, setSaving] = useState(false);
 
@@ -289,6 +306,7 @@ function NewExpenseDialog({
     setForm({
       expense_date: today, category: "", newCategory: "", amount: "",
       paid_amount: "", payment_status: "bekliyor", note: "", sale_id: "",
+      is_recurring: false, recurrence_interval: "Aylık",
     });
   }
 
@@ -312,6 +330,8 @@ function NewExpenseDialog({
       payment_status: form.payment_status,
       note: form.note || "",
       sale_id: form.sale_id || null,
+      is_recurring: form.is_recurring,
+      recurrence_interval: form.is_recurring ? form.recurrence_interval : null,
     };
     const { error } = await supabase.from("expenses").insert(payload);
     if (!error && form.category === "__new__" && cat) {
@@ -399,6 +419,38 @@ function NewExpenseDialog({
             <Textarea value={form.note} rows={2}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
               placeholder="Opsiyonel açıklama" />
+          </div>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5 text-blue-600" /> Tekrar Eden Gider
+                </p>
+                <p className="text-[11px] text-muted-foreground">Bu gider belirli aralıklarla tekrar ediyorsa açın</p>
+              </div>
+              <Switch
+                checked={form.is_recurring}
+                onCheckedChange={(v) => setForm({ ...form, is_recurring: v })}
+              />
+            </div>
+            {form.is_recurring && (
+              <div>
+                <Label className="text-xs">Tekrar Sıklığı</Label>
+                <Select
+                  value={form.recurrence_interval}
+                  onValueChange={(v) => setForm({ ...form, recurrence_interval: v as RecurrenceInterval })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCE_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>

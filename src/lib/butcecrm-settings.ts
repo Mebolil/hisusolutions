@@ -39,13 +39,25 @@ export const DEFAULT_SETTINGS: AppSettings = {
 const KEY = "butcecrm:settings:v1";
 const EVENT = "butcecrm:settings-changed";
 
+function arr<T>(v: unknown, fallback: T[]): T[] {
+  return Array.isArray(v) && v.length >= 0 ? (v as T[]) : fallback;
+}
+
 export function loadSettings(): AppSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    const p = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      platforms: arr(p.platforms, DEFAULT_SETTINGS.platforms),
+      carriers: arr(p.carriers, DEFAULT_SETTINGS.carriers),
+      orderStatuses: arr(p.orderStatuses, DEFAULT_SETTINGS.orderStatuses),
+      costItems: arr(p.costItems, DEFAULT_SETTINGS.costItems),
+      expenseCategories: arr(p.expenseCategories, DEFAULT_SETTINGS.expenseCategories),
+      paymentMethods: arr(p.paymentMethods, DEFAULT_SETTINGS.paymentMethods),
+      installmentPlans: arr(p.installmentPlans, DEFAULT_SETTINGS.installmentPlans),
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }

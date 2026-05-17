@@ -52,7 +52,7 @@ type Sale = {
   payment_status: string;
   campaign_id: string | null;
   platform: string | null;
-  notes?: string | null;
+  note?: string | null;
 };
 
 
@@ -134,7 +134,7 @@ function SalesPage() {
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
       if (q) {
-        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""} ${s.notes || ""}`.toLowerCase();
+        const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""} ${s.note || ""}`.toLowerCase();
         if (!text.includes(q.toLowerCase())) return false;
       }
       return true;
@@ -719,12 +719,16 @@ function NewSaleDialog({
       const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
       combinedNotes = combinedNotes ? `${combinedNotes}\n\n${header}` : header;
     }
-    if (combinedNotes) payload.notes = combinedNotes;
-    let { error } = await supabase.from("sales").insert(payload);
-    // Retry without notes if column doesn't exist
-    if (error && payload.notes && /notes/i.test(error.message)) {
-      delete payload.notes;
-      ({ error } = await supabase.from("sales").insert(payload));
+    if (combinedNotes) payload.note = combinedNotes;
+    console.debug("INSERT payload", JSON.stringify(payload));
+    let { error, data: insertedData } = await supabase.from("sales").insert(payload).select("id,total_cost").single();
+    console.debug("INSERT result", error, insertedData);
+    if (error) {
+      // Retry without note if column doesn't exist yet
+      if (payload.note && /\bnote\b/i.test(error.message)) {
+        delete payload.note;
+        ({ error } = await supabase.from("sales").insert(payload));
+      }
     }
     if (error) {
       setSaving(false);
@@ -1117,10 +1121,10 @@ function EditSaleDialog({
       payment_status: form.payment_status,
       platform: form.platform || null,
     };
-    if (form.notes !== undefined) payload.notes = form.notes;
+    if (form.note !== undefined) payload.note = form.note;
     let { error } = await supabase.from("sales").update(payload).eq("id", form.id);
-    if (error && payload.notes !== undefined && /notes/i.test(error.message)) {
-      delete payload.notes;
+    if (error && payload.note !== undefined && /\bnote\b/i.test(error.message)) {
+      delete payload.note;
       ({ error } = await supabase.from("sales").update(payload).eq("id", form.id));
     }
     setSaving(false);
@@ -1191,8 +1195,8 @@ function EditSaleDialog({
           </div>
           <div className="col-span-2">
             <Label className="text-xs">Notlar</Label>
-            <Textarea rows={5} value={form.notes ?? ""}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            <Textarea rows={5} value={form.note ?? ""}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
               placeholder="Sipariş Durumu: Kargoda&#10;Kargo Firması: Yurtiçi Kargo&#10;..." />
             <p className="text-[10px] text-muted-foreground mt-1">
               "Sipariş Durumu: ...", "Kargo Firması: ..." satırları filtrelerde kullanılır.

@@ -1092,6 +1092,28 @@ function NewSaleDialog({
   );
 }
 
+type EditCostItem = { id: string; label: string; amount: string };
+
+function parseCostsFromNote(note: string | null | undefined): { costs: EditCostItem[]; baseNote: string } {
+  if (!note) return { costs: [], baseNote: "" };
+  const marker = "[Maliyet Kalemleri]";
+  const idx = note.indexOf(marker);
+  if (idx === -1) return { costs: [], baseNote: note };
+  const baseNote = note.slice(0, idx).trim();
+  const block = note.slice(idx + marker.length).trim();
+  const costs: EditCostItem[] = block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      // "Komisyon: 200.00 ₺" → label=Komisyon, amount=200.00
+      const m = line.match(/^(.+?):\s*([\d.]+)/);
+      if (m) return { id: `parsed_${m[1]}`, label: m[1].trim(), amount: m[2] };
+      return { id: `parsed_${line}`, label: line, amount: "" };
+    });
+  return { costs, baseNote };
+}
+
 function EditSaleDialog({
   sale, onClose, onSaved, platforms,
 }: {
@@ -1102,28 +1124,48 @@ function EditSaleDialog({
 }) {
   const [form, setForm] = useState<Sale | null>(sale);
   const [saving, setSaving] = useState(false);
+  const [editCosts, setEditCosts] = useState<EditCostItem[]>([]);
+  const [baseNote, setBaseNote] = useState("");
 
-  useEffect(() => { setForm(sale); }, [sale]);
+  useEffect(() => {
+    setForm(sale);
+    if (sale) {
+      const parsed = parseCostsFromNote(sale.note);
+      setEditCosts(parsed.costs.length > 0 ? parsed.costs : [{ id: "default_0", label: "Ürün Maliyeti", amount: "" }]);
+      setBaseNote(parsed.baseNote);
+    }
+  }, [sale]);
 
   if (!form) return null;
+
+  const costSum = editCosts.reduce((s, c) => s + (Number(c.amount) || 0), 0);
 
   async function save() {
     if (!form) return;
     setSaving(true);
+    const breakdownLines = editCosts
+      .filter((c) => Number(c.amount) > 0)
+      .map((c) => `${c.label}: ${Number(c.amount).toFixed(2)} ₺`);
+    let combinedNote = baseNote.trim();
+    if (breakdownLines.length) {
+      const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
+      combinedNote = combinedNote ? `${combinedNote}\n\n${header}` : header;
+    }
+    const totalCost = costSum > 0 ? costSum : (form.total_cost ? Number(form.total_cost) : null);
     const payload: Record<string, unknown> = {
       sale_date: form.sale_date,
       due_date: form.due_date || null,
       product_name: form.product_name,
       quantity: Number(form.quantity) || 0,
       total_amount: Number(form.total_amount) || 0,
-      total_cost: form.total_cost == null || form.total_cost === ("" as unknown) ? null : Number(form.total_cost),
+      total_cost: totalCost,
       paid_amount: form.paid_amount == null || form.paid_amount === ("" as unknown) ? null : Number(form.paid_amount),
       payment_status: form.payment_status,
       platform: form.platform || null,
+      note: combinedNote || null,
     };
-    if (form.note !== undefined) payload.note = form.note;
     let { error } = await supabase.from("sales").update(payload).eq("id", form.id);
-    if (error && payload.note !== undefined && /\bnote\b/i.test(error.message)) {
+    if (error && /\bnote\b/i.test(error.message)) {
       delete payload.note;
       ({ error } = await supabase.from("sales").update(payload).eq("id", form.id));
     }
@@ -1175,11 +1217,6 @@ function EditSaleDialog({
               onChange={(e) => setForm({ ...form, total_amount: Number(e.target.value) })} />
           </div>
           <div>
-            <Label className="text-xs">Maliyet (₺)</Label>
-            <Input type="number" step="0.01" value={form.total_cost ?? ""}
-              onChange={(e) => setForm({ ...form, total_cost: e.target.value === "" ? null : Number(e.target.value) })} />
-          </div>
-          <div>
             <Label className="text-xs">Tahsil Edilen (₺)</Label>
             <Input type="number" step="0.01" value={form.paid_amount ?? ""}
               onChange={(e) => setForm({ ...form, paid_amount: e.target.value === "" ? null : Number(e.target.value) })} />
@@ -1193,10 +1230,52 @@ function EditSaleDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Cost items breakdown */}
+          <div className="col-span-2 rounded-md border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Maliyet Kalemleri</p>
+              <p className="text-xs text-muted-foreground">
+                Toplam: <span className="font-bold text-foreground">{formatCurrency(costSum)}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              {editCosts.map((item) => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <Input
+                    className="flex-1 h-8 text-sm"
+                    value={item.label}
+                    onChange={(e) => setEditCosts((prev) => prev.map((c) => c.id === item.id ? { ...c, label: e.target.value } : c))}
+                    placeholder="Kalem adı"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    className="w-28 h-8 text-sm"
+                    value={item.amount}
+                    onChange={(e) => setEditCosts((prev) => prev.map((c) => c.id === item.id ? { ...c, amount: e.target.value } : c))}
+                    placeholder="₺"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditCosts((prev) => prev.filter((c) => c.id !== item.id))}
+                    className="text-muted-foreground hover:text-red-500 px-1 text-sm font-bold leading-none"
+                    title="Kaldır"
+                  >×</button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditCosts((prev) => [...prev, { id: `custom_${Date.now()}`, label: "", amount: "" }])}
+              className="text-xs text-primary hover:underline"
+            >+ Kalem ekle</button>
+          </div>
+
           <div className="col-span-2">
             <Label className="text-xs">Notlar</Label>
-            <Textarea rows={5} value={form.note ?? ""}
-              onChange={(e) => setForm({ ...form, note: e.target.value })}
+            <Textarea rows={3} value={baseNote}
+              onChange={(e) => setBaseNote(e.target.value)}
               placeholder="Sipariş Durumu: Kargoda&#10;Kargo Firması: Yurtiçi Kargo&#10;..." />
             <p className="text-[10px] text-muted-foreground mt-1">
               "Sipariş Durumu: ...", "Kargo Firması: ..." satırları filtrelerde kullanılır.

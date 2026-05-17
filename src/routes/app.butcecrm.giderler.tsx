@@ -77,6 +77,8 @@ function ExpensesPage() {
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   async function load() {
     setLoading(true);
@@ -112,6 +114,14 @@ function ExpensesPage() {
       return true;
     });
   }, [expenses, statusFilter, catFilter, from, to, q]);
+
+  useEffect(() => { setPage(1); }, [statusFilter, catFilter, from, to, q]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagedExpenses = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page],
+  );
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.amount || 0), 0);
@@ -230,7 +240,7 @@ function ExpensesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((e) => (
+                {pagedExpenses.map((e) => (
                   <TableRow key={e.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(e.expense_date)}</TableCell>
                     <TableCell className="max-w-[180px]">
@@ -262,6 +272,16 @@ function ExpensesPage() {
             </Table>
           )}
         </CardContent>
+        {!loading && filtered.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+            <span>{((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length} kayıt</span>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>‹ Önceki</Button>
+              <span className="px-3 py-1 rounded border text-xs font-medium">{page} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Sonraki ›</Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

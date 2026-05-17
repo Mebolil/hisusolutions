@@ -23,13 +23,13 @@ import {
 import { tr } from "date-fns/locale";
 import {
   BarChart3, FileSpreadsheet, FileText, Calendar, TrendingUp, TrendingDown,
-  Wallet, AlertTriangle,
+  Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle, Clock,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 type Sale = {
-  id: string; sale_date: string; customer_id: string | null; product_name: string;
+  id: string; sale_date: string; due_date: string | null; customer_id: string | null; product_name: string;
   quantity: number; total_amount: number; total_cost: number | null;
   paid_amount: number | null; payment_status: string;
   campaign_id: string | null; platform: string | null;
@@ -288,6 +288,89 @@ function ReportsPage() {
       .slice(0, 15);
   }, [products, periodSales]);
 
+  // --- NAKİT AKIŞI ---
+  const cashFlowData = useMemo(() => {
+    const months = eachMonthOfInterval({ start: range.start, end: range.end });
+    let cumulative = 0;
+    return months.map((d) => {
+      const key = format(d, "yyyy-MM");
+      const inflow = sales
+        .filter((s) => s.sale_date.startsWith(key))
+        .reduce((sum, s) => sum + Number(s.paid_amount || 0), 0);
+      const outflow =
+        expenses.filter((e) => e.expense_date.startsWith(key)).reduce((sum, e) => sum + Number(e.paid_amount || 0), 0) +
+        purchases.filter((p) => p.purchase_date.startsWith(key)).reduce((sum, p) => sum + Number(p.paid_amount || 0), 0) +
+        campaigns.filter((c) => c.start_date.startsWith(key)).reduce((sum, c) => sum + Number(c.spend || 0), 0);
+      const net = inflow - outflow;
+      cumulative += net;
+      return { name: format(d, "MMM yy", { locale: tr }), "Nakit Giriş": inflow, "Nakit Çıkış": outflow, "Net Nakit": net, Kümülatif: cumulative };
+    });
+  }, [sales, expenses, purchases, campaigns, range]);
+
+  const cashFlowTotals = useMemo(() => {
+    const inflow = cashFlowData.reduce((s, d) => s + d["Nakit Giriş"], 0);
+    const outflow = cashFlowData.reduce((s, d) => s + d["Nakit Çıkış"], 0);
+    return { inflow, outflow, net: inflow - outflow };
+  }, [cashFlowData]);
+
+  // --- ALACAK YAŞLANDıRMA ---
+  const agingRows = useMemo(() => {
+    const today = new Date();
+    return sales
+      .filter((s) => Number(s.total_amount) > Number(s.paid_amount || 0) && s.payment_status !== "ödendi")
+      .map((s) => {
+        const remaining = Number(s.total_amount) - Number(s.paid_amount || 0);
+        const dueDate = s.due_date ? parseISO(s.due_date) : parseISO(s.sale_date);
+        const days = differenceInCalendarDays(today, dueDate);
+        const bucket = days <= 0 ? "vadesi_gelmedi" : days <= 30 ? "0-30" : days <= 60 ? "31-60" : days <= 90 ? "61-90" : "90+";
+        return { ...s, remaining, days, bucket, customerName: customerMap[s.customer_id || ""] || "—" };
+      })
+      .filter((s) => s.days > 0)
+      .sort((a, b) => b.days - a.days);
+  }, [sales, customerMap]);
+
+  const agingSummary = useMemo(() => {
+    const buckets = ["0-30", "31-60", "61-90", "90+"] as const;
+    return buckets.map((b) => {
+      const rows = agingRows.filter((r) => r.bucket === b);
+      return { bucket: b, count: rows.length, total: rows.reduce((s, r) => s + r.remaining, 0) };
+    });
+  }, [agingRows]);
+
+  // --- BAŞA BAŞ ---
+  const [bbFixedCost, setBbFixedCost] = useState("");
+  const [bbAvgRevenue, setBbAvgRevenue] = useState("");
+  const [bbAvgVarCost, setBbAvgVarCost] = useState("");
+
+  const breakevenAuto = useMemo(() => {
+    const fixedCosts = totals.expPaid;
+    const avgRev = periodSales.length > 0 ? totals.revenue / periodSales.length : 0;
+    const avgVar = periodSales.length > 0 ? totals.cost / periodSales.length : 0;
+    return { fixedCosts, avgRev, avgVar };
+  }, [totals, periodSales]);
+
+  useEffect(() => {
+    setBbFixedCost(breakevenAuto.fixedCosts.toFixed(2));
+    setBbAvgRevenue(breakevenAuto.avgRev.toFixed(2));
+    setBbAvgVarCost(breakevenAuto.avgVar.toFixed(2));
+  }, [breakevenAuto]);
+
+  const breakeven = useMemo(() => {
+    const fixed = Number(bbFixedCost) || 0;
+    const avgRev = Number(bbAvgRevenue) || 0;
+    const avgVar = Number(bbAvgVarCost) || 0;
+    const contribution = avgRev - avgVar;
+    const units = contribution > 0 ? Math.ceil(fixed / contribution) : 0;
+    const revenue = units * avgRev;
+    const current = periodSales.length;
+    const safetyMargin = current > 0 && units > 0 ? ((current - units) / current) * 100 : 0;
+    const breakevenData = Array.from({ length: Math.max(units * 2, current + 5, 10) }, (_, i) => {
+      const u = i + 1;
+      return { units: u, "Toplam Gelir": u * avgRev, "Toplam Maliyet": fixed + u * avgVar };
+    }).filter((_, i) => i % Math.max(1, Math.floor(Math.max(units * 2, current + 5, 10) / 20)) === 0 || _ === null);
+    return { fixed, avgRev, avgVar, contribution, units, revenue, current, safetyMargin, breakevenData };
+  }, [bbFixedCost, bbAvgRevenue, bbAvgVarCost, periodSales]);
+
   function exportExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
@@ -456,6 +539,9 @@ function ReportsPage() {
           <TabsTrigger value="expenses">Giderler</TabsTrigger>
           <TabsTrigger value="ads">Reklam</TabsTrigger>
           <TabsTrigger value="stock">Stok</TabsTrigger>
+          <TabsTrigger value="cashflow">Nakit Akışı</TabsTrigger>
+          <TabsTrigger value="aging">Alacak Yaşlandırma</TabsTrigger>
+          <TabsTrigger value="breakeven">Başa Baş</TabsTrigger>
         </TabsList>
 
         {/* GENEL BAKIŞ */}
@@ -800,6 +886,269 @@ function ReportsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        {/* NAKİT AKIŞI */}
+        <TabsContent value="cashflow" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><ArrowDownCircle className="h-3.5 w-3.5 text-emerald-600" /> Toplam Nakit Giriş</p>
+                <p className="text-xl font-bold text-emerald-600">{formatCurrency(cashFlowTotals.inflow)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Tahsil edilen ödemeler</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><ArrowUpCircle className="h-3.5 w-3.5 text-red-600" /> Toplam Nakit Çıkış</p>
+                <p className="text-xl font-bold text-red-600">{formatCurrency(cashFlowTotals.outflow)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Ödenen giderler + alışlar + reklam</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">Net Nakit Akışı</p>
+                <p className={`text-xl font-bold ${cashFlowTotals.net >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(cashFlowTotals.net)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Giriş − Çıkış</p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Aylık Nakit Giriş / Çıkış</CardTitle></CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={cashFlowData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                    <Legend />
+                    <Bar dataKey="Nakit Giriş" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Nakit Çıkış" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Line dataKey="Net Nakit" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Kümülatif Nakit Akışı</CardTitle></CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={cashFlowData}>
+                    <defs>
+                      <linearGradient id="cfGrad" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                    <Area type="monotone" dataKey="Kümülatif" stroke="#3b82f6" fill="url(#cfGrad)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Aylık Detay</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ay</TableHead>
+                    <TableHead className="text-right text-emerald-700">Nakit Giriş</TableHead>
+                    <TableHead className="text-right text-red-700">Nakit Çıkış</TableHead>
+                    <TableHead className="text-right">Net Nakit</TableHead>
+                    <TableHead className="text-right">Kümülatif</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cashFlowData.map((row) => (
+                    <TableRow key={row.name}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatCurrency(row["Nakit Giriş"])}</TableCell>
+                      <TableCell className="text-right text-red-600">{formatCurrency(row["Nakit Çıkış"])}</TableCell>
+                      <TableCell className={`text-right font-semibold ${row["Net Nakit"] >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(row["Net Nakit"])}</TableCell>
+                      <TableCell className={`text-right ${row.Kümülatif >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(row.Kümülatif)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ALACAK YAŞLANDıRMA */}
+        <TabsContent value="aging" className="space-y-4 mt-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Toplam Açık Alacak</p>
+                <p className="text-xl font-bold">{formatCurrency(agingRows.reduce((s, r) => s + r.remaining, 0))}</p>
+                <p className="text-xs text-muted-foreground mt-1">{agingRows.length} vadesi geçmiş kayıt</p>
+              </CardContent>
+            </Card>
+            {agingSummary.map((b) => {
+              const color = b.bucket === "0-30" ? "text-amber-600" : b.bucket === "31-60" ? "text-orange-600" : b.bucket === "61-90" ? "text-red-600" : "text-red-800";
+              return (
+                <Card key={b.bucket}>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">{b.bucket} gün</p>
+                    <p className={`text-xl font-bold ${color}`}>{formatCurrency(b.total)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{b.count} kayıt</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Dilime Göre Alacak Tutarı</CardTitle></CardHeader>
+            <CardContent>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={agingSummary.filter((b) => b.total > 0)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="bucket" className="text-xs" tickFormatter={(v) => `${v} gün`} />
+                    <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                    <Bar dataKey="total" name="Alacak Tutarı" radius={[4, 4, 0, 0]}>
+                      {agingSummary.map((b, i) => (
+                        <Cell key={i} fill={["#f59e0b", "#f97316", "#ef4444", "#991b1b"][i]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-500" /> Vadesi Geçmiş Alacaklar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ürün</TableHead>
+                    <TableHead>Müşteri</TableHead>
+                    <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead className="text-right">Ödenen</TableHead>
+                    <TableHead className="text-right text-red-700">Kalan</TableHead>
+                    <TableHead>Vade Tarihi</TableHead>
+                    <TableHead className="text-right">Geçen Gün</TableHead>
+                    <TableHead>Dilim</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {agingRows.length === 0 ? (
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">Vadesi geçmiş alacak yok 🎉</TableCell></TableRow>
+                  ) : agingRows.map((r) => {
+                    const bucketColor = r.bucket === "0-30" ? "bg-amber-100 text-amber-700 border-amber-200" : r.bucket === "31-60" ? "bg-orange-100 text-orange-700 border-orange-200" : r.bucket === "61-90" ? "bg-red-100 text-red-700 border-red-200" : "bg-red-200 text-red-900 border-red-300";
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="max-w-[200px] truncate font-medium">{r.product_name}</TableCell>
+                        <TableCell className="max-w-[160px] truncate">{r.customerName}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(Number(r.total_amount))}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(Number(r.paid_amount || 0))}</TableCell>
+                        <TableCell className="text-right font-semibold text-red-600">{formatCurrency(r.remaining)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{r.due_date ? formatDate(r.due_date) : formatDate(r.sale_date)}</TableCell>
+                        <TableCell className="text-right font-semibold text-red-600">{r.days} gün</TableCell>
+                        <TableCell><span className={`text-xs px-2 py-0.5 rounded border ${bucketColor}`}>{r.bucket} gün</span></TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* BAŞA BAŞ ANALİZİ */}
+        <TabsContent value="breakeven" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Parametreler (otomatik doldurulur, düzenlenebilir)</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-xs">Sabit Giderler (₺) — dönem operasyonel giderler</Label>
+                  <Input type="number" value={bbFixedCost} onChange={(e) => setBbFixedCost(e.target.value)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-xs">Ortalama Satış Tutarı (₺) — dönem ortalaması</Label>
+                  <Input type="number" value={bbAvgRevenue} onChange={(e) => setBbAvgRevenue(e.target.value)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-xs">Ortalama Değişken Maliyet (₺) — ürün maliyeti ortalaması</Label>
+                  <Input type="number" value={bbAvgVarCost} onChange={(e) => setBbAvgVarCost(e.target.value)} placeholder="0" />
+                </div>
+              </CardContent>
+            </Card>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Katkı Payı / Satış</p>
+                    <p className={`text-xl font-bold ${breakeven.contribution >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(breakeven.contribution)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Gelir − Değişken Maliyet</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Başa Baş Noktası</p>
+                    <p className="text-xl font-bold">{breakeven.units > 0 ? `${breakeven.units} satış` : "—"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(breakeven.revenue)} ciro</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Bu Dönem Satış Adedi</p>
+                    <p className={`text-xl font-bold ${breakeven.current >= breakeven.units ? "text-emerald-600" : "text-red-600"}`}>{breakeven.current}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{breakeven.current >= breakeven.units ? "✅ Kâr bölgesinde" : `❌ ${breakeven.units - breakeven.current} satış eksik`}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Güvenlik Marjı</p>
+                    <p className={`text-xl font-bold ${breakeven.safetyMargin >= 20 ? "text-emerald-600" : breakeven.safetyMargin >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                      {breakeven.safetyMargin > 0 ? `%${breakeven.safetyMargin.toFixed(1)}` : "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Başa baştan ne kadar uzakta</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+          {breakeven.units > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Gelir vs Maliyet Grafiği</CardTitle></CardHeader>
+              <CardContent>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={Array.from({ length: Math.min(Math.max(breakeven.units * 2, breakeven.current + 5), 100) }, (_, i) => {
+                      const u = i + 1;
+                      return { units: u, "Toplam Gelir": u * breakeven.avgRev, "Toplam Maliyet": breakeven.fixed + u * breakeven.avgVar };
+                    })}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="units" className="text-xs" label={{ value: "Satış Adedi", position: "insideBottom", offset: -5 }} />
+                      <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                      <Legend />
+                      <Line dataKey="Toplam Gelir" stroke="#10b981" strokeWidth={2} dot={false} />
+                      <Line dataKey="Toplam Maliyet" stroke="#ef4444" strokeWidth={2} dot={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">İki çizginin kesiştiği nokta = başa baş noktası ({breakeven.units} satış)</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
       </Tabs>
     </div>
   );

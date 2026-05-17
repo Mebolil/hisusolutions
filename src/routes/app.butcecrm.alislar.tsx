@@ -72,6 +72,8 @@ function PurchasesPage() {
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   async function load() {
     setLoading(true);
@@ -106,6 +108,14 @@ function PurchasesPage() {
       return true;
     });
   }, [purchases, statusFilter, supplierFilter, from, to, q, supplierMap]);
+
+  useEffect(() => { setPage(1); }, [statusFilter, supplierFilter, from, to, q]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagedPurchases = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page],
+  );
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, x) => s + Number(x.amount || 0), 0);
@@ -224,7 +234,7 @@ function PurchasesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((p) => (
+                {pagedPurchases.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(p.purchase_date)}</TableCell>
                     <TableCell className="max-w-[160px] truncate">{supplierMap[p.supplier_id || ""] || "-"}</TableCell>
@@ -249,6 +259,16 @@ function PurchasesPage() {
             </Table>
           )}
         </CardContent>
+        {!loading && filtered.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+            <span>{((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length} kayıt</span>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>‹ Önceki</Button>
+              <span className="px-3 py-1 rounded border text-xs font-medium">{page} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Sonraki ›</Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

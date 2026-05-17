@@ -9,12 +9,16 @@ export type AppSettings = {
   orderStatuses: string[];
   paymentMethods: PaymentMethod[];
   installmentPlans: InstallmentPlan[];
+  costItems: string[];
+  expenseCategories: string[];
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
   platforms: ["Trendyol", "Hepsiburada", "Amazon", "N11", "Kendi Sitem"],
   carriers: ["Yurtiçi Kargo", "MNG Kargo", "Aras Kargo", "PTT Kargo", "Sürat Kargo"],
   orderStatuses: ["Hazırlanıyor", "Kargoda", "Teslim Edildi", "İptal", "İade"],
+  costItems: ["Ürün Maliyeti", "Komisyon", "Kargo", "Paketleme", "Vergi / Stopaj"],
+  expenseCategories: ["Kira", "Elektrik", "Su", "İnternet", "Personel", "Muhasebe", "Reklam", "Vergi", "Diğer"],
   paymentMethods: [
     { name: "Kredi Kartı", isCreditCard: true },
     { name: "Havale/EFT", isCreditCard: false },

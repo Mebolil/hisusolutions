@@ -47,14 +47,36 @@ function AyarlarPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="installments">
+      <Tabs defaultValue="costItems">
         <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="costItems">Maliyet Kalemleri</TabsTrigger>
+          <TabsTrigger value="expenseCategories">Gider Kategorileri</TabsTrigger>
+          <TabsTrigger value="platforms">Platformlar</TabsTrigger>
           <TabsTrigger value="installments">Vade / Taksit Oranları</TabsTrigger>
           <TabsTrigger value="payments">Ödeme Yöntemleri</TabsTrigger>
-          <TabsTrigger value="platforms">Platformlar</TabsTrigger>
           <TabsTrigger value="carriers">Kargo Firmaları</TabsTrigger>
           <TabsTrigger value="orderStatuses">Sipariş Durumları</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="costItems">
+          <StringListEditor
+            title="Maliyet Kalemleri"
+            description="Yeni satış formundaki maliyet kalemleri listesi. Buraya eklediğiniz kalemler otomatik olarak satış formunda görünür."
+            items={settings.costItems}
+            onChange={(v) => update("costItems", v)}
+            placeholder="Örn: Ambalaj"
+          />
+        </TabsContent>
+
+        <TabsContent value="expenseCategories">
+          <StringListEditor
+            title="Gider Kategorileri"
+            description="Yeni gider formundaki kategori listesi. Buraya eklediğiniz kategoriler otomatik olarak gider formunda görünür."
+            items={settings.expenseCategories}
+            onChange={(v) => update("expenseCategories", v)}
+            placeholder="Örn: Depo Kirası"
+          />
+        </TabsContent>
 
         <TabsContent value="installments">
           <InstallmentEditor

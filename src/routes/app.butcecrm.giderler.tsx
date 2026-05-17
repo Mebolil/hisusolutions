@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Search, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+import { useSettings } from "@/lib/butcecrm-settings";
 
 const EXPENSES_CSV_FIELDS: CsvField[] = [
   { key: "expense_date",   label: "Tarih",         required: true, type: "date" },
@@ -268,6 +269,9 @@ function NewExpenseDialog({
   open: boolean; setOpen: (v: boolean) => void;
   categories: string[]; sales: SaleRef[]; onCreated: () => void;
 }) {
+  const [settings] = useSettings();
+  // Merge settings categories + DB categories, deduplicated
+  const allCategories = Array.from(new Set([...settings.expenseCategories, ...categories])).sort();
   const today = new Date().toISOString().slice(0, 10);
   const [form, setForm] = useState({
     expense_date: today,
@@ -340,7 +344,7 @@ function NewExpenseDialog({
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {allCategories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   <SelectItem value="__new__">+ Yeni kategori</SelectItem>
                 </SelectContent>
               </Select>

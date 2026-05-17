@@ -531,11 +531,8 @@ function NewSaleDialog({
     notes: "",
   });
   type CostItem = { id: string; label: string; amount: string };
-  const defaultCosts = (): CostItem[] => [
-    { id: "product", label: "Ürün Maliyeti", amount: "" },
-    { id: "commission", label: "Komisyon", amount: "" },
-    { id: "shipping", label: "Kargo", amount: "" },
-  ];
+  const defaultCosts = (): CostItem[] =>
+    settings.costItems.map((label) => ({ id: label, label, amount: "" }));
   const [costs, setCosts] = useState<CostItem[]>(defaultCosts());
   const [commissionPct, setCommissionPct] = useState("");
   const [decrementStock, setDecrementStock] = useState(true);
@@ -580,7 +577,7 @@ function NewSaleDialog({
     const total = Number(form.total_amount) || 0;
     if (pct > 0 && total > 0) {
       const c = ((total * pct) / 100).toFixed(2);
-      setCosts((prev) => prev.map((item) => item.id === "commission" && item.amount !== c ? { ...item, amount: c } : item));
+      setCosts((prev) => prev.map((item) => /komisyon/i.test(item.label) && item.amount !== c ? { ...item, amount: c } : item));
     }
   }, [commissionPct, form.total_amount]);
 
@@ -871,12 +868,12 @@ function NewSaleDialog({
                     className="w-28 h-8 text-sm"
                     value={item.amount}
                     onChange={(e) => {
-                      if (item.id === "commission") setCommissionPct("");
+                      if (/komisyon/i.test(item.label)) setCommissionPct("");
                       setCosts((prev) => prev.map((c) => c.id === item.id ? { ...c, amount: e.target.value } : c));
                     }}
                     placeholder="₺"
                   />
-                  {item.id === "commission" && (
+                  {/komisyon/i.test(item.label) && (
                     <Input
                       type="number"
                       step="0.1"

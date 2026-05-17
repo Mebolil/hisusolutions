@@ -695,6 +695,8 @@ function NewSaleDialog({
     const latestCosts = costsRef.current;
     const costSum = latestCosts.reduce((s, item) => s + (Number(item.amount) || 0), 0);
     const finalCost = costSum > 0 ? costSum : (form.total_cost ? Number(form.total_cost) : 0);
+    console.log("[DEBUG] costs at submit:", JSON.stringify(latestCosts));
+    console.log("[DEBUG] costSum:", costSum, "finalCost:", finalCost, "form.total_cost:", form.total_cost);
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,

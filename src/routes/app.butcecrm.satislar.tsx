@@ -513,16 +513,14 @@ function NewSaleDialog({
     platform: "",
     notes: "",
   });
-  const [costs, setCosts] = useState({
-    product: "",
-    commission: "",
-    commission_pct: "",
-    shipping: "",
-    packaging: "",
-    tax: "",
-    other: "",
-  });
-  const [costsOpen, setCostsOpen] = useState(false);
+  type CostItem = { id: string; label: string; amount: string };
+  const defaultCosts = (): CostItem[] => [
+    { id: "product", label: "Ürün Maliyeti", amount: "" },
+    { id: "commission", label: "Komisyon", amount: "" },
+    { id: "shipping", label: "Kargo", amount: "" },
+  ];
+  const [costs, setCosts] = useState<CostItem[]>(defaultCosts());
+  const [commissionPct, setCommissionPct] = useState("");
   const [decrementStock, setDecrementStock] = useState(true);
   const [saving, setSaving] = useState(false);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
@@ -542,8 +540,8 @@ function NewSaleDialog({
       total_amount: "", total_cost: "", paid_amount: "",
       payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
     });
-    setCosts({ product: "", commission: "", commission_pct: "", shipping: "", packaging: "", tax: "", other: "" });
-    setCostsOpen(false);
+    setCosts(defaultCosts());
+    setCommissionPct("");
     setDecrementStock(true);
   }
 
@@ -559,25 +557,21 @@ function NewSaleDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.unit_price, form.quantity, form.discount]);
 
-  // Auto-calc commission from percentage of total_amount
+  // Auto-calc commission amount from percentage of total_amount
   useEffect(() => {
-    const pct = Number(costs.commission_pct) || 0;
+    const pct = Number(commissionPct) || 0;
     const total = Number(form.total_amount) || 0;
     if (pct > 0 && total > 0) {
-      const c = (total * pct) / 100;
-      setCosts((p) => (p.commission === c.toFixed(2) ? p : { ...p, commission: c.toFixed(2) }));
+      const c = ((total * pct) / 100).toFixed(2);
+      setCosts((prev) => prev.map((item) => item.id === "commission" && item.amount !== c ? { ...item, amount: c } : item));
     }
-  }, [costs.commission_pct, form.total_amount]);
+  }, [commissionPct, form.total_amount]);
 
   // Sum cost breakdown -> total_cost
-  const breakdownSum = useMemo(() => {
-    return ["product", "commission", "shipping", "packaging", "tax", "other"]
-      .reduce((s, k) => s + (Number((costs as Record<string, string>)[k]) || 0), 0);
-  }, [costs]);
+  const breakdownSum = useMemo(() => costs.reduce((s, item) => s + (Number(item.amount) || 0), 0), [costs]);
 
   useEffect(() => {
-    const anyFilled = ["product", "commission", "shipping", "packaging", "tax", "other"]
-      .some((k) => (costs as Record<string, string>)[k] !== "");
+    const anyFilled = costs.some((item) => item.amount !== "");
     if (anyFilled) {
       setForm((f) => (f.total_cost === breakdownSum.toFixed(2) ? f : { ...f, total_cost: breakdownSum.toFixed(2) }));
     }
@@ -657,17 +651,9 @@ function NewSaleDialog({
       platform: form.platform || null,
     };
     // Build a cost-breakdown summary and append to notes for record-keeping
-    const labels: Record<string, string> = {
-      product: "Ürün maliyeti",
-      commission: "Komisyon",
-      shipping: "Kargo",
-      packaging: "Paketleme",
-      tax: "Vergi/Stopaj",
-      other: "Diğer",
-    };
-    const breakdownLines = (Object.keys(labels) as Array<keyof typeof labels>)
-      .filter((k) => Number((costs as Record<string, string>)[k]) > 0)
-      .map((k) => `${labels[k]}: ${Number((costs as Record<string, string>)[k]).toFixed(2)} ₺`);
+    const breakdownLines = costs
+      .filter((item) => Number(item.amount) > 0)
+      .map((item) => `${item.label}: ${Number(item.amount).toFixed(2)} ₺`);
     let combinedNotes = form.notes.trim();
     if (breakdownLines.length) {
       const header = "[Maliyet Kalemleri]\n" + breakdownLines.join("\n");
@@ -802,85 +788,80 @@ function NewSaleDialog({
                 onChange={(e) => setForm({ ...form, total_amount: e.target.value })} required />
             </div>
           </div>
+          <div>
+            <Label>Ödeme Durumu</Label>
+            <Select value={form.payment_status}
+              onValueChange={(v) => setForm({ ...form, payment_status: v as Status })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Maliyet Kalemleri</p>
+              <p className="text-xs text-muted-foreground">
+                Toplam Maliyet: <span className="font-bold text-foreground">{formatCurrency(breakdownSum)}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              {costs.map((item) => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <Input
+                    className="flex-1 h-8 text-sm"
+                    value={item.label}
+                    onChange={(e) => setCosts((prev) => prev.map((c) => c.id === item.id ? { ...c, label: e.target.value } : c))}
+                    placeholder="Kalem adı"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    className="w-28 h-8 text-sm"
+                    value={item.amount}
+                    onChange={(e) => {
+                      if (item.id === "commission") setCommissionPct("");
+                      setCosts((prev) => prev.map((c) => c.id === item.id ? { ...c, amount: e.target.value } : c));
+                    }}
+                    placeholder="₺"
+                  />
+                  {item.id === "commission" && (
+                    <Input
+                      type="number"
+                      step="0.1"
+                      className="w-16 h-8 text-sm"
+                      value={commissionPct}
+                      onChange={(e) => setCommissionPct(e.target.value)}
+                      placeholder="%"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCosts((prev) => prev.filter((c) => c.id !== item.id))}
+                    className="text-muted-foreground hover:text-red-500 px-1 text-sm font-bold leading-none"
+                    title="Kaldır"
+                  >×</button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setCosts((prev) => [...prev, { id: `custom_${Date.now()}`, label: "", amount: "" }])}
+              className="text-xs text-primary hover:underline"
+            >+ Kalem ekle</button>
+            <p className="text-[11px] text-muted-foreground">
+              Kalemler doldurulunca Toplam Maliyet otomatik hesaplanır ve notlara eklenir.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Toplam Maliyet (₺)</Label>
               <Input type="number" step="0.01" value={form.total_cost}
                 onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
-                placeholder="Otomatik veya manuel" />
-              <button
-                type="button"
-                onClick={() => setCostsOpen((v) => !v)}
-                className="mt-1 text-xs text-primary hover:underline"
-              >
-                {costsOpen ? "− Maliyet kalemlerini gizle" : "+ Maliyet kalemlerini detaylandır (Komisyon, Kargo, vb.)"}
-              </button>
+                placeholder="Kalemlerden otomatik" />
             </div>
-            <div>
-              <Label>Ödeme Durumu</Label>
-              <Select value={form.payment_status}
-                onValueChange={(v) => setForm({ ...form, payment_status: v as Status })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {costsOpen && (
-            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground">MALİYET KALEMLERİ</p>
-                <p className="text-xs text-muted-foreground">
-                  Toplam: <span className="font-semibold text-foreground">{formatCurrency(breakdownSum)}</span>
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Ürün Maliyeti (₺)</Label>
-                  <Input type="number" step="0.01" value={costs.product}
-                    onChange={(e) => setCosts({ ...costs, product: e.target.value })}
-                    placeholder="COGS" />
-                </div>
-                <div>
-                  <Label className="text-xs">Kargo (₺)</Label>
-                  <Input type="number" step="0.01" value={costs.shipping}
-                    onChange={(e) => setCosts({ ...costs, shipping: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Komisyon (₺)</Label>
-                  <div className="flex gap-2">
-                    <Input type="number" step="0.01" value={costs.commission}
-                      onChange={(e) => setCosts({ ...costs, commission: e.target.value, commission_pct: "" })} />
-                    <Input type="number" step="0.1" value={costs.commission_pct}
-                      onChange={(e) => setCosts({ ...costs, commission_pct: e.target.value })}
-                      placeholder="%" className="w-20" />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Paketleme (₺)</Label>
-                  <Input type="number" step="0.01" value={costs.packaging}
-                    onChange={(e) => setCosts({ ...costs, packaging: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Vergi / Stopaj (₺)</Label>
-                  <Input type="number" step="0.01" value={costs.tax}
-                    onChange={(e) => setCosts({ ...costs, tax: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Diğer (₺)</Label>
-                  <Input type="number" step="0.01" value={costs.other}
-                    onChange={(e) => setCosts({ ...costs, other: e.target.value })} />
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Kalemler doldurulunca "Toplam Maliyet" otomatik hesaplanır. Detaylar satışın notlarına eklenir.
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-3">
             <div>
               <Label>Tahsil Edilen (₺)</Label>
               <Input type="number" step="0.01" value={form.paid_amount}
@@ -888,6 +869,7 @@ function NewSaleDialog({
                 placeholder="Boşsa duruma göre hesaplanır" />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Platform</Label>

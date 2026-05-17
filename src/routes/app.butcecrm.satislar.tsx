@@ -1139,6 +1139,7 @@ function EditSaleDialog({
   if (!form) return null;
 
   const costSum = editCosts.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+  const netProfit = Number(form.total_amount || 0) - costSum;
 
   async function save() {
     if (!form) return;
@@ -1235,9 +1236,10 @@ function EditSaleDialog({
           <div className="col-span-2 rounded-md border bg-muted/30 p-3 space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Maliyet Kalemleri</p>
-              <p className="text-xs text-muted-foreground">
-                Toplam: <span className="font-bold text-foreground">{formatCurrency(costSum)}</span>
-              </p>
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span>Toplam Maliyet: <span className="font-bold text-foreground">{formatCurrency(costSum)}</span></span>
+                <span>Net Kâr: <span className={`font-bold ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatCurrency(netProfit)}</span></span>
+              </div>
             </div>
             <div className="space-y-2">
               {editCosts.map((item) => (

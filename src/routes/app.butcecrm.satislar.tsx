@@ -649,10 +649,13 @@ function NewSaleDialog({
       return toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın");
     }
     const total = Number(form.total_amount);
-    const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
-    // Always derive total_cost from cost items if any are filled — prevents state sync issues
-    const anyItemFilled = costs.some((item) => Number(item.amount) > 0);
-    const finalCost = anyItemFilled ? breakdownSum : (form.total_cost ? Number(form.total_cost) : 0);
+    // Derive paid from status — don't trust paid_amount string which can be "0" from early Ödendi click
+    const paid = form.payment_status === "ödendi" ? total
+               : form.payment_status === "bekliyor" ? 0
+               : (Number(form.paid_amount) || 0);
+    // Compute cost fresh from costs array to avoid stale closure issues
+    const costSum = costs.reduce((s, item) => s + (Number(item.amount) || 0), 0);
+    const finalCost = costSum > 0 ? costSum : (form.total_cost ? Number(form.total_cost) : 0);
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,

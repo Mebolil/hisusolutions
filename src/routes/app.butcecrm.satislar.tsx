@@ -620,11 +620,11 @@ function NewSaleDialog({
       product_name: p.name,
       unit_price: p.unit_price != null ? String(p.unit_price) : f.unit_price,
     }));
-    // Fetch latest purchase unit_price for this product
+    // Fetch latest purchase unit_price for this product by name
     const { data } = await supabase
       .from("purchases")
       .select("unit_price")
-      .eq("product_id", id)
+      .eq("product_name", p.name)
       .order("purchase_date", { ascending: false })
       .limit(1)
       .maybeSingle();

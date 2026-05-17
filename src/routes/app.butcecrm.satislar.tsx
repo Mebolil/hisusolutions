@@ -809,14 +809,44 @@ function NewSaleDialog({
             </div>
           </div>
           <div>
-            <Label>Ödeme Durumu</Label>
-            <Select value={form.payment_status}
-              onValueChange={(v) => setForm({ ...form, payment_status: v as Status })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label>Tahsilat</Label>
+            <div className="flex rounded-md overflow-hidden border text-sm font-medium">
+              {(["ödendi", "bekliyor", "kısmi"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    const total = Number(form.total_amount) || 0;
+                    setForm((f) => ({
+                      ...f,
+                      payment_status: s,
+                      paid_amount: s === "ödendi" ? String(total) : s === "bekliyor" ? "0" : f.paid_amount,
+                    }));
+                  }}
+                  className={`flex-1 py-2 capitalize transition-colors ${
+                    form.payment_status === s
+                      ? s === "ödendi"
+                        ? "bg-emerald-500 text-white"
+                        : s === "bekliyor"
+                        ? "bg-red-500 text-white"
+                        : "bg-amber-400 text-white"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            {form.payment_status === "kısmi" && (
+              <Input
+                type="number"
+                step="0.01"
+                className="mt-2"
+                value={form.paid_amount}
+                onChange={(e) => setForm({ ...form, paid_amount: e.target.value })}
+                placeholder="Tahsil edilen tutar (₺)"
+              />
+            )}
           </div>
 
           <div className="rounded-md border bg-muted/30 p-3 space-y-2">
@@ -875,26 +905,18 @@ function NewSaleDialog({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Toplam Maliyet (₺)</Label>
-              {costs.some((c) => Number(c.amount) > 0) ? (
-                <div className="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium">
-                  {formatCurrency(breakdownSum)}
-                  <span className="ml-auto text-[10px] text-muted-foreground self-center">kalemlerden</span>
-                </div>
-              ) : (
-                <Input type="number" step="0.01" value={form.total_cost}
-                  onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
-                  placeholder="Manuel gir" />
-              )}
-            </div>
-            <div>
-              <Label>Tahsil Edilen (₺)</Label>
-              <Input type="number" step="0.01" value={form.paid_amount}
-                onChange={(e) => setForm({ ...form, paid_amount: e.target.value })}
-                placeholder="Boşsa duruma göre hesaplanır" />
-            </div>
+          <div>
+            <Label>Toplam Maliyet (₺)</Label>
+            {costs.some((c) => Number(c.amount) > 0) ? (
+              <div className="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium">
+                {formatCurrency(breakdownSum)}
+                <span className="ml-auto text-[10px] text-muted-foreground self-center">kalemlerden</span>
+              </div>
+            ) : (
+              <Input type="number" step="0.01" value={form.total_cost}
+                onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
+                placeholder="Manuel gir" />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

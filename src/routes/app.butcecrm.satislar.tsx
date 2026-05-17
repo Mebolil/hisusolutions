@@ -695,12 +695,9 @@ function NewSaleDialog({
     const latestCosts = costsRef.current;
     const costSum = latestCosts.reduce((s, item) => s + (Number(item.amount) || 0), 0);
     const finalCost = costSum > 0 ? costSum : (form.total_cost ? Number(form.total_cost) : 0);
-    console.log("[DEBUG] costs at submit:", JSON.stringify(latestCosts));
-    console.log("[DEBUG] costSum:", costSum, "finalCost:", finalCost, "form.total_cost:", form.total_cost);
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,
-      due_date: form.due_date || null,
       customer_id: form.customer_id || null,
       product_name: form.product_name,
       quantity: Number(form.quantity) || 1,
@@ -711,6 +708,8 @@ function NewSaleDialog({
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
     };
+    // Only include due_date if the user entered one (column may not exist in DB yet)
+    if (form.due_date) payload.due_date = form.due_date;
     // Build a cost-breakdown summary and append to notes for record-keeping
     const breakdownLines = latestCosts
       .filter((item) => Number(item.amount) > 0)

@@ -636,6 +636,9 @@ function NewSaleDialog({
     }
     const total = Number(form.total_amount);
     const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
+    // Always derive total_cost from cost items if any are filled — prevents state sync issues
+    const anyItemFilled = costs.some((item) => Number(item.amount) > 0);
+    const finalCost = anyItemFilled ? breakdownSum : (form.total_cost ? Number(form.total_cost) : 0);
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
       sale_date: form.sale_date,
@@ -644,7 +647,7 @@ function NewSaleDialog({
       product_name: form.product_name,
       quantity: Number(form.quantity) || 1,
       total_amount: total,
-      total_cost: form.total_cost ? Number(form.total_cost) : 0,
+      total_cost: finalCost,
       paid_amount: paid,
       payment_status: form.payment_status,
       campaign_id: form.campaign_id || null,
@@ -858,9 +861,16 @@ function NewSaleDialog({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Toplam Maliyet (₺)</Label>
-              <Input type="number" step="0.01" value={form.total_cost}
-                onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
-                placeholder="Kalemlerden otomatik" />
+              {costs.some((c) => Number(c.amount) > 0) ? (
+                <div className="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium">
+                  {formatCurrency(breakdownSum)}
+                  <span className="ml-auto text-[10px] text-muted-foreground self-center">kalemlerden</span>
+                </div>
+              ) : (
+                <Input type="number" step="0.01" value={form.total_cost}
+                  onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
+                  placeholder="Manuel gir" />
+              )}
             </div>
             <div>
               <Label>Tahsil Edilen (₺)</Label>

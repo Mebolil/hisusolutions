@@ -24,6 +24,7 @@ import { tr } from "date-fns/locale";
 import {
   BarChart3, FileSpreadsheet, FileText, Calendar, TrendingUp, TrendingDown,
   Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle, Clock,
+  Info, CheckCircle2, XCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -546,6 +547,15 @@ function ReportsPage() {
 
         {/* GENEL BAKIŞ */}
         <TabsContent value="overview" className="space-y-4 mt-4">
+          {totals.profit < 0 && (
+            <InsightBanner type="danger" message={`Bu dönem net zarar var (${formatCurrency(totals.profit)}). Gider ve maliyet kalemlerini gözden geçirin.`} />
+          )}
+          {totals.profit >= 0 && totals.margin < 10 && totals.income > 0 && (
+            <InsightBanner type="warning" message={`Kâr marjı düşük (%${totals.margin.toFixed(1)}). Maliyet azaltma veya fiyat artışı değerlendirilebilir.`} />
+          )}
+          {totals.income > 0 && outstanding.receivable > totals.income * 0.5 && (
+            <InsightBanner type="warning" message={`Açık alacak (${formatCurrency(outstanding.receivable)}), tahsil edilen gelirin %${((outstanding.receivable / totals.income) * 100).toFixed(0)}'i. Tahsilat takibi önerilir.`} />
+          )}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KPI label="Gelir (Tahsil)" value={formatCurrency(totals.income)} delta={deltaPct(totals.income, prevTotals.income)} positive />
             <KPI label="Gider" value={formatCurrency(totals.totalExp)} delta={deltaPct(totals.totalExp, prevTotals.totalExp)} positive={false} />
@@ -888,6 +898,16 @@ function ReportsPage() {
         </TabsContent>
         {/* NAKİT AKIŞI */}
         <TabsContent value="cashflow" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Gerçek nakit hareketleri — tahsil edilen gelir ve ödenen giderler. Fatura tutarları değil, kasaya giren/çıkan para.</p>
+          {cashFlowTotals.net < 0 && (
+            <InsightBanner type="danger" message={`Bu dönem nakit çıkışları girişleri aşıyor (${formatCurrency(Math.abs(cashFlowTotals.net))} açık). Tahsilat hızlandırılması veya gider ertelenmesi değerlendirilebilir.`} />
+          )}
+          {cashFlowTotals.net >= 0 && cashFlowData.filter((d) => d["Net Nakit"] < 0).length > 1 && (
+            <InsightBanner type="warning" message={`${cashFlowData.filter((d) => d["Net Nakit"] < 0).length} ayda negatif nakit akışı yaşandı. Aylık nakit dengesini yakından takip edin.`} />
+          )}
+          {cashFlowTotals.net > 0 && cashFlowData.filter((d) => d["Net Nakit"] < 0).length <= 1 && (
+            <InsightBanner type="success" message={`Bu dönem nakit akışı pozitif. ${formatCurrency(cashFlowTotals.net)} net nakit fazlası oluştu.`} />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-6">
@@ -983,6 +1003,16 @@ function ReportsPage() {
 
         {/* ALACAK YAŞLANDıRMA */}
         <TabsContent value="aging" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Vadesi geçmiş ve henüz tahsil edilmemiş alacaklar. Renk dilimleri riski gösterir: sarı dikkat, turuncu riskli, kırmızı kritik.</p>
+          {agingRows.length === 0 && (
+            <InsightBanner type="success" message="Vadesi geçmiş alacak yok. Tahsilat durumu iyi görünüyor." />
+          )}
+          {agingSummary.find((b) => b.bucket === "90+" && b.total > 0) && (
+            <InsightBanner type="danger" message={`${formatCurrency(agingSummary.find((b) => b.bucket === "90+")!.total)} tutarında 90+ gün vadesi geçmiş alacak var — şüpheli alacak riski. Acil takip ve hukuki süreç değerlendirilebilir.`} />
+          )}
+          {!agingSummary.find((b) => b.bucket === "90+" && b.total > 0) && agingSummary.find((b) => b.bucket === "61-90" && b.total > 0) && (
+            <InsightBanner type="warning" message={`${formatCurrency(agingSummary.find((b) => b.bucket === "61-90")!.total)} tutarında 61–90 gün vadesi geçmiş alacak var. Ödeme hatırlatması gönderin.`} />
+          )}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6">
@@ -1070,6 +1100,16 @@ function ReportsPage() {
 
         {/* BAŞA BAŞ ANALİZİ */}
         <TabsContent value="breakeven" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Kaç satış yaparsanız tüm giderlerinizi karşılarsınız? İki çizginin kesiştiği nokta kâra geçiş noktanızdır.</p>
+          {breakeven.units > 0 && breakeven.current < breakeven.units && (
+            <InsightBanner type="danger" message={`Bu dönem başa baş noktasının altındasınız. Kâra geçmek için ${breakeven.units - breakeven.current} satış daha gerekiyor.`} />
+          )}
+          {breakeven.units > 0 && breakeven.current >= breakeven.units && breakeven.safetyMargin < 20 && (
+            <InsightBanner type="warning" message={`Güvenlik marjı düşük (%${breakeven.safetyMargin.toFixed(1)}). Küçük bir satış düşüşü sizi zarara sokabilir.`} />
+          )}
+          {breakeven.units > 0 && breakeven.current >= breakeven.units && breakeven.safetyMargin >= 20 && (
+            <InsightBanner type="success" message={`Başa baş noktasını aşmışsınız. %${breakeven.safetyMargin.toFixed(1)} güvenlik marjıyla kâr bölgesindesiniz.`} />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-base">Parametreler (otomatik doldurulur, düzenlenebilir)</CardTitle></CardHeader>
@@ -1162,6 +1202,21 @@ function Stat({ label, value, cls }: { label: string; value: string; cls?: strin
         <p className={`text-xl font-bold truncate ${cls || ""}`}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function InsightBanner({ type, message }: { type: "info" | "warning" | "danger" | "success"; message: string }) {
+  const styles = {
+    info:    { bg: "bg-blue-50 border-blue-200 text-blue-800",    Icon: Info },
+    warning: { bg: "bg-amber-50 border-amber-200 text-amber-800", Icon: AlertTriangle },
+    danger:  { bg: "bg-red-50 border-red-200 text-red-800",       Icon: XCircle },
+    success: { bg: "bg-emerald-50 border-emerald-200 text-emerald-800", Icon: CheckCircle2 },
+  }[type];
+  return (
+    <div className={`flex items-start gap-2 rounded-lg border px-4 py-3 text-sm ${styles.bg}`}>
+      <styles.Icon className="h-4 w-4 mt-0.5 shrink-0" />
+      <span>{message}</span>
+    </div>
   );
 }
 

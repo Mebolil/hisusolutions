@@ -20,7 +20,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Bell, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Search, Bell, Trash2, AlertCircle, RefreshCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { z } from "zod";
 import { differenceInCalendarDays, parseISO } from "date-fns";
@@ -33,11 +34,15 @@ type Reminder = {
   status: string;
   related_record: string | null;
   note: string | null;
+  is_recurring: boolean | null;
+  recurrence_interval: RecurrenceInterval | null;
 };
 
 const TYPES = ["ödeme", "tahsilat", "stok", "görev", "diğer"] as const;
 const STATUSES = ["bekliyor", "tamamlandı"] as const;
 type Status = (typeof STATUSES)[number];
+const RECURRENCE_OPTIONS = ["Günlük", "Haftalık", "Aylık", "Senelik"] as const;
+type RecurrenceInterval = (typeof RECURRENCE_OPTIONS)[number];
 
 const TYPE_BADGE: Record<string, string> = {
   "ödeme": "bg-red-100 text-red-700 border-red-200",
@@ -222,7 +227,14 @@ function RemindersPage() {
                         />
                       </TableCell>
                       <TableCell className={`font-medium max-w-[260px] truncate ${done ? "line-through text-muted-foreground" : ""}`}>
-                        {r.title}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="truncate">{r.title}</span>
+                          {r.is_recurring && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200 rounded px-1.5 py-0.5 shrink-0">
+                              <RefreshCw className="h-2.5 w-2.5" />{r.recurrence_interval}
+                            </span>
+                          )}
+                        </div>
                         {r.note && <p className="text-xs text-muted-foreground font-normal truncate">{r.note}</p>}
                       </TableCell>
                       <TableCell>
@@ -293,11 +305,12 @@ function NewReminderDialog({
   const [form, setForm] = useState({
     title: "", type: "görev", due_date: today,
     status: "bekliyor" as Status, related_record: "", note: "",
+    is_recurring: false, recurrence_interval: "Aylık" as RecurrenceInterval,
   });
   const [saving, setSaving] = useState(false);
 
   function reset() {
-    setForm({ title: "", type: "görev", due_date: today, status: "bekliyor", related_record: "", note: "" });
+    setForm({ title: "", type: "görev", due_date: today, status: "bekliyor", related_record: "", note: "", is_recurring: false, recurrence_interval: "Aylık" });
   }
 
   async function submit(e: React.FormEvent) {
@@ -315,6 +328,8 @@ function NewReminderDialog({
       status: parsed.data.status,
       related_record: parsed.data.related_record || null,
       note: parsed.data.note || null,
+      is_recurring: form.is_recurring,
+      recurrence_interval: form.is_recurring ? form.recurrence_interval : null,
     };
     const { error } = await supabase.from("reminders").insert(payload);
     setSaving(false);
@@ -364,6 +379,28 @@ function NewReminderDialog({
             <Label>Not</Label>
             <Textarea value={form.note} rows={2} maxLength={1000}
               onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </div>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5 text-blue-600" /> Tekrar Eden Görev
+                </p>
+                <p className="text-[11px] text-muted-foreground">Bu hatırlatıcı belirli aralıklarla tekrar ediyorsa açın</p>
+              </div>
+              <Switch checked={form.is_recurring} onCheckedChange={(v) => setForm({ ...form, is_recurring: v })} />
+            </div>
+            {form.is_recurring && (
+              <div>
+                <Label className="text-xs">Tekrar Sıklığı</Label>
+                <Select value={form.recurrence_interval} onValueChange={(v) => setForm({ ...form, recurrence_interval: v as RecurrenceInterval })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCE_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>

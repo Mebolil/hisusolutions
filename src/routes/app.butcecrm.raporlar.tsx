@@ -13,7 +13,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, BarChart, AreaChart, Area,
+  PieChart, Pie, Cell, BarChart, AreaChart, Area, ReferenceLine, ReferenceDot,
 } from "recharts";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear,
@@ -1163,30 +1163,63 @@ function ReportsPage() {
               </div>
             </div>
           </div>
-          {breakeven.units > 0 && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Gelir vs Maliyet Grafiği</CardTitle></CardHeader>
-              <CardContent>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={Array.from({ length: Math.min(Math.max(breakeven.units * 2, breakeven.current + 5), 100) }, (_, i) => {
-                      const u = i + 1;
-                      return { units: u, "Toplam Gelir": u * breakeven.avgRev, "Toplam Maliyet": breakeven.fixed + u * breakeven.avgVar };
-                    })}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="units" className="text-xs" label={{ value: "Satış Adedi", position: "insideBottom", offset: -5 }} />
-                      <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                      <Legend />
-                      <Line dataKey="Toplam Gelir" stroke="#10b981" strokeWidth={2} dot={false} />
-                      <Line dataKey="Toplam Maliyet" stroke="#ef4444" strokeWidth={2} dot={false} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-2">İki çizginin kesiştiği nokta = başa baş noktası ({breakeven.units} satış)</p>
-              </CardContent>
-            </Card>
-          )}
+          {breakeven.units > 0 && (() => {
+            const maxUnits = Math.max(Math.ceil(breakeven.units * 1.6), breakeven.current + 5, 10);
+            const step = Math.max(1, Math.ceil(maxUnits / 60));
+            const pts: number[] = [];
+            for (let u = 0; u <= maxUnits; u += step) pts.push(u);
+            if (!pts.includes(breakeven.units)) pts.push(breakeven.units);
+            if (breakeven.current > 0 && !pts.includes(breakeven.current)) pts.push(breakeven.current);
+            pts.sort((a, b) => a - b);
+            const chartData = pts.map((u) => ({
+              units: u,
+              "Toplam Gelir": u * breakeven.avgRev,
+              "Toplam Maliyet": breakeven.fixed + u * breakeven.avgVar,
+            }));
+            const beY = breakeven.units * breakeven.avgRev;
+            return (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Gelir vs Maliyet Grafiği</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={chartData} margin={{ bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="units" className="text-xs" label={{ value: "Satış Adedi", position: "insideBottom", offset: -10 }} />
+                        <YAxis className="text-xs" tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`} width={60} />
+                        <Tooltip
+                          formatter={(v, name) => [formatCurrency(Number(v)), name]}
+                          labelFormatter={(l) => `${l} satış`}
+                        />
+                        <Legend />
+                        <ReferenceLine
+                          x={breakeven.units}
+                          stroke="#6366f1"
+                          strokeDasharray="5 3"
+                          label={{ value: `Başa Baş: ${breakeven.units}`, position: "top", fontSize: 11, fill: "#6366f1" }}
+                        />
+                        {breakeven.current > 0 && breakeven.current !== breakeven.units && (
+                          <ReferenceLine
+                            x={breakeven.current}
+                            stroke="#3b82f6"
+                            strokeDasharray="5 3"
+                            label={{ value: `Şu An: ${breakeven.current}`, position: "insideTopRight", fontSize: 11, fill: "#3b82f6" }}
+                          />
+                        )}
+                        <Line dataKey="Toplam Gelir" stroke="#10b981" strokeWidth={2.5} dot={false} />
+                        <Line dataKey="Toplam Maliyet" stroke="#ef4444" strokeWidth={2.5} dot={false} />
+                        <ReferenceDot x={breakeven.units} y={beY} r={6} fill="#6366f1" stroke="#fff" strokeWidth={2} />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    Mor nokta = başa baş ({breakeven.units} satış, {formatCurrency(beY)})
+                    {breakeven.current > 0 && ` · Mavi çizgi = bu dönem gerçekleşen (${breakeven.current} satış)`}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
 
       </Tabs>

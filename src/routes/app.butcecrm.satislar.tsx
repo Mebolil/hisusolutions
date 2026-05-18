@@ -777,7 +777,7 @@ function NewSaleDialog({
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="h-4 w-4" /> Yeni Satış</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Yeni Satış</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">

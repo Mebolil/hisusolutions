@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2 } from "lucide-react";
 
@@ -53,23 +53,18 @@ function HomePage() {
             Sistemi Biz Kurarız.{" "}
             <br />
             <span className="text-muted-foreground font-normal">Siz sadece </span>
-            <span className="relative inline-flex h-[1.1em] overflow-hidden" style={{ verticalAlign: "bottom", width: "9ch" }}>
-              {titles.map((title, index) => (
-                <motion.span
-                  key={index}
-                  className="absolute inset-0 flex items-center justify-center font-bold text-primary whitespace-nowrap"
-                  initial={{ opacity: 0, y: 60 }}
-                  transition={{ type: "spring", stiffness: 60, damping: 14 }}
-                  animate={
-                    titleNumber === index
-                      ? { y: 0, opacity: 1 }
-                      : { y: titleNumber > index ? -60 : 60, opacity: 0 }
-                  }
-                >
-                  {title}
-                </motion.span>
-              ))}
-            </span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={titleNumber}
+                className="inline-block font-bold text-primary"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -40 }}
+                transition={{ type: "spring", stiffness: 60, damping: 14 }}
+              >
+                {titles[titleNumber]}
+              </motion.span>
+            </AnimatePresence>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             SaaS değil, AaaS. Her çözümü işinize özel kuruyor, teslim ediyor ve yanınızda kalıyoruz.

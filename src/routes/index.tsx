@@ -53,11 +53,11 @@ function HomePage() {
             Sistemi Biz Kurarız.{" "}
             <br />
             <span className="text-muted-foreground font-normal">Siz sadece </span>
-            <span className="relative inline-flex h-[1.1em] w-[5ch] overflow-hidden" style={{ verticalAlign: "bottom" }}>
+            <span className="relative inline-flex h-[1.1em] overflow-hidden" style={{ verticalAlign: "bottom", width: "9ch" }}>
               {titles.map((title, index) => (
                 <motion.span
                   key={index}
-                  className="absolute inset-0 flex items-center justify-center font-bold text-primary"
+                  className="absolute inset-0 flex items-center justify-center font-bold text-primary whitespace-nowrap"
                   initial={{ opacity: 0, y: 60 }}
                   transition={{ type: "spring", stiffness: 60, damping: 14 }}
                   animate={

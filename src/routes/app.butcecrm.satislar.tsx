@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil } from "lucide-react";
+import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import { useSettings } from "@/lib/butcecrm-settings";
 import { Link } from "@tanstack/react-router";
 import { Textarea } from "@/components/ui/textarea";
@@ -146,10 +146,32 @@ function SalesPage() {
   // Filter değişince sayfayı sıfırla
   useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q]);
 
+  const [sortKey, setSortKey] = useState<keyof Sale>("sale_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  function handleSort(col: keyof Sale) {
+    if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(col); setSortDir("asc"); }
+  }
+
+  function SortIcon({ col }: { col: keyof Sale }) {
+    if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-25" />;
+    return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+  }
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedSales = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
+    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sorted, page],
   );
 
   const totals = useMemo(() => {
@@ -454,16 +476,22 @@ function SalesPage() {
                   <TableHead className="w-10">
                     <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
                   </TableHead>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead>Vade</TableHead>
-                  <TableHead>Müşteri</TableHead>
-                  <TableHead>Ürün</TableHead>
-                  <TableHead>Platform</TableHead>
-                  <TableHead className="text-right">Miktar</TableHead>
-                  <TableHead className="text-right">Tutar</TableHead>
-                  <TableHead className="text-right">Maliyet</TableHead>
-                  <TableHead className="text-right">Kâr</TableHead>
-                  <TableHead className="text-right">Tahsil</TableHead>
+                  {([["sale_date","Tarih"],["due_date","Vade"],["customer_id","Müşteri"],["product_name","Ürün"],["platform","Platform"]] as [keyof Sale, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
+                  {([["quantity","Miktar"],["total_amount","Tutar"],["total_cost","Maliyet"]] as [keyof Sale, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="text-right cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center justify-end gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
+                  <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("total_amount")}>
+                    <span className="inline-flex items-center justify-end gap-1">Kâr</span>
+                  </TableHead>
+                  <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("paid_amount")}>
+                    <span className="inline-flex items-center justify-end gap-1">Tahsil<SortIcon col="paid_amount" /></span>
+                  </TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead className="w-[90px]">İşlem</TableHead>
                 </TableRow>

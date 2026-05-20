@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, Search, Receipt, RefreshCw, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -119,10 +119,32 @@ function ExpensesPage() {
 
   useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, catFilter, from, to, q]);
 
+  const [sortKey, setSortKey] = useState<keyof Expense>("expense_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  function handleSort(col: keyof Expense) {
+    if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(col); setSortDir("asc"); }
+  }
+
+  function SortIcon({ col }: { col: keyof Expense }) {
+    if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-25" />;
+    return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+  }
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedExpenses = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
+    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sorted, page],
   );
 
   const totals = useMemo(() => {
@@ -275,11 +297,16 @@ function ExpensesPage() {
                   <TableHead className="w-10">
                     <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
                   </TableHead>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Not</TableHead>
-                  <TableHead className="text-right">Tutar</TableHead>
-                  <TableHead className="text-right">Ödenen</TableHead>
+                  {([["expense_date","Tarih"],["category","Kategori"],["note","Not"]] as [keyof Expense, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
+                  {([["amount","Tutar"],["paid_amount","Ödenen"]] as [keyof Expense, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="text-right cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center justify-end gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
                   <TableHead>Durum</TableHead>
                 </TableRow>
               </TableHeader>

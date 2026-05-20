@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
+import { Plus, Search, ShoppingCart, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
@@ -113,10 +113,32 @@ function PurchasesPage() {
 
   useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, supplierFilter, from, to, q]);
 
+  const [sortKey, setSortKey] = useState<keyof Purchase>("purchase_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  function handleSort(col: keyof Purchase) {
+    if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(col); setSortDir("asc"); }
+  }
+
+  function SortIcon({ col }: { col: keyof Purchase }) {
+    if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-25" />;
+    return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+  }
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedPurchases = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page],
+    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sorted, page],
   );
 
   const totals = useMemo(() => {
@@ -267,13 +289,16 @@ function PurchasesPage() {
                   <TableHead className="w-10">
                     <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
                   </TableHead>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead>Tedarikçi</TableHead>
-                  <TableHead>Ürün</TableHead>
-                  <TableHead className="text-right">Miktar</TableHead>
-                  <TableHead className="text-right">Birim Fiyat</TableHead>
-                  <TableHead className="text-right">Tutar</TableHead>
-                  <TableHead className="text-right">Ödenen</TableHead>
+                  {([["purchase_date","Tarih"],["supplier_id","Tedarikçi"],["product_name","Ürün"]] as [keyof Purchase, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
+                  {([["quantity","Miktar"],["unit_price","Birim Fiyat"],["amount","Tutar"],["paid_amount","Ödenen"]] as [keyof Purchase, string][]).map(([col, label]) => (
+                    <TableHead key={col} className="text-right cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center justify-end gap-1">{label}<SortIcon col={col} /></span>
+                    </TableHead>
+                  ))}
                   <TableHead>Durum</TableHead>
                 </TableRow>
               </TableHeader>

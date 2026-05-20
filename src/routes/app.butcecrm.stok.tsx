@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2 } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
@@ -112,6 +112,18 @@ function StockPage() {
   const [newOpen, setNewOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<keyof Product>("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function handleSort(col: keyof Product) {
+    if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(col); setSortDir("asc"); }
+  }
+
+  function SortIcon({ col }: { col: keyof Product }) {
+    if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-25" />;
+    return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
+  }
 
   async function load() {
     setLoading(true);
@@ -162,6 +174,15 @@ function StockPage() {
     setLots((data as Lot[]) || []);
     setLotsLoading(false);
   }
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
 
   const allPageSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
 
@@ -329,20 +350,28 @@ function StockPage() {
                   <TableHead className="w-10">
                     <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
                   </TableHead>
-                  <TableHead>Ürün Adı</TableHead>
-                  <TableHead>Ürün Kodu</TableHead>
-                  <TableHead>Kısa İsmi</TableHead>
-                  <TableHead>Üretici Kodu</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead className="text-right">Mevcut Stok</TableHead>
-                  <TableHead className="text-right">Eşik</TableHead>
-                  <TableHead className="text-right">Birim Fiyat</TableHead>
+                  {(["name","urun_kodu","kisa_ismi","uretici_kodu","category"] as (keyof Product)[]).map((col, i) => (
+                    <TableHead key={col} className="cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center gap-1">
+                        {["Ürün Adı","Ürün Kodu","Kısa İsmi","Üretici Kodu","Kategori"][i]}
+                        <SortIcon col={col} />
+                      </span>
+                    </TableHead>
+                  ))}
+                  {(["quantity","low_stock_threshold","unit_price"] as (keyof Product)[]).map((col, i) => (
+                    <TableHead key={col} className="text-right cursor-pointer select-none" onClick={() => handleSort(col)}>
+                      <span className="inline-flex items-center justify-end gap-1">
+                        {["Mevcut Stok","Eşik","Birim Fiyat"][i]}
+                        <SortIcon col={col} />
+                      </span>
+                    </TableHead>
+                  ))}
                   <TableHead>Durum</TableHead>
                   <TableHead className="text-right">Hareketler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((p) => {
+                {sorted.map((p) => {
                   const st = stockState(p);
                   return (
                     <TableRow key={p.id} className={selectedIds.has(p.id) ? "bg-muted/50" : ""}>

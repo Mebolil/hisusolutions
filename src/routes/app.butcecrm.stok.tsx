@@ -99,9 +99,38 @@ export const Route = createFileRoute("/app/butcecrm/stok")({
   component: StockPage,
 });
 
+const PAGE_SIZE = 100;
+
+function buildQuery(
+  catFilter: string,
+  stateFilter: "all" | StockState,
+  q: string,
+  sortKey: keyof Product,
+  sortDir: "asc" | "desc",
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from("products").select("*") as any);
+  if (catFilter !== "all") query = query.eq("category", catFilter);
+  if (stateFilter === "out") query = query.lte("quantity", 0);
+  // "low" / "ok" need column-to-column comparison — handled client-side
+  if (q.trim()) {
+    const safe = q.trim().replace(/[%_]/g, "\\$&");
+    query = query.or(
+      `name.ilike.%${safe}%,urun_kodu.ilike.%${safe}%,kisa_ismi.ilike.%${safe}%,uretici_kodu.ilike.%${safe}%,category.ilike.%${safe}%`,
+    );
+  }
+  query = query.order(sortKey, { ascending: sortDir === "asc" });
+  return query;
+}
+
 function StockPage() {
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  // Server-side mode: only current page rows
+  const [rows, setRows] = useState<Product[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  // Client-side mode (for "low"/"ok" stateFilter that need column comparison)
+  const [allRows, setAllRows] = useState<Product[] | null>(null);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [catFilter, setCatFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState<"all" | StockState>("all");
@@ -115,7 +144,10 @@ function StockPage() {
   const [sortKey, setSortKey] = useState<keyof Product>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 100;
+  const [stats, setStats] = useState({ total: 0, low: 0, out: 0 });
+
+  // Whether we're in client-side filter mode (stateFilter low/ok)
+  const clientMode = stateFilter === "low" || stateFilter === "ok";
 
   function handleSort(col: keyof Product) {
     if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -127,63 +159,102 @@ function StockPage() {
     return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
   }
 
-  async function load() {
-    setLoading(true);
-    const [c] = await Promise.all([
-      supabase.from("product_categories").select("id,name").order("name"),
+  async function loadStats() {
+    const [total, outRes] = await Promise.all([
+      supabase.from("products").select("*", { count: "exact", head: true }),
+      supabase.from("products").select("*", { count: "exact", head: true }).lte("quantity", 0),
     ]);
-    setCategories((c.data as Category[]) || []);
+    const totalVal = total.count ?? 0;
+    const outVal = outRes.count ?? 0;
+    // "low" requires column comparison — approximated from allRows when available
+    setStats((s) => ({ ...s, total: totalVal, out: outVal }));
+  }
 
-    // Supabase returns max 1000 rows per request — fetch all in batches
-    const all: Product[] = [];
-    const BATCH = 1000;
-    let from = 0;
-    while (true) {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name")
-        .range(from, from + BATCH - 1);
-      if (error || !data || data.length === 0) break;
-      all.push(...(data as Product[]));
-      if (data.length < BATCH) break;
-      from += BATCH;
-    }
-    setProducts(all);
+  async function loadCategories() {
+    const { data } = await supabase.from("product_categories").select("id,name").order("name");
+    setCategories((data as Category[]) || []);
+  }
+
+  async function loadPage() {
+    setLoading(true);
+    setAllRows(null);
+    const query = buildQuery(catFilter, stateFilter, q, sortKey, sortDir);
+    const from = (page - 1) * PAGE_SIZE;
+    const { data, count } = await query
+      .select("*", { count: "exact" })
+      .range(from, from + PAGE_SIZE - 1);
+    setRows((data as Product[]) || []);
+    setTotalCount(count ?? 0);
     setLoading(false);
   }
-  useEffect(() => { load(); }, []);
+
+  // For "low"/"ok" filters: parallel batch load then client-side filter
+  async function loadAllForClientFilter() {
+    setLoading(true);
+    setRows([]);
+    // First get total count so we can parallelise
+    const base = buildQuery(catFilter, "all", q, sortKey, sortDir);
+    const { count } = await base.select("*", { count: "exact", head: true });
+    const total = count ?? 0;
+    if (total === 0) { setAllRows([]); setTotalCount(0); setLoading(false); return; }
+    const BATCH = 1000;
+    const batches = Math.ceil(total / BATCH);
+    const baseQuery = buildQuery(catFilter, "all", q, sortKey, sortDir);
+    const promises = Array.from({ length: batches }, (_, i) =>
+      baseQuery.select("*").range(i * BATCH, (i + 1) * BATCH - 1),
+    );
+    const results = await Promise.all(promises);
+    const all: Product[] = results.flatMap((r) => (r.data as Product[]) || []);
+    setAllRows(all);
+    // Update low count for stats
+    const lowCount = all.filter((p) => stockState(p) === "low").length;
+    setStats((s) => ({ ...s, low: lowCount }));
+    setLoading(false);
+  }
+
+  useEffect(() => { loadStats(); loadCategories(); }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [catFilter, stateFilter, q, sortKey, sortDir]);
+
+  useEffect(() => {
+    if (clientMode) loadAllForClientFilter();
+    else loadPage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catFilter, stateFilter, q, sortKey, sortDir]);
+
+  useEffect(() => {
+    if (!clientMode) loadPage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  // Client-mode: filter + sort + paginate allRows in memory
+  const clientFiltered = useMemo(() => {
+    if (!clientMode || !allRows) return null;
+    return allRows.filter((p) => stockState(p) === stateFilter);
+  }, [allRows, stateFilter, clientMode]);
+
+  const clientSorted = useMemo(() => {
+    if (!clientFiltered) return null;
+    return [...clientFiltered].sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [clientFiltered, sortKey, sortDir]);
+
+  const displayRows = clientMode && clientSorted
+    ? clientSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : rows;
+  const displayTotal = clientMode && clientSorted ? clientSorted.length : totalCount;
+  const totalPages = Math.max(1, Math.ceil(displayTotal / PAGE_SIZE));
 
   const categoryNames = useMemo(() => {
     const set = new Set<string>(categories.map((c) => c.name));
-    products.forEach((p) => p.category && set.add(p.category));
     return Array.from(set).sort();
-  }, [categories, products]);
-
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      if (catFilter !== "all" && p.category !== catFilter) return false;
-      if (stateFilter !== "all" && stockState(p) !== stateFilter) return false;
-      if (q) {
-        const ql = q.toLowerCase();
-        const match = [p.name, p.urun_kodu, p.kisa_ismi, p.uretici_kodu, p.category]
-          .some((v) => v && v.toLowerCase().includes(ql));
-        if (!match) return false;
-      }
-      return true;
-    });
-  }, [products, catFilter, stateFilter, q]);
-
-  const stats = useMemo(() => {
-    const total = products.length;
-    const low = products.filter((p) => stockState(p) === "low").length;
-    const out = products.filter((p) => stockState(p) === "out").length;
-    const value = products.reduce(
-      (s, p) => s + Number(p.quantity || 0) * Number(p.unit_price || 0),
-      0,
-    );
-    return { total, low, out, value };
-  }, [products]);
+  }, [categories]);
 
   async function openHistory(p: Product) {
     setSelected(p);
@@ -197,31 +268,13 @@ function StockPage() {
     setLotsLoading(false);
   }
 
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const av = a[sortKey] ?? "";
-      const bv = b[sortKey] ?? "";
-      const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-  }, [filtered, sortKey, sortDir]);
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const paged = useMemo(
-    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [sorted, page, PAGE_SIZE],
-  );
-
-  // Reset to page 1 when filters/sort change
-  useEffect(() => { setPage(1); }, [catFilter, stateFilter, q, sortKey, sortDir]);
-
-  const allPageSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
+  const allPageSelected = displayRows.length > 0 && displayRows.every((p) => selectedIds.has(p.id));
 
   function toggleAll() {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (allPageSelected) filtered.forEach((p) => next.delete(p.id));
-      else filtered.forEach((p) => next.add(p.id));
+      if (allPageSelected) displayRows.forEach((p) => next.delete(p.id));
+      else displayRows.forEach((p) => next.add(p.id));
       return next;
     });
   }
@@ -245,12 +298,17 @@ function StockPage() {
     }
     toast.success(`${ids.length} ürün silindi`);
     setSelectedIds(new Set());
-    load();
+    loadStats();
+    if (clientMode) loadAllForClientFilter(); else loadPage();
   }
 
-  const lowStockProducts = products
-    .filter((p) => stockState(p) !== "ok")
-    .sort((a, b) => Number(a.quantity) - Number(b.quantity));
+  // Low-stock alert list: only meaningful when we have full data
+  const lowStockProducts = useMemo(() => {
+    if (!allRows) return [];
+    return allRows
+      .filter((p) => stockState(p) !== "ok")
+      .sort((a, b) => Number(a.quantity) - Number(b.quantity));
+  }, [allRows]);
 
   return (
     <div className="space-y-6">
@@ -264,7 +322,7 @@ function StockPage() {
             open={newOpen}
             setOpen={setNewOpen}
             categories={categoryNames}
-            onCreated={load}
+            onCreated={() => { loadStats(); if (clientMode) loadAllForClientFilter(); else { setPage(1); loadPage(); } }}
           />
           <CsvToolbar
             slug="stok"
@@ -272,7 +330,7 @@ function StockPage() {
             upsertOn="name,user_id"
             fields={PRODUCTS_CSV_FIELDS}
             sampleRow={PRODUCTS_CSV_SAMPLE}
-            exportRows={filtered.map((p) => ({
+            exportRows={displayRows.map((p) => ({
               name: p.name,
               urun_kodu: p.urun_kodu,
               kisa_ismi: p.kisa_ismi,
@@ -282,16 +340,16 @@ function StockPage() {
               low_stock_threshold: p.low_stock_threshold,
               unit_price: p.unit_price,
             }))}
-            onImported={load}
+            onImported={() => { loadStats(); if (clientMode) loadAllForClientFilter(); else loadPage(); }}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Toplam Ürün" value={String(stats.total)} />
-        <StatCard label="Düşük Stok" value={String(stats.low)} valueClass="text-amber-600" />
+        <StatCard label="Düşük Stok" value={stats.low > 0 ? String(stats.low) : "—"} valueClass="text-amber-600" />
         <StatCard label="Tükenen" value={String(stats.out)} valueClass="text-red-600" />
-        <StatCard label="Toplam Stok Değeri" value={formatCurrency(stats.value)} />
+        <StatCard label="Filtredeki Sonuç" value={String(displayTotal)} />
       </div>
 
       {lowStockProducts.length > 0 && (
@@ -375,8 +433,8 @@ function StockPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Yükleniyor...</div>
-          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">Yükleniyor…</div>
+          ) : displayRows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">Kayıt bulunamadı</div>
           ) : (
             <Table>
@@ -406,7 +464,7 @@ function StockPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paged.map((p) => {
+                {displayRows.map((p) => {
                   const st = stockState(p);
                   return (
                     <TableRow key={p.id} className={selectedIds.has(p.id) ? "bg-muted/50" : ""}>
@@ -440,12 +498,9 @@ function StockPage() {
               </TableBody>
             </Table>
           )}
-          {!loading && sorted.length > 0 && (
+          {!loading && displayTotal > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
-              <span>
-                {sorted.length} sonuç &mdash; sayfa {page} / {totalPages}
-                {sorted.length !== products.length && ` (toplam ${products.length} ürün)`}
-              </span>
+              <span>{displayTotal} sonuç &mdash; sayfa {page} / {totalPages}</span>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => setPage(1)} disabled={page === 1}>«</Button>
                 <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>‹ Önceki</Button>
@@ -501,7 +556,7 @@ function StockPage() {
         product={editing}
         categories={categoryNames}
         onClose={() => setEditing(null)}
-        onSaved={() => { setEditing(null); load(); }}
+        onSaved={() => { setEditing(null); loadStats(); if (clientMode) loadAllForClientFilter(); else loadPage(); }}
       />
     </div>
   );

@@ -144,7 +144,7 @@ function SalesPage() {
   }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
 
   // Filter değişince sayfayı sıfırla
-  useEffect(() => { setPage(1); }, [statusFilter, platformFilter, from, to, q]);
+  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedSales = useMemo(
@@ -228,6 +228,37 @@ function SalesPage() {
   }
 
   const [editing, setEditing] = useState<Sale | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const pagedIds = pagedSales.map((s) => s.id);
+  const allPageSelected = pagedIds.length > 0 && pagedIds.every((id) => selectedIds.has(id));
+
+  function toggleAll() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) pagedIds.forEach((id) => next.delete(id));
+      else pagedIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`${selectedIds.size} satışı silmek istediğinize emin misiniz?`)) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("sales").delete().in("id", ids);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success(`${ids.length} satış silindi`);
+    setSelectedIds(new Set());
+    load();
+  }
 
   return (
     <div className="space-y-6">
@@ -401,6 +432,15 @@ function SalesPage() {
         </Card>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm">
+          <span className="font-medium text-red-700">{selectedIds.size} kayıt seçildi</span>
+          <Button size="sm" variant="destructive" onClick={handleBulkDelete} className="gap-1.5 h-7">
+            <Trash2 className="h-3.5 w-3.5" /> Seçilenleri Sil
+          </Button>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -411,6 +451,9 @@ function SalesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
+                  </TableHead>
                   <TableHead>Tarih</TableHead>
                   <TableHead>Vade</TableHead>
                   <TableHead>Müşteri</TableHead>
@@ -429,7 +472,10 @@ function SalesPage() {
                 {pagedSales.map((s) => {
                   const profit = Number(s.total_amount || 0) - Number(s.total_cost || 0);
                   return (
-                  <TableRow key={s.id}>
+                  <TableRow key={s.id} className={selectedIds.has(s.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                      <Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleOne(s.id)} />
+                    </TableCell>
                     <TableCell className="whitespace-nowrap">{formatDate(s.sale_date)}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {s.due_date ? (() => {

@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History, Plus, Pencil } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
@@ -110,6 +111,7 @@ function StockPage() {
   const [lotsLoading, setLotsLoading] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   async function load() {
     setLoading(true);
@@ -159,6 +161,35 @@ function StockPage() {
       .order("created_at", { ascending: false });
     setLots((data as Lot[]) || []);
     setLotsLoading(false);
+  }
+
+  const allPageSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
+
+  function toggleAll() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) filtered.forEach((p) => next.delete(p.id));
+      else filtered.forEach((p) => next.add(p.id));
+      return next;
+    });
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`${selectedIds.size} ürünü silmek istediğinize emin misiniz?`)) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("products").delete().in("id", ids);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success(`${ids.length} ürün silindi`);
+    setSelectedIds(new Set());
+    load();
   }
 
   const lowStockProducts = products
@@ -276,6 +307,15 @@ function StockPage() {
         </CardContent>
       </Card>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm">
+          <span className="font-medium text-red-700">{selectedIds.size} kayıt seçildi</span>
+          <Button size="sm" variant="destructive" onClick={handleBulkDelete} className="gap-1.5 h-7">
+            <Trash2 className="h-3.5 w-3.5" /> Seçilenleri Sil
+          </Button>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -286,6 +326,9 @@ function StockPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
+                  </TableHead>
                   <TableHead>Ürün Adı</TableHead>
                   <TableHead>Ürün Kodu</TableHead>
                   <TableHead>Kısa İsmi</TableHead>
@@ -302,7 +345,10 @@ function StockPage() {
                 {filtered.map((p) => {
                   const st = stockState(p);
                   return (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className={selectedIds.has(p.id) ? "bg-muted/50" : ""}>
+                      <TableCell>
+                        <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleOne(p.id)} />
+                      </TableCell>
                       <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
                       <TableCell className="text-muted-foreground">{p.urun_kodu || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">{p.kisa_ismi || "-"}</TableCell>

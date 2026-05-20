@@ -15,7 +15,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, RefreshCw } from "lucide-react";
+import { Plus, Search, Receipt, RefreshCw, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
@@ -79,6 +80,7 @@ function ExpensesPage() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   async function load() {
     setLoading(true);
@@ -115,7 +117,7 @@ function ExpensesPage() {
     });
   }, [expenses, statusFilter, catFilter, from, to, q]);
 
-  useEffect(() => { setPage(1); }, [statusFilter, catFilter, from, to, q]);
+  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, catFilter, from, to, q]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedExpenses = useMemo(
@@ -128,6 +130,36 @@ function ExpensesPage() {
     const paid = filtered.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
     return { total, paid, remaining: total - paid, count: filtered.length };
   }, [filtered]);
+
+  const pagedIds = pagedExpenses.map((e) => e.id);
+  const allPageSelected = pagedIds.length > 0 && pagedIds.every((id) => selectedIds.has(id));
+
+  function toggleAll() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) pagedIds.forEach((id) => next.delete(id));
+      else pagedIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`${selectedIds.size} gideri silmek istediğinize emin misiniz?`)) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("expenses").delete().in("id", ids);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success(`${ids.length} gider silindi`);
+    setSelectedIds(new Set());
+    load();
+  }
 
   async function updateStatus(exp: Expense, newStatus: Status) {
     const patch: Partial<Expense> = { payment_status: newStatus };
@@ -221,6 +253,15 @@ function ExpensesPage() {
         </CardContent>
       </Card>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm">
+          <span className="font-medium text-red-700">{selectedIds.size} kayıt seçildi</span>
+          <Button size="sm" variant="destructive" onClick={handleBulkDelete} className="gap-1.5 h-7">
+            <Trash2 className="h-3.5 w-3.5" /> Seçilenleri Sil
+          </Button>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -231,6 +272,9 @@ function ExpensesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={allPageSelected} onCheckedChange={toggleAll} />
+                  </TableHead>
                   <TableHead>Tarih</TableHead>
                   <TableHead>Kategori</TableHead>
                   <TableHead>Not</TableHead>
@@ -241,7 +285,10 @@ function ExpensesPage() {
               </TableHeader>
               <TableBody>
                 {pagedExpenses.map((e) => (
-                  <TableRow key={e.id}>
+                  <TableRow key={e.id} className={selectedIds.has(e.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                      <Checkbox checked={selectedIds.has(e.id)} onCheckedChange={() => toggleOne(e.id)} />
+                    </TableCell>
                     <TableCell className="whitespace-nowrap">{formatDate(e.expense_date)}</TableCell>
                     <TableCell className="max-w-[180px]">
                       <div className="flex items-center gap-1.5">

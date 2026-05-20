@@ -167,6 +167,7 @@ function StockPage() {
           <CsvToolbar
             slug="stok"
             table="products"
+            upsertOn="name,user_id"
             fields={PRODUCTS_CSV_FIELDS}
             sampleRow={PRODUCTS_CSV_SAMPLE}
             exportRows={filtered.map((p) => ({

@@ -34,6 +34,8 @@ export type CsvToolbarProps = {
   transformRow?: (row: Record<string, string>) => Record<string, unknown> | string;
   /** Called after successful import to refresh data */
   onImported?: () => void;
+  /** If set, use upsert instead of insert. Comma-separated conflict columns, e.g. "name,user_id" */
+  upsertOn?: string;
 };
 
 function csvEscape(v: unknown): string {
@@ -91,7 +93,7 @@ export function parseCsv(text: string): string[][] {
 }
 
 export function CsvToolbar({
-  slug, table, fields, sampleRow, exportRows, transformRow, onImported,
+  slug, table, fields, sampleRow, exportRows, transformRow, onImported, upsertOn,
 }: CsvToolbarProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const xlsxRef = useRef<HTMLInputElement>(null);
@@ -260,7 +262,9 @@ export function CsvToolbar({
       let inserted = 0;
       for (let i = 0; i < payloads.length; i += 100) {
         const chunk = payloads.slice(i, i + 100);
-        const { error } = await supabase.from(table).insert(chunk);
+        const { error } = upsertOn
+          ? await supabase.from(table).upsert(chunk, { onConflict: upsertOn, ignoreDuplicates: false })
+          : await supabase.from(table).insert(chunk);
         if (error) {
           setErrorReport([
             `Veritabanı hatası: ${error.message}`,

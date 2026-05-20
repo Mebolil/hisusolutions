@@ -208,7 +208,7 @@ function StockPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
     const { error } = await supabase.from("products").delete().in("id", ids).eq("user_id", session.user.id);
-    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
     toast.success(`${ids.length} ürün silindi`);
     setSelectedIds(new Set());
     load();

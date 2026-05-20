@@ -114,6 +114,8 @@ function StockPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<keyof Product>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 100;
 
   function handleSort(col: keyof Product) {
     if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -127,12 +129,27 @@ function StockPage() {
 
   async function load() {
     setLoading(true);
-    const [p, c] = await Promise.all([
-      supabase.from("products").select("*").order("name"),
+    const [c] = await Promise.all([
       supabase.from("product_categories").select("id,name").order("name"),
     ]);
-    setProducts((p.data as Product[]) || []);
     setCategories((c.data as Category[]) || []);
+
+    // Supabase returns max 1000 rows per request — fetch all in batches
+    const all: Product[] = [];
+    const BATCH = 1000;
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("name")
+        .range(from, from + BATCH - 1);
+      if (error || !data || data.length === 0) break;
+      all.push(...(data as Product[]));
+      if (data.length < BATCH) break;
+      from += BATCH;
+    }
+    setProducts(all);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -188,6 +205,15 @@ function StockPage() {
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [filtered, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const paged = useMemo(
+    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sorted, page, PAGE_SIZE],
+  );
+
+  // Reset to page 1 when filters/sort change
+  useEffect(() => { setPage(1); }, [catFilter, stateFilter, q, sortKey, sortDir]);
 
   const allPageSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
 
@@ -380,7 +406,7 @@ function StockPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sorted.map((p) => {
+                {paged.map((p) => {
                   const st = stockState(p);
                   return (
                     <TableRow key={p.id} className={selectedIds.has(p.id) ? "bg-muted/50" : ""}>
@@ -413,6 +439,20 @@ function StockPage() {
                 })}
               </TableBody>
             </Table>
+          )}
+          {!loading && sorted.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+              <span>
+                {sorted.length} sonuç &mdash; sayfa {page} / {totalPages}
+                {sorted.length !== products.length && ` (toplam ${products.length} ürün)`}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setPage(1)} disabled={page === 1}>«</Button>
+                <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>‹ Önceki</Button>
+                <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Sonraki ›</Button>
+                <Button size="sm" variant="outline" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

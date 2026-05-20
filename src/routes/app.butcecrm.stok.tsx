@@ -21,7 +21,19 @@ import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 const PRODUCTS_CSV_FIELDS: CsvField[] = [
   {
     key: "name", label: "Ürün Adı",
-    aliases: ["ADI", "KISA ISM", "KISA İSMİ", "URUN ADI", "ÜRÜN", "ACIKLAMA", "AÇIKLAMA", "TANIM", "STOK ADI", "MALZEME ADI", "PRODUCT NAME", "NAME"],
+    aliases: ["ADI", "URUN ADI", "ÜRÜN", "ACIKLAMA", "AÇIKLAMA", "TANIM", "STOK ADI", "MALZEME ADI", "PRODUCT NAME", "NAME"],
+  },
+  {
+    key: "urun_kodu", label: "Ürün Kodu",
+    aliases: ["URUN KODU", "KODU", "KOD", "STOK KODU", "STOK KOD", "SKU", "ITEM CODE", "BARCODE", "BARKOD"],
+  },
+  {
+    key: "kisa_ismi", label: "Kısa İsmi",
+    aliases: ["KISA ISM", "KISA İSMİ", "KISA AD", "KISA ADI", "SHORT NAME", "KISAAD"],
+  },
+  {
+    key: "uretici_kodu", label: "Üretici Kodu",
+    aliases: ["URETICI KODU", "ÜRETİCİ KODU", "URETICI KOD", "MPN", "MANUFACTURER CODE", "MARKA KODU", "MODEL KODU"],
   },
   {
     key: "category", label: "Kategori",
@@ -40,11 +52,14 @@ const PRODUCTS_CSV_FIELDS: CsvField[] = [
     aliases: ["FIYAT", "FİYAT", "TL FIYAT", "TL FİYAT", "TL FIYAT KDV", "TL FİYAT + KDV", "SATIS FIYATI", "SATIŞ FİYATI", "BIRIM FIYAT", "BİRİM FİYAT", "PRICE", "UNIT PRICE", "TICARI", "TİCARİ"],
   },
 ];
-const PRODUCTS_CSV_SAMPLE = ["Örnek Ürün", "Genel", 100, 10, 50];
+const PRODUCTS_CSV_SAMPLE = ["Örnek Ürün", "URN-001", "Kısa Ad", "MPN-001", "Genel", 100, 10, 50];
 
 type Product = {
   id: string;
   name: string;
+  urun_kodu: string | null;
+  kisa_ismi: string | null;
+  uretici_kodu: string | null;
   category: string | null;
   quantity: number;
   low_stock_threshold: number;
@@ -172,6 +187,9 @@ function StockPage() {
             sampleRow={PRODUCTS_CSV_SAMPLE}
             exportRows={filtered.map((p) => ({
               name: p.name,
+              urun_kodu: p.urun_kodu,
+              kisa_ismi: p.kisa_ismi,
+              uretici_kodu: p.uretici_kodu,
               category: p.category,
               quantity: p.quantity,
               low_stock_threshold: p.low_stock_threshold,
@@ -268,7 +286,10 @@ function StockPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ürün</TableHead>
+                  <TableHead>Ürün Adı</TableHead>
+                  <TableHead>Ürün Kodu</TableHead>
+                  <TableHead>Kısa İsmi</TableHead>
+                  <TableHead>Üretici Kodu</TableHead>
                   <TableHead>Kategori</TableHead>
                   <TableHead className="text-right">Mevcut Stok</TableHead>
                   <TableHead className="text-right">Eşik</TableHead>
@@ -282,8 +303,11 @@ function StockPage() {
                   const st = stockState(p);
                   return (
                     <TableRow key={p.id}>
-                      <TableCell className="font-medium max-w-[260px] truncate">{p.name}</TableCell>
-                      <TableCell className="max-w-[160px] truncate text-muted-foreground">{p.category || "-"}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.urun_kodu || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.kisa_ismi || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.uretici_kodu || "-"}</TableCell>
+                      <TableCell className="max-w-[120px] truncate text-muted-foreground">{p.category || "-"}</TableCell>
                       <TableCell className="text-right font-medium">{Number(p.quantity)}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{Number(p.low_stock_threshold)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(Number(p.unit_price || 0))}</TableCell>
@@ -377,17 +401,13 @@ function NewProductDialog({
   categories: string[]; onCreated: () => void;
 }) {
   const [form, setForm] = useState({
-    name: "",
-    category: "",
-    newCategory: "",
-    quantity: "0",
-    low_stock_threshold: "5",
-    unit_price: "",
+    name: "", urun_kodu: "", kisa_ismi: "", uretici_kodu: "",
+    category: "", newCategory: "", quantity: "0", low_stock_threshold: "5", unit_price: "",
   });
   const [saving, setSaving] = useState(false);
 
   function reset() {
-    setForm({ name: "", category: "", newCategory: "", quantity: "0", low_stock_threshold: "5", unit_price: "" });
+    setForm({ name: "", urun_kodu: "", kisa_ismi: "", uretici_kodu: "", category: "", newCategory: "", quantity: "0", low_stock_threshold: "5", unit_price: "" });
   }
 
   async function submit(e: React.FormEvent) {
@@ -405,6 +425,9 @@ function NewProductDialog({
     const payload = {
       user_id: userId,
       name: form.name.trim(),
+      urun_kodu: form.urun_kodu.trim() || null,
+      kisa_ismi: form.kisa_ismi.trim() || null,
+      uretici_kodu: form.uretici_kodu.trim() || null,
       category: cat || null,
       quantity: Number(form.quantity || 0),
       low_stock_threshold: Number(form.low_stock_threshold || 0),
@@ -433,6 +456,20 @@ function NewProductDialog({
           <div>
             <Label>Ürün Adı</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>Ürün Kodu</Label>
+              <Input value={form.urun_kodu} onChange={(e) => setForm({ ...form, urun_kodu: e.target.value })} placeholder="Opsiyonel" />
+            </div>
+            <div>
+              <Label>Kısa İsmi</Label>
+              <Input value={form.kisa_ismi} onChange={(e) => setForm({ ...form, kisa_ismi: e.target.value })} placeholder="Opsiyonel" />
+            </div>
+            <div>
+              <Label>Üretici Kodu</Label>
+              <Input value={form.uretici_kodu} onChange={(e) => setForm({ ...form, uretici_kodu: e.target.value })} placeholder="Opsiyonel" />
+            </div>
           </div>
           <div>
             <Label>Kategori *</Label>
@@ -488,8 +525,8 @@ function EditProductDialog({
   onSaved: () => void;
 }) {
   const [form, setForm] = useState({
-    name: "", category: "", newCategory: "",
-    quantity: "0", low_stock_threshold: "0", unit_price: "",
+    name: "", urun_kodu: "", kisa_ismi: "", uretici_kodu: "",
+    category: "", newCategory: "", quantity: "0", low_stock_threshold: "0", unit_price: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -497,6 +534,9 @@ function EditProductDialog({
     if (product) {
       setForm({
         name: product.name,
+        urun_kodu: product.urun_kodu || "",
+        kisa_ismi: product.kisa_ismi || "",
+        uretici_kodu: product.uretici_kodu || "",
         category: product.category || "",
         newCategory: "",
         quantity: String(product.quantity ?? 0),
@@ -534,6 +574,9 @@ function EditProductDialog({
     }
     const { error } = await supabase.from("products").update({
       name: newName,
+      urun_kodu: form.urun_kodu.trim() || null,
+      kisa_ismi: form.kisa_ismi.trim() || null,
+      uretici_kodu: form.uretici_kodu.trim() || null,
       category: cat || null,
       quantity: newQty,
       low_stock_threshold: Number(form.low_stock_threshold || 0),
@@ -576,6 +619,20 @@ function EditProductDialog({
           <div>
             <Label>Ürün Adı</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>Ürün Kodu</Label>
+              <Input value={form.urun_kodu} onChange={(e) => setForm({ ...form, urun_kodu: e.target.value })} placeholder="Opsiyonel" />
+            </div>
+            <div>
+              <Label>Kısa İsmi</Label>
+              <Input value={form.kisa_ismi} onChange={(e) => setForm({ ...form, kisa_ismi: e.target.value })} placeholder="Opsiyonel" />
+            </div>
+            <div>
+              <Label>Üretici Kodu</Label>
+              <Input value={form.uretici_kodu} onChange={(e) => setForm({ ...form, uretici_kodu: e.target.value })} placeholder="Opsiyonel" />
+            </div>
           </div>
           <div>
             <Label>Kategori</Label>

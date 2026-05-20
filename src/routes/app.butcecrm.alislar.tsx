@@ -171,8 +171,11 @@ function PurchasesPage() {
     const ids = Array.from(selectedIds);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
-    const { error } = await supabase.from("purchases").delete().in("id", ids).eq("user_id", session.user.id);
-    if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
+    for (let i = 0; i < ids.length; i += 20) {
+      const chunk = ids.slice(i, i + 20);
+      const { error } = await supabase.from("purchases").delete().in("id", chunk).eq("user_id", session.user.id);
+      if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
+    }
     toast.success(`${ids.length} alış silindi`);
     setSelectedIds(new Set());
     load();

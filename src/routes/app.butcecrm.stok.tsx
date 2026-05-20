@@ -147,7 +147,12 @@ function StockPage() {
     return products.filter((p) => {
       if (catFilter !== "all" && p.category !== catFilter) return false;
       if (stateFilter !== "all" && stockState(p) !== stateFilter) return false;
-      if (q && !p.name.toLowerCase().includes(q.toLowerCase())) return false;
+      if (q) {
+        const ql = q.toLowerCase();
+        const match = [p.name, p.urun_kodu, p.kisa_ismi, p.uretici_kodu, p.category]
+          .some((v) => v && v.toLowerCase().includes(ql));
+        if (!match) return false;
+      }
       return true;
     });
   }, [products, catFilter, stateFilter, q]);
@@ -322,7 +327,7 @@ function StockPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Ara (ürün adı)</Label>
+              <Label className="text-xs">Ara (ad, kod, kategori…)</Label>
               <div className="relative">
                 <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
                 <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ara..." className="pl-8" />

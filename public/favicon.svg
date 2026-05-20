@@ -1,0 +1,13 @@
+<svg width="100%" viewBox="0 0 680 680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Hisu Solutions Favicon</title>
+  <!-- Badge background -->
+  <rect x="90" y="90" width="500" height="500" rx="110" fill="#0A1628"/>
+  <!-- H left bar -->
+  <rect x="185" y="195" width="110" height="290" rx="20" fill="#FFFFFF"/>
+  <!-- H right bar -->
+  <rect x="385" y="195" width="110" height="290" rx="20" fill="#FFFFFF"/>
+  <!-- H crossbar -->
+  <rect x="185" y="303" width="310" height="74" rx="14" fill="#00C2FF"/>
+  <!-- Cyan dot accent top-right -->
+  <circle cx="556" cy="124" r="38" fill="#00C2FF"/>
+</svg>

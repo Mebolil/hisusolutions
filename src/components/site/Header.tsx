@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { HisuLogo } from "@/components/HisuLogo";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -25,11 +26,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Zap className="h-5 w-5" />
-          </span>
-          <span className="font-display text-lg font-bold tracking-tight">Hisu Solutions</span>
+        <Link to="/">
+          <HisuLogo />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

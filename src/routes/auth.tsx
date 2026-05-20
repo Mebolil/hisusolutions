@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Lock, Mail, Zap } from "lucide-react";
+import { ArrowLeft, Lock, Mail } from "lucide-react";
+import { HisuLogo } from "@/components/HisuLogo";
 import { supabase, REMEMBER_ME_KEY } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,9 +48,8 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /></Link>
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Zap className="h-5 w-5" /></span>
-          <span className="font-display text-lg font-bold">Hisu Solutions</span>
+        <Link to="/">
+          <HisuLogo />
         </Link>
       </header>
 

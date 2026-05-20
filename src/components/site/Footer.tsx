@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Zap } from "lucide-react";
+import { HisuLogo } from "@/components/HisuLogo";
 
 export function Footer() {
   return (
@@ -7,10 +7,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Zap className="h-5 w-5" /></span>
-              <span className="font-display text-lg font-bold">Hisu Solutions</span>
-            </div>
+            <HisuLogo />
             <p className="mt-3 max-w-md text-sm text-muted-foreground">
               SaaS değil, AaaS. İşinize özel otomasyon, web ve finansal sistemler — anahtar teslim.
             </p>

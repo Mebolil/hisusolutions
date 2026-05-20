@@ -204,7 +204,6 @@ function StockPage() {
   }
 
   async function handleBulkDelete() {
-    if (!confirm(`${selectedIds.size} ürünü silmek istediğinize emin misiniz?`)) return;
     const ids = Array.from(selectedIds);
     const { error } = await supabase.from("products").delete().in("id", ids);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));

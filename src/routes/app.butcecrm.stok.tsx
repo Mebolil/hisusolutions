@@ -19,11 +19,26 @@ import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
 
 const PRODUCTS_CSV_FIELDS: CsvField[] = [
-  { key: "name",                 label: "Ürün Adı",        required: true },
-  { key: "category",             label: "Kategori" },
-  { key: "quantity",             label: "Stok Miktarı",    required: true, type: "number" },
-  { key: "low_stock_threshold",  label: "Düşük Stok Eşiği", type: "number" },
-  { key: "unit_price",           label: "Birim Fiyat",     type: "number" },
+  {
+    key: "name", label: "Ürün Adı",
+    aliases: ["ADI", "KISA ISM", "KISA İSMİ", "URUN ADI", "ÜRÜN", "ACIKLAMA", "AÇIKLAMA", "TANIM", "STOK ADI", "MALZEME ADI", "PRODUCT NAME", "NAME"],
+  },
+  {
+    key: "category", label: "Kategori",
+    aliases: ["ANA GRUP", "KATEGORI KODU", "KATEGORİ", "GRUP", "SEKTOR", "SEKTÖR KODU", "TIP", "TÜR", "CATEGORY"],
+  },
+  {
+    key: "quantity", label: "Stok Miktarı", type: "number",
+    aliases: ["MERKEZ MIKTAR", "MERKEZ MİKTAR", "MIKTAR", "MİKTAR", "ADET", "STOK", "QTY", "QUANTITY", "PCS", "TOPLAM MIKTAR"],
+  },
+  {
+    key: "low_stock_threshold", label: "Düşük Stok Eşiği", type: "number",
+    aliases: ["MINIMUM SEVIYE", "MİNİMUM SEVİYE", "MIN SEVIYE", "ALT SINIR", "REORDER", "SIPARIS SEVIYE", "SİPARİŞ SEVİYE"],
+  },
+  {
+    key: "unit_price", label: "Birim Fiyat", type: "number",
+    aliases: ["FIYAT", "FİYAT", "TL FIYAT", "TL FİYAT", "TL FIYAT KDV", "TL FİYAT + KDV", "SATIS FIYATI", "SATIŞ FİYATI", "BIRIM FIYAT", "BİRİM FİYAT", "PRICE", "UNIT PRICE", "TICARI", "TİCARİ"],
+  },
 ];
 const PRODUCTS_CSV_SAMPLE = ["Örnek Ürün", "Genel", 100, 10, 50];
 

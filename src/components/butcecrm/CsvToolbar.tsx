@@ -15,6 +15,8 @@ export type CsvField = {
   label: string;
   required?: boolean;
   type?: "string" | "number" | "date";
+  /** Extra column name aliases (ERP exports, alternate spellings, etc.) */
+  aliases?: string[];
 };
 
 export type CsvToolbarProps = {
@@ -164,22 +166,70 @@ export function CsvToolbar({
         return;
       }
       const headerRow = rows[0].map((h) => h.trim());
-      // Build a map: field.key -> column index in CSV (match by label OR key)
+
+      // Normalize a string for fuzzy matching: lowercase, strip diacritics, remove non-alphanumeric
+      function norm(s: string) {
+        return s.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+      }
+
+      // Build a map: field.key -> column index
+      // Priority: 1) exact match on label/key/aliases  2) partial match
       const colIdx: Record<string, number> = {};
       for (const f of fields) {
-        const idx = headerRow.findIndex(
-          (h) => h.toLocaleLowerCase("tr") === f.label.toLocaleLowerCase("tr")
-              || h.toLocaleLowerCase("tr") === f.key.toLocaleLowerCase("tr"),
-        );
+        const normLabel = norm(f.label);
+        const normKey = norm(f.key);
+        const normAliases = (f.aliases ?? []).map(norm);
+        const allExact = [normLabel, normKey, ...normAliases];
+
+        let idx = headerRow.findIndex((h) => allExact.includes(norm(h)));
+        if (idx === -1) {
+          // Partial: any alias/label/key is a substring of the header or vice versa
+          idx = headerRow.findIndex((h) => {
+            const hn = norm(h);
+            return allExact.some((a) => hn.includes(a) || a.includes(hn));
+          });
+        }
         colIdx[f.key] = idx;
       }
-      const missingRequired = fields.filter((f) => f.required && colIdx[f.key] === -1);
-      if (missingRequired.length > 0) {
-        toast.error(`Eksik kolon: ${missingRequired.map((f) => f.label).join(", ")}`);
-        return;
+
+      // Warn about unmatched columns but don't block
+      const unmatched = fields.filter((f) => colIdx[f.key] === -1);
+      const today = new Date().toISOString().slice(0, 10);
+
+      function defaultFor(f: CsvField): unknown {
+        if (f.type === "date") return today;
+        if (f.type === "number") return 0;
+        return "";
+      }
+
+      function coerceValue(f: CsvField, v: string): unknown {
+        if (v === "" || v === undefined) return defaultFor(f);
+        if (f.type === "number") {
+          const n = Number(v.replace(/\s/g, "").replace(",", "."));
+          return Number.isNaN(n) ? 0 : n;
+        }
+        if (f.type === "date") {
+          // Try DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+          const m = v.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+          if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+          // Try YYYY/MM/DD
+          const m2 = v.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
+          if (m2) return `${m2[1]}-${m2[2].padStart(2, "0")}-${m2[3].padStart(2, "0")}`;
+          // Excel serial date number
+          const serial = Number(v);
+          if (!Number.isNaN(serial) && serial > 1000) {
+            const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+          }
+          return today;
+        }
+        return v;
       }
 
       const errors: string[] = [];
+      if (unmatched.length > 0) {
+        errors.push(`Uyarı: şu kolonlar dosyada bulunamadı, varsayılan değer kullanıldı — ${unmatched.map((f) => f.label).join(", ")}`);
+      }
       const payloads: Record<string, unknown>[] = [];
       for (let r = 1; r < rows.length; r++) {
         const raw: Record<string, string> = {};
@@ -187,57 +237,23 @@ export function CsvToolbar({
           const idx = colIdx[f.key];
           raw[f.key] = idx >= 0 ? (rows[r][idx] ?? "").trim() : "";
         }
-        const lineNo = r + 1;
-        // Required check
-        const missing = fields.filter((f) => f.required && !raw[f.key]);
-        if (missing.length > 0) {
-          errors.push(`Satır ${lineNo}: zorunlu alan(lar) boş — ${missing.map((m) => m.label).join(", ")}`);
-          continue;
-        }
-        // Type coercion
+        // Type coercion — never skip rows, always use defaults on bad/missing values
         const obj: Record<string, unknown> = {};
-        let rowError: string | null = null;
         for (const f of fields) {
-          const v = raw[f.key];
-          if (v === "" || v === undefined) {
-            if (!f.required) { obj[f.key] = null; continue; }
-          }
-          if (f.type === "number") {
-            const n = Number(v.replace(",", "."));
-            if (Number.isNaN(n)) { rowError = `Satır ${lineNo}: "${f.label}" sayı olmalı (değer: "${v}")`; break; }
-            obj[f.key] = n;
-          } else if (f.type === "date") {
-            // Accept YYYY-MM-DD or DD.MM.YYYY or DD/MM/YYYY
-            let d = v;
-            const m = v.match(/^(\d{2})[./-](\d{2})[./-](\d{4})$/);
-            if (m) d = `${m[3]}-${m[2]}-${m[1]}`;
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-              rowError = `Satır ${lineNo}: "${f.label}" geçerli tarih değil (YYYY-MM-DD). Değer: "${v}"`; break;
-            }
-            obj[f.key] = d;
-          } else {
-            obj[f.key] = v;
-          }
+          obj[f.key] = coerceValue(f, raw[f.key]);
         }
-        if (rowError) { errors.push(rowError); continue; }
 
         if (transformRow) {
           const out = transformRow(raw);
-          if (typeof out === "string") { errors.push(`Satır ${lineNo}: ${out}`); continue; }
+          if (typeof out === "string") { errors.push(`Satır ${r + 1}: ${out}`); continue; }
           payloads.push({ user_id: session.user.id, ...out });
         } else {
           payloads.push({ user_id: session.user.id, ...obj });
         }
       }
 
-      if (errors.length > 0 && payloads.length === 0) {
-        setErrorReport(errors);
-        toast.error("İçe aktarma başarısız — lütfen hataları inceleyin");
-        return;
-      }
-
       if (payloads.length === 0) {
-        toast.error("İçe aktarılacak geçerli satır bulunamadı");
+        toast.error("İçe aktarılacak satır bulunamadı");
         return;
       }
 
@@ -258,11 +274,8 @@ export function CsvToolbar({
       }
 
       if (errors.length > 0) {
-        setErrorReport([
-          `${payloads.length} satır eklendi, ${errors.length} satır atlandı:`,
-          ...errors,
-        ]);
-        toast.success(`${payloads.length} kayıt eklendi (${errors.length} satır atlandı)`);
+        setErrorReport([`${payloads.length} kayıt eklendi (uyarılar):`, ...errors]);
+        toast.success(`${payloads.length} kayıt eklendi`);
       } else {
         toast.success(`${payloads.length} kayıt başarıyla eklendi`);
       }

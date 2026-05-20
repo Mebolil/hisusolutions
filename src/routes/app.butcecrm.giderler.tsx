@@ -175,7 +175,9 @@ function ExpensesPage() {
 
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds);
-    const { error } = await supabase.from("expenses").delete().in("id", ids);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from("expenses").delete().in("id", ids).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success(`${ids.length} gider silindi`);
     setSelectedIds(new Set());

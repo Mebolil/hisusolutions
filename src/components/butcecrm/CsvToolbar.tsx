@@ -259,9 +259,21 @@ export function CsvToolbar({
         return;
       }
 
+      // Deduplicate by conflict key — keep last occurrence
+      let deduped = payloads;
+      if (upsertOn) {
+        const conflictKeys = upsertOn.split(",").map((k) => k.trim());
+        const seen = new Map<string, Record<string, unknown>>();
+        for (const p of payloads) {
+          const key = conflictKeys.map((k) => String(p[k] ?? "")).join("|");
+          seen.set(key, p);
+        }
+        deduped = Array.from(seen.values());
+      }
+
       let inserted = 0;
-      for (let i = 0; i < payloads.length; i += 100) {
-        const chunk = payloads.slice(i, i + 100);
+      for (let i = 0; i < deduped.length; i += 100) {
+        const chunk = deduped.slice(i, i + 100);
         const { error } = upsertOn
           ? await supabase.from(table).upsert(chunk, { onConflict: upsertOn, ignoreDuplicates: false })
           : await supabase.from(table).insert(chunk);
@@ -278,10 +290,10 @@ export function CsvToolbar({
       }
 
       if (errors.length > 0) {
-        setErrorReport([`${payloads.length} kayıt eklendi (uyarılar):`, ...errors]);
-        toast.success(`${payloads.length} kayıt eklendi`);
+        setErrorReport([`${deduped.length} kayıt eklendi (uyarılar):`, ...errors]);
+        toast.success(`${deduped.length} kayıt eklendi`);
       } else {
-        toast.success(`${payloads.length} kayıt başarıyla eklendi`);
+        toast.success(`${deduped.length} kayıt başarıyla eklendi`);
       }
       onImported?.();
     } catch (err) {

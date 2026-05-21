@@ -18,6 +18,37 @@ export const Route = createFileRoute("/butceleme")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/butceleme" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "BütçeCRM",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://hisusolutions.com/butceleme",
+          "description": "E-ticaret ve KOBİ'ler için gelir, gider, stok ve reklam ROI yönetimi. Tek ekranda finansal kontrol.",
+          "inLanguage": "tr-TR",
+          "offers": {
+            "@type": "Offer",
+            "price": "890",
+            "priceCurrency": "TRY",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "890",
+              "priceCurrency": "TRY",
+              "unitCode": "MON"
+            }
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Hisu Solutions",
+            "url": "https://hisusolutions.com"
+          }
+        }),
+      },
+    ],
   }),
   component: ButcelemePage,
 });

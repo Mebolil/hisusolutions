@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Instagram, Lightbulb, Wrench, TrendingUp, Quote } from "lucide-react";
+import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -159,7 +159,7 @@ function HomePage() {
                 rel="noopener noreferrer"
                 className="ml-4 grid h-10 w-10 place-items-center rounded-xl border border-border bg-background transition hover:border-primary/40 hover:text-primary"
               >
-                <Instagram className="h-5 w-5" />
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
               </a>
             </div>
           </div>

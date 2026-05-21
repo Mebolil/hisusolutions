@@ -50,7 +50,8 @@ function ContactPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-3xl px-4 py-20 text-center lg:px-8 lg:py-24">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">İletişim</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl"><span className="text-primary">Ücretsiz</span> Görüşme Al</h1>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Hisu Solutions İletişim | Demo ve Teklif Al</h1>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl"><span className="text-primary">Ücretsiz</span> Görüşme Al</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions ile iletişime geçin: otomasyon, BütçeCRM veya web tasarım projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde dönüş yapıyoruz.</p>
         </div>
       </section>

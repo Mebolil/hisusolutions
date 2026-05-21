@@ -82,6 +82,9 @@ function HomePage() {
             <Sparkles className="h-4 w-4" /> Türkiye'nin AaaS Platformu
           </span>
           <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-bold tracking-tight md:text-7xl">
+            KOBİ Otomasyon ve Yazılım Çözümleri | Hisu Solutions
+          </h1>
+          <h2 className="mx-auto mt-4 max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
             Sistemi Biz Kurarız.{" "}
             <br />
             <span className="text-muted-foreground font-normal">Siz sadece </span>
@@ -97,7 +100,7 @@ function HomePage() {
                 {titles[titleNumber]}
               </motion.span>
             </AnimatePresence>
-          </h1>
+          </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             SaaS değil, AaaS. Her çözümü işinize özel kuruyor, teslim ediyor ve yanınızda kalıyoruz.
             Teknoloji altyapınızı siz değil, biz taşırız.

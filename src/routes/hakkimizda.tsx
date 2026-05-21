@@ -55,7 +55,8 @@ function AboutPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-4xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Biz Kimiz?</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Daha Az Kaynakla <span className="text-primary">Daha Fazla Değer</span> Üretiyoruz</h1>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Hisu Solutions Kimdir | İstanbul Teknoloji Girişimi</h1>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Daha Az Kaynakla <span className="text-primary">Daha Fazla Değer</span> Üretiyoruz</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, Türkiye'deki KOBİ'lere otomasyon, bütçe yönetimi ve kurumsal web tasarım hizmetleri sunan bir AaaS platformudur. Büyük bütçeler gerektirmeden işletmelerin teknolojiyle büyümesini sağlamak için kuruldu.</p>
         </div>
       </section>

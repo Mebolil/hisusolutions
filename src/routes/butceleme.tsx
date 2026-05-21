@@ -81,7 +81,8 @@ function ButcelemePage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Finansal Otomasyon</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Paranın Nereye Gittiğini Artık Biliyorsun</h1>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">KOBİ Bütçe Yönetim Yazılımı | BütçeCRM</h1>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Paranın Nereye Gittiğini Artık Biliyorsun</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için satış, stok, gider ve reklam ROI'sini tek ekranda yöneten finansal yönetim yazılımıdır. Excel'e, muhasebecine sormaya son.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Demo Talep Et <ArrowRight className="h-4 w-4" /></a>

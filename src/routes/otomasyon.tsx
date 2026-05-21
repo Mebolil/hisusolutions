@@ -76,7 +76,8 @@ function OtomasyonPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">AaaS — Automation as a Service</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Sistemi Biz Kurarız.<br/><span className="text-primary">Siz Sadece Büyüyün.</span></h1>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">İş Süreci Otomasyonu | Türkiye KOBİ</h1>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Sistemi Biz Kurarız.<br/><span className="text-primary">Siz Sadece Büyüyün.</span></h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, KOBİ'lerin tekrarlayan iş süreçlerini — sipariş takibi, müşteri bildirimleri, raporlama — şirketinize özel otomasyon sistemleriyle otomatikleştirir. Anahtar teslim kurulum, sıfır teknik bilgi gerektirir.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">İhtiyacımı Anlat <ArrowRight className="h-4 w-4" /></a>

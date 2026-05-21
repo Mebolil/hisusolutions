@@ -58,7 +58,8 @@ function WebSitePage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Özel Tasarım Site</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">3 Günde Web Siteniz Hazır.<br/><span className="text-primary">Siz Sadece Vizyonunuzu Anlatın.</span></h1>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Kurumsal Web Sitesi Tasarımı | 3 Günde Teslim</h1>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">3 Günde Web Siteniz Hazır.<br/><span className="text-primary">Siz Sadece Vizyonunuzu Anlatın.</span></h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, KOBİ'lere 3 iş gününde marka DNA'sına özel kurumsal web sitesi tasarlar ve teslim eder. Hazır şablon yok, her site sıfırdan üretilir. Starter paket ₺9.900'dan başlar.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#basla" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Hemen Başla — ₺9.900 <ArrowRight className="h-4 w-4" /></a>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { LeadForm } from "@/components/site/LeadForm";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, Check } from "lucide-react";
 
 export const Route = createFileRoute("/web-sitesi")({
@@ -18,9 +19,31 @@ export const Route = createFileRoute("/web-sitesi")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/web-sitesi" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Web sitesi gerçekten 3 günde teslim ediliyor mu?", "acceptedAnswer": { "@type": "Answer", "text": "Evet. Gün 1: marka analizi, Gün 2: tasarım ve strateji, Gün 3: teslim ve domain bağlantısı. Starter paket için 3 iş günü garantidir." } },
+            { "@type": "Question", "name": "Web sitesi fiyatı ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Starter paket ₺9.900 + KDV tek seferlik ödeme. Çok sayfalı, kurumsal siteler için Nihai Paket teklif bazlıdır. Her iki pakette de 3 ay bakım mevcuttur." } },
+            { "@type": "Question", "name": "Hazır şablon mu kullanılıyor?", "acceptedAnswer": { "@type": "Answer", "text": "Hayır. Her site marka DNA'nıza özel tasarlanır. Logo, renk, hedef kitle ve referans siteleriniz analiz edilerek özgün bir tasarım üretilir." } },
+            { "@type": "Question", "name": "Teslimden sonra destek var mı?", "acceptedAnswer": { "@type": "Answer", "text": "Starter pakette 1 revizyon hakkı bulunur. Nihai pakette 3 ay ücretsiz bakım ve sınırsız revizyon dahildir." } },
+          ]
+        }),
+      },
+    ],
   }),
   component: WebSitePage,
 });
+
+const faqs: FaqItem[] = [
+  { q: "Web sitesi gerçekten 3 günde teslim ediliyor mu?", a: "Evet. Gün 1: marka analizi, Gün 2: tasarım ve strateji, Gün 3: teslim ve domain bağlantısı. Starter paket için 3 iş günü garantidir." },
+  { q: "Web sitesi fiyatı ne kadar?", a: "Starter paket ₺9.900 + KDV tek seferlik ödeme. Çok sayfalı, kurumsal siteler için Nihai Paket teklif bazlıdır. Her iki pakette de 3 ay bakım mevcuttur." },
+  { q: "Hazır şablon mu kullanılıyor?", a: "Hayır. Her site marka DNA'nıza özel tasarlanır. Logo, renk, hedef kitle ve referans siteleriniz analiz edilerek özgün bir tasarım üretilir." },
+  { q: "Teslimden sonra destek var mı?", a: "Starter pakette 1 revizyon hakkı bulunur. Nihai pakette 3 ay ücretsiz bakım ve sınırsız revizyon dahildir." },
+];
 
 const steps = [
   { n: 1, day: "Gün 1", t: "Marka Analizi", d: "Logonuzu, renklerinizi, referans sitelerinizi ve hedef kitlenizi birlikte ele alırız." },
@@ -36,7 +59,7 @@ function WebSitePage() {
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Özel Tasarım Site</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">3 Günde Web Siteniz Hazır.<br/><span className="text-primary">Siz Sadece Vizyonunuzu Anlatın.</span></h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Şablon değil, marka DNA'nıza özel. Biz tasarlar, biz kurar, anahtarı size teslim ederiz.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, KOBİ'lere 3 iş gününde marka DNA'sına özel kurumsal web sitesi tasarlar ve teslim eder. Hazır şablon yok, her site sıfırdan üretilir. Starter paket ₺9.900'dan başlar.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#basla" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Hemen Başla — ₺9.900 <ArrowRight className="h-4 w-4" /></a>
             <a href="#surec" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
@@ -88,6 +111,8 @@ function WebSitePage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
 
       <section id="basla" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl border border-border bg-card p-8 md:p-12">

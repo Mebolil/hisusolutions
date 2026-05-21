@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { LeadForm } from "@/components/site/LeadForm";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing } from "lucide-react";
 
 export const Route = createFileRoute("/butceleme")({
@@ -19,6 +20,19 @@ export const Route = createFileRoute("/butceleme")({
       { rel: "canonical", href: "https://hisusolutions.com/butceleme" },
     ],
     scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "BütçeCRM nedir?", "acceptedAnswer": { "@type": "Answer", "text": "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." } },
+            { "@type": "Question", "name": "BütçeCRM ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Demo görüşmesiyle başlayabilirsiniz." } },
+            { "@type": "Question", "name": "BütçeCRM Excel'den farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." } },
+            { "@type": "Question", "name": "Kimler BütçeCRM kullanabilir?", "acceptedAnswer": { "@type": "Answer", "text": "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." } },
+          ]
+        }),
+      },
       {
         type: "application/ld+json",
         children: JSON.stringify({
@@ -53,6 +67,13 @@ export const Route = createFileRoute("/butceleme")({
   component: ButcelemePage,
 });
 
+const faqs: FaqItem[] = [
+  { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." },
+  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Demo görüşmesiyle başlayabilirsiniz." },
+  { q: "BütçeCRM Excel'den farkı nedir?", a: "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." },
+  { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
+];
+
 function ButcelemePage() {
   return (
     <SiteLayout>
@@ -61,7 +82,7 @@ function ButcelemePage() {
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Finansal Otomasyon</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Paranın Nereye Gittiğini Artık Biliyorsun</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Satış, stok, gider ve reklam performansını tek ekranda gör. Excel'e, muhasebecine sormaya son.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için satış, stok, gider ve reklam ROI'sini tek ekranda yöneten finansal yönetim yazılımıdır. Excel'e, muhasebecine sormaya son.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Demo Talep Et <ArrowRight className="h-4 w-4" /></a>
             <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
@@ -134,6 +155,8 @@ function ButcelemePage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
 
       {/* Demo form */}
       <section id="demo" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">

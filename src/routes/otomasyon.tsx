@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { LeadForm } from "@/components/site/LeadForm";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, Mail, FileBarChart, Users, Workflow, MessageSquare, ListTodo } from "lucide-react";
 
 export const Route = createFileRoute("/otomasyon")({
@@ -18,9 +19,31 @@ export const Route = createFileRoute("/otomasyon")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/otomasyon" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Otomasyon sistemleri nasıl çalışır?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions sürecinizi analiz eder, şirketinize özel bir otomasyon mimarisi tasarlar ve sistemi kurup teslim eder. Keşif görüşmesi → özel sistem tasarımı → kurulum ve teslim şeklinde ilerler." } },
+            { "@type": "Question", "name": "Otomasyon kurulumu ne kadar sürer?", "acceptedAnswer": { "@type": "Answer", "text": "Projenin kapsamına göre değişir. Basit e-posta ve bildirim otomasyonları 3-5 iş gününde teslim edilir. Karmaşık CRM ve entegrasyon projeleri 2-4 haftaya uzayabilir." } },
+            { "@type": "Question", "name": "Hangi iş süreçleri otomatikleştirilebilir?", "acceptedAnswer": { "@type": "Answer", "text": "Sipariş takibi, müşteri bildirimleri, faturalama, raporlama, CRM süreçleri, WhatsApp mesajlaşması, stok güncellemeleri ve ekip içi görev atamaları otomatikleştirilebilir." } },
+            { "@type": "Question", "name": "Otomasyon hizmetinin fiyatı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Şirketinize özel tasarlandığı için fiyatlandırma keşif görüşmesinde belirlenir. Ücretsiz keşif görüşmesi talep edebilirsiniz." } },
+          ]
+        }),
+      },
+    ],
   }),
   component: OtomasyonPage,
 });
+
+const faqs: FaqItem[] = [
+  { q: "Otomasyon sistemleri nasıl çalışır?", a: "Hisu Solutions sürecinizi analiz eder, şirketinize özel bir otomasyon mimarisi tasarlar ve sistemi kurup teslim eder. Keşif görüşmesi → özel sistem tasarımı → kurulum ve teslim şeklinde ilerler." },
+  { q: "Otomasyon kurulumu ne kadar sürer?", a: "Projenin kapsamına göre değişir. Basit e-posta ve bildirim otomasyonları 3-5 iş gününde teslim edilir. Karmaşık CRM ve entegrasyon projeleri 2-4 haftaya uzayabilir." },
+  { q: "Hangi iş süreçleri otomatikleştirilebilir?", a: "Sipariş takibi, müşteri bildirimleri, faturalama, raporlama, CRM süreçleri, WhatsApp mesajlaşması, stok güncellemeleri ve ekip içi görev atamaları otomatikleştirilebilir." },
+  { q: "Otomasyon hizmetinin fiyatı nedir?", a: "Şirketinize özel tasarlandığı için fiyatlandırma keşif görüşmesinde belirlenir. Ücretsiz keşif görüşmesi talep edebilirsiniz." },
+];
 
 const pains = [
   "Siparişleri manuel takip etmek",
@@ -54,7 +77,7 @@ function OtomasyonPage() {
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">AaaS — Automation as a Service</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Sistemi Biz Kurarız.<br/><span className="text-primary">Siz Sadece Büyüyün.</span></h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Tekrarlayan işleri, manuel süreçleri ve zaman kayıplarını otomasyona devrediyoruz. Şirketinize özel tasarlanmış, anahtar teslim sistemler.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, KOBİ'lerin tekrarlayan iş süreçlerini — sipariş takibi, müşteri bildirimleri, raporlama — şirketinize özel otomasyon sistemleriyle otomatikleştirir. Anahtar teslim kurulum, sıfır teknik bilgi gerektirir.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">İhtiyacımı Anlat <ArrowRight className="h-4 w-4" /></a>
             <a href="#cozumler" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Ne Yapıyoruz?</a>
@@ -121,6 +144,8 @@ function OtomasyonPage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
 
       <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl bg-primary p-12 text-center text-primary-foreground md:p-16">

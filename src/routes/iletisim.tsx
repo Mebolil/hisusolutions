@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { LeadForm } from "@/components/site/LeadForm";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { Mail, Phone, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/iletisim")({
@@ -18,9 +19,29 @@ export const Route = createFileRoute("/iletisim")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/iletisim" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "hello@hisu.solutions adresine e-posta gönderebilir, +90 553 900 34 59 numarasını WhatsApp veya telefon olarak kullanabilir ya da bu sayfadaki iletişim formunu doldurabilirsiniz." } },
+            { "@type": "Question", "name": "Keşif görüşmesi ne kadar sürer?", "acceptedAnswer": { "@type": "Answer", "text": "İlk keşif görüşmesi genellikle 30 dakika sürer. Bu görüşmede ihtiyaçlarınız, beklentileriniz ve size uygun çözüm seçenekleri değerlendirilir." } },
+            { "@type": "Question", "name": "Görüşme ücretli mi?", "acceptedAnswer": { "@type": "Answer", "text": "Hayır. İlk keşif görüşmesi tamamen ücretsizdir. Formu doldurun ya da WhatsApp'tan yazın, 24 saat içinde dönüş yaparız." } },
+          ]
+        }),
+      },
+    ],
   }),
   component: ContactPage,
 });
+
+const faqs: FaqItem[] = [
+  { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "hello@hisu.solutions adresine e-posta gönderebilir, +90 553 900 34 59 numarasını WhatsApp veya telefon olarak kullanabilir ya da bu sayfadaki iletişim formunu doldurabilirsiniz." },
+  { q: "Keşif görüşmesi ne kadar sürer?", a: "İlk keşif görüşmesi genellikle 30 dakika sürer. Bu görüşmede ihtiyaçlarınız, beklentileriniz ve size uygun çözüm seçenekleri değerlendirilir." },
+  { q: "Görüşme ücretli mi?", a: "Hayır. İlk keşif görüşmesi tamamen ücretsizdir. Formu doldurun ya da WhatsApp'tan yazın, 24 saat içinde dönüş yaparız." },
+];
 
 function ContactPage() {
   return (
@@ -30,7 +51,7 @@ function ContactPage() {
         <div className="mx-auto max-w-3xl px-4 py-20 text-center lg:px-8 lg:py-24">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">İletişim</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl"><span className="text-primary">Ücretsiz</span> Görüşme Al</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde dönüş yapıyoruz.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions ile iletişime geçin: otomasyon, BütçeCRM veya web tasarım projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde dönüş yapıyoruz.</p>
         </div>
       </section>
 
@@ -67,6 +88,8 @@ function ContactPage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
     </SiteLayout>
   );
 }

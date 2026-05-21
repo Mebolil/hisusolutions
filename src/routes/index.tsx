@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -19,9 +20,31 @@ export const Route = createFileRoute("/")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
+            { "@type": "Question", "name": "AaaS nedir, SaaS'tan farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." } },
+            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." } },
+            { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "hello@hisu.solutions adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
+          ]
+        }),
+      },
+    ],
   }),
   component: HomePage,
 });
+
+const faqs: FaqItem[] = [
+  { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." },
+  { q: "AaaS nedir, SaaS'tan farkı nedir?", a: "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." },
+  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." },
+  { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "hello@hisu.solutions adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
+];
 
 const products = [
   { to: "/butceleme", icon: BarChart3, title: "BütçeCRM", desc: "E-ticaret ve KOBİ'ler için gelir, gider, stok ve reklam ROI'sini tek ekranda görün." },
@@ -177,6 +200,8 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 py-24 lg:px-8">

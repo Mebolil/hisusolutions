@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 
 export const Route = createFileRoute("/hakkimizda")({
   head: () => ({
@@ -16,9 +17,29 @@ export const Route = createFileRoute("/hakkimizda")({
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/hakkimizda" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Hisu Solutions kimdir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki küçük ve orta ölçekli işletmelere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur. Düşük maliyetle yüksek değer üretme felsefesiyle çalışır." } },
+            { "@type": "Question", "name": "Hisu ne anlama geliyor?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu; Hacking, Innovation, Solutions ve Ultimate kelimelerinin baş harflerinden oluşur. Her harf bir çalışma prensibini temsil eder: yenilikçi yöntemler, özgün çözümler ve en yüksek değer." } },
+            { "@type": "Question", "name": "Hisu Solutions ile çalışmak nasıl başlar?", "acceptedAnswer": { "@type": "Answer", "text": "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. hello@hisu.solutions veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." } },
+          ]
+        }),
+      },
+    ],
   }),
   component: AboutPage,
 });
+
+const faqs: FaqItem[] = [
+  { q: "Hisu Solutions kimdir?", a: "Hisu Solutions, Türkiye'deki küçük ve orta ölçekli işletmelere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur. Düşük maliyetle yüksek değer üretme felsefesiyle çalışır." },
+  { q: "Hisu ne anlama geliyor?", a: "Hisu; Hacking, Innovation, Solutions ve Ultimate kelimelerinin baş harflerinden oluşur. Her harf bir çalışma prensibini temsil eder: yenilikçi yöntemler, özgün çözümler ve en yüksek değer." },
+  { q: "Hisu Solutions ile çalışmak nasıl başlar?", a: "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. hello@hisu.solutions veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." },
+];
 
 const letters = [
   { l: "H", t: "Hacking", d: "Düşük maliyetli, yenilikçi yöntemlerle hızlı büyüme sağlama. Kısıtları değil, fırsatları görme." },
@@ -35,7 +56,7 @@ function AboutPage() {
         <div className="mx-auto max-w-4xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Biz Kimiz?</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Daha Az Kaynakla <span className="text-primary">Daha Fazla Değer</span> Üretiyoruz</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu, büyük bütçelere gerek kalmadan işletmelerin teknolojiyle büyümesini sağlamak için kuruldu. Piyasanın alışıldık yolunu değil, daha akıllı olanı seçiyoruz.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, Türkiye'deki KOBİ'lere otomasyon, bütçe yönetimi ve kurumsal web tasarım hizmetleri sunan bir AaaS platformudur. Büyük bütçeler gerektirmeden işletmelerin teknolojiyle büyümesini sağlamak için kuruldu.</p>
         </div>
       </section>
 
@@ -81,6 +102,8 @@ function AboutPage() {
           </div>
         </div>
       </section>
+
+      <FaqBlock items={faqs} />
 
       <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl bg-primary p-12 text-center text-primary-foreground md:p-16">

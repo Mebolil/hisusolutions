@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2 } from "lucide-react";
+import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Instagram, Lightbulb, Wrench, TrendingUp, Quote } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,6 +31,8 @@ export const Route = createFileRoute("/")({
             { "@type": "Question", "name": "AaaS nedir, SaaS'tan farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." } },
             { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "hello@hisu.solutions adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
+            { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Ata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere düşük maliyetle yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
+            { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin pahalı kurumsal yazılımlara gerek duymadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Düşük maliyet, yüksek değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
           ]
         }),
       },
@@ -44,6 +46,8 @@ const faqs: FaqItem[] = [
   { q: "AaaS nedir, SaaS'tan farkı nedir?", a: "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." },
   { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "hello@hisu.solutions adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
+  { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Ata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere düşük maliyetle yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
+  { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin pahalı kurumsal yazılımlara gerek duymadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Düşük maliyet, yüksek değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
 ];
 
 const products = [
@@ -131,6 +135,61 @@ function HomePage() {
                 </span>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Kurucu */}
+      <section className="border-t border-border/60">
+        <div className="mx-auto max-w-6xl px-4 py-24 lg:px-8">
+          <div className="text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Kurucu</span>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Hisu Solutions'u Neden Kurdum?</h2>
+          </div>
+
+          {/* Kurucu kartı */}
+          <div className="mt-12 flex justify-center">
+            <div className="flex items-center gap-6 rounded-3xl border border-border bg-card px-8 py-6">
+              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-primary-soft text-4xl font-bold text-primary">M</div>
+              <div>
+                <p className="text-xl font-bold">Melih Ata</p>
+                <p className="text-sm text-muted-foreground">Kurucu &amp; BütçeCRM Yapımcısı</p>
+                <span className="mt-1.5 inline-block rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary">19 yaşında</span>
+              </div>
+              <a
+                href="https://www.instagram.com/melihaataa/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-4 grid h-10 w-10 place-items-center rounded-xl border border-border bg-background transition hover:border-primary/40 hover:text-primary"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+
+          {/* 3 kart */}
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              { icon: Lightbulb, t: "Pahalı yazılımlara gerek yok", d: "KOBİ'ler kurumsal kaliteyi yüksek bütçe olmadan hak ediyor." },
+              { icon: Wrench, t: "No-code ile gerçek ürün", d: "BütçeCRM'i ve otomasyon sistemlerini doğru araçları seçerek inşa ettim." },
+              { icon: TrendingUp, t: "Düşük maliyet, yüksek değer", d: "Bu Hisu'nun çekirdeği — her çözümde bu felsefeyle hareket ediyoruz." },
+            ].map(c => (
+              <div key={c.t} className="rounded-2xl border border-border bg-card p-7">
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><c.icon className="h-6 w-6" /></span>
+                <h3 className="mt-5 text-lg font-bold">{c.t}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{c.d}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Quote */}
+          <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft px-8 py-6">
+            <Quote className="h-8 w-8 text-primary/40" />
+            <p className="mt-3 text-lg font-medium leading-relaxed">
+              KOBİ'lerin sisteme ihtiyacı var, karmaşıklığa değil.<br />
+              Ben bunu mümkün kılmak için buradayım.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-primary">— Melih Ata</p>
           </div>
         </div>
       </section>

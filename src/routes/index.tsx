@@ -85,10 +85,7 @@ function HomePage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-sm font-medium text-accent-foreground">
             <Sparkles className="h-4 w-4" /> Türkiye'nin AaaS Platformu
           </span>
-          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-bold tracking-tight md:text-7xl">
-            KOBİ Otomasyon ve Yazılım Çözümleri | Hisu Solutions
-          </h1>
-          <h2 className="mx-auto mt-4 max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
+          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-bold tracking-tight md:text-6xl">
             Sistemi Biz Kurarız.{" "}
             <br />
             <span className="text-muted-foreground font-normal">Siz sadece </span>

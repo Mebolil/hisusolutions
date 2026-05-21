@@ -101,7 +101,7 @@ function HomePage() {
                 {titles[titleNumber]}
               </motion.span>
             </AnimatePresence>
-          </h2>
+          </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             SaaS değil, AaaS. Her çözümü işinize özel kuruyor, teslim ediyor ve yanınızda kalıyoruz.
             Teknoloji altyapınızı siz değil, biz taşırız.

@@ -31,8 +31,8 @@ export const Route = createFileRoute("/")({
             { "@type": "Question", "name": "AaaS nedir, SaaS'tan farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." } },
             { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
-            { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere düşük maliyetle yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
-            { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin pahalı kurumsal yazılımlara gerek duymadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Düşük maliyet, yüksek değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
+            { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
+            { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
           ]
         }),
       },
@@ -46,8 +46,8 @@ const faqs: FaqItem[] = [
   { q: "AaaS nedir, SaaS'tan farkı nedir?", a: "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." },
   { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
-  { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere düşük maliyetle yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
-  { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin pahalı kurumsal yazılımlara gerek duymadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Düşük maliyet, yüksek değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
+  { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
+  { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
 ];
 
 const products = [
@@ -167,9 +167,9 @@ function HomePage() {
           {/* 3 kart */}
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { icon: Lightbulb, t: "Pahalı yazılımlara gerek yok", d: "KOBİ'ler kurumsal kaliteyi yüksek bütçe olmadan hak ediyor." },
+              { icon: Lightbulb, t: "Karmaşıklığa gerek yok", d: "KOBİ'ler kurumsal kaliteyi gereksiz karmaşıklık olmadan hak ediyor." },
               { icon: Wrench, t: "No-code ile gerçek ürün", d: "BütçeCRM'i ve otomasyon sistemlerini doğru araçları seçerek inşa ettim." },
-              { icon: TrendingUp, t: "Düşük maliyet, yüksek değer", d: "Bu Hisu'nun çekirdeği — her çözümde bu felsefeyle hareket ediyoruz." },
+              { icon: TrendingUp, t: "Doğru sistem, ölçeklenebilir sonuç", d: "Bu Hisu'nun çekirdeği — her çözümde bu felsefeyle hareket ediyoruz." },
             ].map(c => (
               <div key={c.t} className="rounded-2xl border border-border bg-card p-7">
                 <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><c.icon className="h-6 w-6" /></span>
@@ -183,8 +183,8 @@ function HomePage() {
           <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft px-8 py-6">
             <Quote className="h-8 w-8 text-primary/40" />
             <p className="mt-3 text-lg font-medium leading-relaxed">
-              KOBİ'lerin sisteme ihtiyacı var, karmaşıklığa değil.<br />
-              Ben bunu mümkün kılmak için buradayım.
+              KOBİ'ler kurumsal kaliteyi hak ediyor.<br />
+              Biz bunu gereksiz karmaşıklık olmadan mümkün kılıyoruz.
             </p>
             <p className="mt-3 text-sm font-semibold text-primary">— Melih Hata</p>
           </div>

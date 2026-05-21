@@ -26,7 +26,7 @@ export const Route = createFileRoute("/hakkimizda")({
           "mainEntity": [
             { "@type": "Question", "name": "Hisu Solutions kimdir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki küçük ve orta ölçekli işletmelere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur. Düşük maliyetle yüksek değer üretme felsefesiyle çalışır." } },
             { "@type": "Question", "name": "Hisu ne anlama geliyor?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu; Hacking, Innovation, Solutions ve Ultimate kelimelerinin baş harflerinden oluşur. Her harf bir çalışma prensibini temsil eder: yenilikçi yöntemler, özgün çözümler ve en yüksek değer." } },
-            { "@type": "Question", "name": "Hisu Solutions ile çalışmak nasıl başlar?", "acceptedAnswer": { "@type": "Answer", "text": "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. hello@hisu.solutions veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." } },
+            { "@type": "Question", "name": "Hisu Solutions ile çalışmak nasıl başlar?", "acceptedAnswer": { "@type": "Answer", "text": "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. info@hisusolutions.com veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." } },
           ]
         }),
       },
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/hakkimizda")({
 const faqs: FaqItem[] = [
   { q: "Hisu Solutions kimdir?", a: "Hisu Solutions, Türkiye'deki küçük ve orta ölçekli işletmelere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur. Düşük maliyetle yüksek değer üretme felsefesiyle çalışır." },
   { q: "Hisu ne anlama geliyor?", a: "Hisu; Hacking, Innovation, Solutions ve Ultimate kelimelerinin baş harflerinden oluşur. Her harf bir çalışma prensibini temsil eder: yenilikçi yöntemler, özgün çözümler ve en yüksek değer." },
-  { q: "Hisu Solutions ile çalışmak nasıl başlar?", a: "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. hello@hisu.solutions veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." },
+  { q: "Hisu Solutions ile çalışmak nasıl başlar?", a: "Ücretsiz keşif görüşmesi ile başlar. İhtiyacınızı anlatırsınız, size özel çözümü birlikte tasarlarız ve süreci başlatırız. info@hisusolutions.com veya WhatsApp (+90 553 900 34 59) üzerinden ulaşabilirsiniz." },
 ];
 
 const letters = [

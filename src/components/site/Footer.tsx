@@ -23,7 +23,7 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold">İletişim</h4>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li><a href="mailto:hello@hisu.solutions" className="hover:text-foreground">hello@hisu.solutions</a></li>
+              <li><a href="mailto:info@hisusolutions.com" className="hover:text-foreground">info@hisusolutions.com</a></li>
               <li><a href="tel:+905539003459" className="hover:text-foreground">+90 553 900 34 59</a></li>
               <li><a href="https://wa.me/905539003459" className="hover:text-foreground">WhatsApp</a></li>
             </ul>

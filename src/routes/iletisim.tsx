@@ -6,8 +6,17 @@ import { Mail, Phone, MessageCircle } from "lucide-react";
 export const Route = createFileRoute("/iletisim")({
   head: () => ({
     meta: [
-      { title: "İletişim — Ücretsiz Görüşme Al | Hisu Solutions" },
-      { name: "description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde dönüş." },
+      { title: "İletişim — Ücretsiz Keşif Görüşmesi | Hisu Solutions" },
+      { name: "description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde geri dönüş. Otomasyon, BütçeCRM ve web tasarım hizmetleri için ücretsiz görüşme alın." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://hisusolutions.com/iletisim" },
+      { property: "og:site_name", content: "Hisu Solutions" },
+      { property: "og:title", content: "İletişim — Ücretsiz Keşif Görüşmesi | Hisu Solutions" },
+      { property: "og:description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde geri dönüş garantisi." },
+    ],
+    links: [
+      { rel: "canonical", href: "https://hisusolutions.com/iletisim" },
     ],
   }),
   component: ContactPage,

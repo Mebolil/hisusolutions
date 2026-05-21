@@ -4,8 +4,17 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/hakkimizda")({
   head: () => ({
     meta: [
-      { title: "Hakkımızda — Hisu Solutions" },
-      { name: "description", content: "Hisu, daha az kaynakla daha fazla değer üreten bir AaaS platformudur." },
+      { title: "Hakkımızda — Hisu Solutions | AaaS Platform" },
+      { name: "description", content: "Hisu Solutions, Türkiye'deki KOBİ'lere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur. Düşük maliyetle yüksek değer üretiyoruz." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://hisusolutions.com/hakkimizda" },
+      { property: "og:site_name", content: "Hisu Solutions" },
+      { property: "og:title", content: "Hakkımızda — Hisu Solutions | AaaS Platform" },
+      { property: "og:description", content: "Hisu Solutions, Türkiye'deki KOBİ'lere otomasyon, bütçe yönetimi ve web tasarım hizmetleri sunan bir AaaS platformudur." },
+    ],
+    links: [
+      { rel: "canonical", href: "https://hisusolutions.com/hakkimizda" },
     ],
   }),
   component: AboutPage,

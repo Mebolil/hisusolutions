@@ -6,8 +6,17 @@ import { ArrowRight, Check } from "lucide-react";
 export const Route = createFileRoute("/web-sitesi")({
   head: () => ({
     meta: [
-      { title: "Özel Tasarım Web Sitesi — 3 Günde Teslim | Hisu Solutions" },
-      { name: "description", content: "Şablon değil, marka DNA'nıza özel. 3 iş gününde modern ve dönüşüm odaklı web siteniz hazır." },
+      { title: "Kurumsal Web Sitesi Tasarımı — 3 Günde Teslim | Hisu Solutions" },
+      { name: "description", content: "Şablon değil, marka DNA'nıza özel kurumsal web sitesi. 3 iş gününde modern, hızlı ve dönüşüm odaklı web siteniz hazır. Türkiye'de KOBİ'lere özel web tasarım hizmeti." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://hisusolutions.com/web-sitesi" },
+      { property: "og:site_name", content: "Hisu Solutions" },
+      { property: "og:title", content: "Kurumsal Web Sitesi Tasarımı — 3 Günde Teslim | Hisu Solutions" },
+      { property: "og:description", content: "Şablon değil, marka DNA'nıza özel. 3 iş gününde modern ve dönüşüm odaklı web siteniz hazır. Starter ₺9.900'dan başlayan fiyatlarla." },
+    ],
+    links: [
+      { rel: "canonical", href: "https://hisusolutions.com/web-sitesi" },
     ],
   }),
   component: WebSitePage,

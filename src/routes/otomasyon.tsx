@@ -6,8 +6,17 @@ import { ArrowRight, Mail, FileBarChart, Users, Workflow, MessageSquare, ListTod
 export const Route = createFileRoute("/otomasyon")({
   head: () => ({
     meta: [
-      { title: "Otomasyon Sistemleri — AaaS | Hisu Solutions" },
-      { name: "description", content: "Tekrarlayan işleri otomasyona devredin. Şirketinize özel, anahtar teslim sistemler." },
+      { title: "İş Süreci Otomasyonu — AaaS Çözümleri | Hisu Solutions" },
+      { name: "description", content: "Sipariş takibi, müşteri bildirimleri, faturalama ve raporlama süreçlerini otomatikleştirin. KOBİ'ler ve e-ticaret işletmeleri için Türkiye'de anahtar teslim otomasyon sistemleri." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://hisusolutions.com/otomasyon" },
+      { property: "og:site_name", content: "Hisu Solutions" },
+      { property: "og:title", content: "İş Süreci Otomasyonu — AaaS Çözümleri | Hisu Solutions" },
+      { property: "og:description", content: "Tekrarlayan iş süreçlerini otomatikleştirin. Şirketinize özel, ölçeklenebilir otomasyon sistemleri Hisu Solutions tarafından kurulur ve teslim edilir." },
+    ],
+    links: [
+      { rel: "canonical", href: "https://hisusolutions.com/otomasyon" },
     ],
   }),
   component: OtomasyonPage,

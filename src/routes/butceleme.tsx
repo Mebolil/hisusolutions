@@ -6,8 +6,17 @@ import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText,
 export const Route = createFileRoute("/butceleme")({
   head: () => ({
     meta: [
-      { title: "BütçeCRM — Finansal Otomasyon | Hisu Solutions" },
-      { name: "description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda gör. E-ticaret ve KOBİ'ler için." },
+      { title: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
+      { name: "description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret işletmeleri ve KOBİ'ler için Türkiye'nin en pratik bütçe yönetim yazılımı. Aylık ₺890." },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://hisusolutions.com/butceleme" },
+      { property: "og:site_name", content: "Hisu Solutions" },
+      { property: "og:title", content: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
+      { property: "og:description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret ve KOBİ'ler için anahtar teslim bütçe yönetimi." },
+    ],
+    links: [
+      { rel: "canonical", href: "https://hisusolutions.com/butceleme" },
     ],
   }),
   component: ButcelemePage,

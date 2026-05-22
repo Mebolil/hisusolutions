@@ -17,6 +17,7 @@ interface Field {
 const WORK_HOURS = [
   "09:00", "10:00", "11:00", "12:00",
   "13:00", "14:00", "15:00", "16:00", "17:00",
+  "18:00", "19:00", "20:00", "21:00",
 ];
 
 function toDateInputMin() {
@@ -29,11 +30,6 @@ function toDateInputMax() {
   const d = new Date();
   d.setDate(d.getDate() + 60);
   return d.toISOString().slice(0, 10);
-}
-
-function isWeekend(dateStr: string) {
-  const day = new Date(dateStr + "T12:00:00").getDay();
-  return day === 0 || day === 6;
 }
 
 export function BookingForm({
@@ -67,14 +63,7 @@ export function BookingForm({
   }, [selectedDate]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (isWeekend(val)) {
-      toast.error("Hafta içi (Pazartesi–Cuma) bir gün seçin.");
-      setSelectedDate("");
-      e.target.value = "";
-      return;
-    }
-    setSelectedDate(val);
+    setSelectedDate(e.target.value);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -122,7 +111,7 @@ export function BookingForm({
     <form onSubmit={onSubmit} className="space-y-6">
       {/* Tarih Seçimi */}
       <div className="space-y-1.5">
-        <Label htmlFor="booking-date">Tarih Seçin <span className="text-muted-foreground text-xs">(Pzt–Cum)</span></Label>
+        <Label htmlFor="booking-date">Tarih Seçin</Label>
         <Input
           id="booking-date"
           type="date"

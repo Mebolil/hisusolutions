@@ -68,13 +68,16 @@ function ReportsPage() {
 
   useEffect(() => {
     (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const uid = session.user.id;
       const [s, e, pu, p, c, cu] = await Promise.all([
-        supabase.from("sales").select("*"),
-        supabase.from("expenses").select("*"),
-        supabase.from("purchases").select("*"),
-        supabase.from("products").select("*"),
-        supabase.from("campaigns").select("*"),
-        supabase.from("customers").select("id,name"),
+        supabase.from("sales").select("*").eq("user_id", uid),
+        supabase.from("expenses").select("*").eq("user_id", uid),
+        supabase.from("purchases").select("*").eq("user_id", uid),
+        supabase.from("products").select("*").eq("user_id", uid),
+        supabase.from("campaigns").select("*").eq("user_id", uid),
+        supabase.from("customers").select("id,name").eq("user_id", uid),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);

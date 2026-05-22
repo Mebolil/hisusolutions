@@ -160,9 +160,12 @@ function StockPage() {
   }
 
   async function loadStats() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const uid = session.user.id;
     const [total, outRes] = await Promise.all([
-      supabase.from("products").select("*", { count: "exact", head: true }),
-      supabase.from("products").select("*", { count: "exact", head: true }).lte("quantity", 0),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid).lte("quantity", 0),
     ]);
     const totalVal = total.count ?? 0;
     const outVal = outRes.count ?? 0;
@@ -178,7 +181,10 @@ function StockPage() {
   async function loadPage() {
     setLoading(true);
     setAllRows(null);
-    const query = buildQuery(catFilter, stateFilter, q, sortKey, sortDir);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
+    const query = buildQuery(catFilter, stateFilter, q, sortKey, sortDir).eq("user_id", uid);
     const from = (page - 1) * PAGE_SIZE;
     const { data, count } = await query
       .select("*", { count: "exact" })
@@ -192,14 +198,17 @@ function StockPage() {
   async function loadAllForClientFilter() {
     setLoading(true);
     setRows([]);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
     // First get total count so we can parallelise
-    const base = buildQuery(catFilter, "all", q, sortKey, sortDir);
+    const base = buildQuery(catFilter, "all", q, sortKey, sortDir).eq("user_id", uid);
     const { count } = await base.select("*", { count: "exact", head: true });
     const total = count ?? 0;
     if (total === 0) { setAllRows([]); setTotalCount(0); setLoading(false); return; }
     const BATCH = 1000;
     const batches = Math.ceil(total / BATCH);
-    const baseQuery = buildQuery(catFilter, "all", q, sortKey, sortDir);
+    const baseQuery = buildQuery(catFilter, "all", q, sortKey, sortDir).eq("user_id", uid);
     const promises = Array.from({ length: batches }, (_, i) =>
       baseQuery.select("*").range(i * BATCH, (i + 1) * BATCH - 1),
     );
@@ -737,11 +746,15 @@ function EditProductDialog({
     const diff = newQty - oldQty;
 
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return; }
+    const uid = session.user.id;
     const newName = form.name.trim();
     if (cat && (newName !== product.name || cat !== (product.category || ""))) {
       const { data: dup } = await supabase
         .from("products")
         .select("id")
+        .eq("user_id", uid)
         .eq("name", newName)
         .eq("category", cat)
         .neq("id", product.id)
@@ -760,7 +773,7 @@ function EditProductDialog({
       quantity: newQty,
       low_stock_threshold: Number(form.low_stock_threshold || 0),
       unit_price: form.unit_price ? Number(form.unit_price) : null,
-    }).eq("id", product.id);
+    }).eq("id", product.id).eq("user_id", uid);
 
     if (!error && diff !== 0) {
       await supabase.from("stock_lots").insert({
@@ -783,7 +796,9 @@ function EditProductDialog({
     if (!product) return;
     if (!confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
     setSaving(true);
-    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return; }
+    const { error } = await supabase.from("products").delete().eq("id", product.id).eq("user_id", session.user.id);
     setSaving(false);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Ürün silindi");

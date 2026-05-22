@@ -79,10 +79,13 @@ function PurchasesPage() {
 
   async function load() {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
     const [p, s, pr] = await Promise.all([
-      supabase.from("purchases").select("*").order("purchase_date", { ascending: false }),
-      supabase.from("suppliers").select("id,name").order("name"),
-      supabase.from("products").select("id,name,unit_price,quantity").order("name"),
+      supabase.from("purchases").select("*").eq("user_id", uid).order("purchase_date", { ascending: false }),
+      supabase.from("suppliers").select("id,name").eq("user_id", uid).order("name"),
+      supabase.from("products").select("id,name,unit_price,quantity").eq("user_id", uid).order("name"),
     ]);
     setPurchases((p.data as Purchase[]) || []);
     setSuppliers((s.data as Supplier[]) || []);

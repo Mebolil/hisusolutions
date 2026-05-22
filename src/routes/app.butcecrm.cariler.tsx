@@ -116,7 +116,10 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from(kind).select("*").order("name");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
+    const { data } = await supabase.from(kind).select("*").eq("user_id", uid).order("name");
     const parties = (data as Party[]) || [];
     setItems(parties);
 
@@ -127,6 +130,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
         const { data: sales } = await supabase
           .from("sales")
           .select("customer_id, total_amount, paid_amount, payment_status")
+          .eq("user_id", uid)
           .in("customer_id", ids);
         const map: Record<string, PartyStats> = {};
         for (const s of sales || []) {
@@ -144,6 +148,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
         const { data: purchases } = await supabase
           .from("purchases")
           .select("supplier_id, amount, paid_amount, payment_status")
+          .eq("user_id", uid)
           .in("supplier_id", ids);
         const map: Record<string, PartyStats> = {};
         for (const p of purchases || []) {
@@ -332,22 +337,26 @@ function PartyDetailDialog({
   useEffect(() => {
     async function fetch() {
       setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
       if (kind === "customers") {
-        const { data } = await supabase
+        const q = supabase
           .from("sales")
           .select("id, sale_date, product_name, total_amount, paid_amount, payment_status")
           .eq("customer_id", party.id)
           .order("sale_date", { ascending: false });
+        const { data } = uid ? await q.eq("user_id", uid) : await q;
         setTxs((data || []).map((r: { id: string; sale_date: string; product_name: string; total_amount: number; paid_amount: number; payment_status: string }) => ({
           id: r.id, date: r.sale_date, product_name: r.product_name,
           amount: r.total_amount, paid_amount: r.paid_amount, payment_status: r.payment_status,
         })));
       } else {
-        const { data } = await supabase
+        const pq = supabase
           .from("purchases")
           .select("id, purchase_date, product_name, amount, paid_amount, payment_status")
           .eq("supplier_id", party.id)
           .order("purchase_date", { ascending: false });
+        const { data } = uid ? await pq.eq("user_id", uid) : await pq;
         setTxs((data || []).map((r: { id: string; purchase_date: string; product_name: string; amount: number; paid_amount: number; payment_status: string }) => ({
           id: r.id, date: r.purchase_date, product_name: r.product_name,
           amount: r.amount, paid_amount: r.paid_amount, payment_status: r.payment_status,

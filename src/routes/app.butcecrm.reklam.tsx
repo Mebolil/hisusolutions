@@ -52,9 +52,12 @@ function AdsPage() {
 
   async function load() {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
     const [c, s] = await Promise.all([
-      supabase.from("campaigns").select("*").order("start_date", { ascending: false }),
-      supabase.from("sales").select("campaign_id,total_amount"),
+      supabase.from("campaigns").select("*").eq("user_id", uid).order("start_date", { ascending: false }),
+      supabase.from("sales").select("campaign_id,total_amount").eq("user_id", uid),
     ]);
     setCampaigns((c.data as Campaign[]) || []);
     setSales((s.data as Sale[]) || []);
@@ -103,8 +106,10 @@ function AdsPage() {
   }, [enriched]);
 
   async function toggleStatus(c: Campaign) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
     const next: Status = c.status === "aktif" ? "pasif" : "aktif";
-    const { error } = await supabase.from("campaigns").update({ status: next }).eq("id", c.id);
+    const { error } = await supabase.from("campaigns").update({ status: next }).eq("id", c.id).eq("user_id", session.user.id);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success(`Kampanya ${next} olarak işaretlendi`);
     setCampaigns((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: next } : x)));

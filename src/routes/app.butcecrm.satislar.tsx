@@ -103,11 +103,14 @@ function SalesPage() {
 
   async function load() {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
     const [s, c, ca, p] = await Promise.all([
-      supabase.from("sales").select("*").order("sale_date", { ascending: false }),
-      supabase.from("customers").select("id,name").order("name"),
-      supabase.from("campaigns").select("id,name").order("name"),
-      supabase.from("products").select("id,name,quantity,unit_price").order("name"),
+      supabase.from("sales").select("*").eq("user_id", uid).order("sale_date", { ascending: false }),
+      supabase.from("customers").select("id,name").eq("user_id", uid).order("name"),
+      supabase.from("campaigns").select("id,name").eq("user_id", uid).order("name"),
+      supabase.from("products").select("id,name,quantity,unit_price").eq("user_id", uid).order("name"),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
@@ -216,17 +219,21 @@ function SalesPage() {
   }, [filtered]);
 
   async function updateStatus(sale: Sale, newStatus: Status) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
     const patch: Partial<Sale> = { payment_status: newStatus };
     if (newStatus === "ödendi") patch.paid_amount = Number(sale.total_amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
-    const { error } = await supabase.from("sales").update(patch).eq("id", sale.id);
+    const { error } = await supabase.from("sales").update(patch).eq("id", sale.id).eq("user_id", session.user.id);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setSales((prev) => prev.map((s) => (s.id === sale.id ? { ...s, ...patch } as Sale : s)));
   }
 
   async function deleteSale(sale: Sale) {
-    const { error } = await supabase.from("sales").delete().eq("id", sale.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from("sales").delete().eq("id", sale.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     setSales((prev) => prev.filter((s) => s.id !== sale.id));
 
@@ -1243,6 +1250,9 @@ function EditSaleDialog({
   async function save() {
     if (!form) return;
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return; }
+    const uid = session.user.id;
     const breakdownLines = editCosts
       .filter((c) => Number(c.amount) > 0)
       .map((c) => `${c.label}: ${Number(c.amount).toFixed(2)} ₺`);
@@ -1264,10 +1274,10 @@ function EditSaleDialog({
       platform: form.platform || null,
       note: combinedNote || null,
     };
-    let { error } = await supabase.from("sales").update(payload).eq("id", form.id);
+    let { error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid);
     if (error && /\bnote\b/i.test(error.message)) {
       delete payload.note;
-      ({ error } = await supabase.from("sales").update(payload).eq("id", form.id));
+      ({ error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid));
     }
     setSaving(false);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));

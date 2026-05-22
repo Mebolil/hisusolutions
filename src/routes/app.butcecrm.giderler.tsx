@@ -84,10 +84,13 @@ function ExpensesPage() {
 
   async function load() {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const uid = session.user.id;
     const [e, c, s] = await Promise.all([
-      supabase.from("expenses").select("*").order("expense_date", { ascending: false }),
+      supabase.from("expenses").select("*").eq("user_id", uid).order("expense_date", { ascending: false }),
       supabase.from("expense_categories").select("id,name").order("name"),
-      supabase.from("sales").select("id,product_name,sale_date").order("sale_date", { ascending: false }).limit(200),
+      supabase.from("sales").select("id,product_name,sale_date").eq("user_id", uid).order("sale_date", { ascending: false }).limit(200),
     ]);
     setExpenses((e.data as Expense[]) || []);
     setCategories((c.data as Category[]) || []);

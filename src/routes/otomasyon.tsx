@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { LeadForm } from "@/components/site/LeadForm";
+import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, Mail, FileBarChart, Users, Workflow, MessageSquare, ListTodo } from "lucide-react";
 
@@ -129,8 +129,9 @@ function OtomasyonPage() {
           <h2 className="text-3xl font-bold">İhtiyacınızı Anlatın</h2>
           <p className="mt-2 text-muted-foreground">Hangi süreci otomatikleştirmek istediğinizi kısaca yazın. Görüşmeden önce size özel düşünelim.</p>
           <div className="mt-8">
-            <LeadForm
+            <BookingForm
               source="otomasyon"
+              submitLabel="Keşif Görüşmesi Ayarla"
               fields={[
                 { name: "name", label: "Ad Soyad", required: true },
                 { name: "company", label: "Firma Adı" },

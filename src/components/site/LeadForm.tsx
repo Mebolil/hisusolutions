@@ -31,16 +31,16 @@ export function LeadForm({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Try insert into a leads table if exists; otherwise just toast.
-    try {
-      const { error } = await supabase.from("leads").insert({ source, payload: values });
-      if (error && !/relation .* does not exist/i.test(error.message)) {
-        // ignore — table optional
-      }
-    } catch {}
+    const { error } = await supabase.from("leads").insert({ source, payload: values });
+    if (error) {
+      console.error("Lead insert error:", error.message);
+      toast.error("Bir hata oluştu, lütfen tekrar deneyin.");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setValues({});
-    toast.success("Talebiniz alındı! 24 saat içinde dönüş yapıyoruz.");
+    toast.success("Mesajınız alındı! 24 saat içinde dönüş yapıyoruz.");
   };
 
   return (

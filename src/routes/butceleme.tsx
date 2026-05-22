@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { LeadForm } from "@/components/site/LeadForm";
+import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing } from "lucide-react";
 
@@ -165,8 +165,9 @@ function ButcelemePage() {
           <h2 className="text-3xl font-bold">Demo Talep Et</h2>
           <p className="mt-2 text-muted-foreground">30 dakikada BütçeCRM'i birlikte keşfedelim.</p>
           <div className="mt-8">
-            <LeadForm
+            <BookingForm
               source="butcecrm-demo"
+              submitLabel="Demo Randevusu Al"
               fields={[
                 { name: "name", label: "Ad Soyad", required: true },
                 { name: "company", label: "Firma Adı" },

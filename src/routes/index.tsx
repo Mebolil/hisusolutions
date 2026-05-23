@@ -28,7 +28,8 @@ export const Route = createFileRoute("/")({
           "@type": "FAQPage",
           "mainEntity": [
             { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
-            { "@type": "Question", "name": "AaaS nedir, SaaS'tan farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." } },
+            { "@type": "Question", "name": "AaaS nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." } },
+            { "@type": "Question", "name": "Neden sadece yazılım satmıyorsunuz?", "acceptedAnswer": { "@type": "Answer", "text": "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." } },
             { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
             { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
@@ -42,8 +43,9 @@ export const Route = createFileRoute("/")({
 });
 
 const faqs: FaqItem[] = [
-  { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." },
-  { q: "AaaS nedir, SaaS'tan farkı nedir?", a: "AaaS — Automation as a Service — çözümlerin size özel kurulup teslim edildiği bir modeldir. SaaS'tan farkı, hazır şablon yerine işinize özel sistem tasarlanması ve kurulmasıdır. Siz sistemi öğrenmek zorunda değilsiniz." },
+  { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir dijital çözüm platformudur." },
+  { q: "AaaS nedir?", a: "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." },
+  { q: "Neden sadece yazılım satmıyorsunuz?", a: "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." },
   { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
   { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
@@ -51,18 +53,18 @@ const faqs: FaqItem[] = [
 ];
 
 const products = [
-  { to: "/butceleme", icon: BarChart3, title: "BütçeCRM", desc: "E-ticaret ve KOBİ'ler için gelir, gider, stok ve reklam ROI'sini tek ekranda görün." },
-  { to: "/web-sitesi", icon: Monitor, title: "Özel Tasarım Site", desc: "3 iş gününde marka DNA'nıza özel, modern ve dönüşüm odaklı web siteniz hazır." },
-  { to: "/otomasyon", icon: Workflow, title: "Otomasyon Sistemleri", desc: "Tekrarlayan işleri sistemlere devredin. Zamanınızı sadece büyümeye ayırın." },
+  { to: "/butceleme", icon: BarChart3, title: "BütçeCRM", desc: "Paranız nereye gidiyor? Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün." },
+  { to: "/web-sitesi", icon: Monitor, title: "Özel Tasarım Site", desc: "3 günde hazır, müşteri çeken web sitenizle dijitalde yerinizi alın." },
+  { to: "/otomasyon", icon: Workflow, title: "Otomasyon Sistemleri", desc: "Sıkıcı, tekrarlayan işleri otomatikleştirin — siz sadece büyüyün." },
 ];
 
 const categories = [
-  { icon: Mail, title: "E-posta Otomasyonu", count: "12 hizmet", desc: "Toplu mail, autoresponder, drip kampanyalar" },
-  { icon: Share2, title: "Sosyal Medya", count: "8 hizmet", desc: "İçerik planlama, otomatik paylaşım" },
-  { icon: Workflow, title: "İş Akışı", count: "15 hizmet", desc: "CRM, fatura, stok yönetimi otomasyonları" },
-  { icon: Bot, title: "Chatbot & AI", count: "6 hizmet", desc: "Müşteri destek botları, AI asistanlar" },
-  { icon: FileBarChart, title: "Raporlama", count: "9 hizmet", desc: "Otomatik rapor oluşturma ve gönderim" },
-  { icon: Shield, title: "Güvenlik", count: "7 hizmet", desc: "Yedekleme, izleme, uyarı otomasyonları" },
+  { icon: Mail, title: "E-posta Otomasyonu", count: "12 hizmet", desc: "Müşteriniz sipariş verdiğinde otomatik bilgi gitsin, siz uyurken bile iletişim kesilmesin." },
+  { icon: Share2, title: "Sosyal Medya", count: "8 hizmet", desc: "İçerik takvimi kurun, paylaşımlar otomatik gitsin — her gün aktif görünün, her gün uğraşmadan." },
+  { icon: Workflow, title: "İş Akışı", count: "15 hizmet", desc: "Stok, fatura, CRM — birbirini takip etsin, siz sadece karar verin." },
+  { icon: Bot, title: "Chatbot & AI", count: "6 hizmet", desc: "Müşteri soruları 7/24 yanıtlansın, siz yokken bile satış ve destek eksiksiz sürsün." },
+  { icon: FileBarChart, title: "Raporlama", count: "9 hizmet", desc: "Her Pazartesi sabahı geçen haftanın özeti e-postanıza gelsin, el ile hazırlamaya son." },
+  { icon: Shield, title: "Güvenlik", count: "7 hizmet", desc: "Verileriniz yedeklensin, sistemleriniz izlensin — sorun olmadan önce haberiniz olsun." },
 ];
 
 function HomePage() {
@@ -254,6 +256,33 @@ function HomePage() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-primary">Adım {s.n}</span>
                 <h3 className="mt-3 text-2xl font-bold">{s.t}</h3>
                 <p className="mt-2 text-muted-foreground">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Referanslar */}
+      <section className="border-t border-border/60 bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
+          <div className="text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Referanslar</span>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Kimler Kullanıyor?</h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Farklı sektörlerden işletmeler Hisu Solutions ile dijital altyapılarını kurdu.</p>
+          </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {[
+              { quote: "Ay sonu kâr hesabı artık 5 dakika sürüyor.", sector: "E-ticaret İşletmesi", city: "İstanbul" },
+              { quote: "3 günde web sitemiz hazırdı, ilk hafta 3 form geldi.", sector: "Muhasebe Bürosu", city: "Ankara" },
+              { quote: "Sipariş takibi için harcadığım 2 saati artık işime ayırıyorum.", sector: "Lojistik Firması", city: "İzmir" },
+            ].map((r) => (
+              <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-background p-7">
+                <Quote className="h-7 w-7 text-primary/40" />
+                <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
+                <div className="mt-6 flex items-center gap-2">
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
+                  <span className="text-xs text-muted-foreground">{r.city}</span>
+                </div>
               </div>
             ))}
           </div>

@@ -68,9 +68,10 @@ export const Route = createFileRoute("/butceleme")({
 });
 
 const faqs: FaqItem[] = [
-  { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." },
-  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Demo görüşmesiyle başlayabilirsiniz." },
-  { q: "BütçeCRM Excel'den farkı nedir?", a: "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." },
+  { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
+  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Canlı demo görüşmesiyle başlayabilirsiniz." },
+  { q: "BütçeCRM Excel'den farkı nedir?", a: "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklamlarınızın ne kadar kazandırdığını kampanya bazında saptar." },
+  { q: "Reklamlarımın ne kadar kazandırdığını görebiliyor muyum?", a: "Evet. Meta, Google ve TikTok kampanyalarınızı satışlarınıza bağlayarak her kampanyanın gerçek gelirini görebilirsiniz. Hangi reklamın işe yarayıp hangisinin para yaktığını net görürsünüz." },
   { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
 ];
 
@@ -80,12 +81,11 @@ function ButcelemePage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
-          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Finansal Otomasyon</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">KOBİ Bütçe Yönetim Yazılımı | BütçeCRM</h1>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Paranın Nereye Gittiğini Artık Biliyorsun</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için satış, stok, gider ve reklam ROI'sini tek ekranda yöneten finansal yönetim yazılımıdır. Excel'e, muhasebecine sormaya son.</p>
+          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">KOBİ Bütçe Yönetim Yazılımı</span>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Paranız Nereye Gidiyor?<br />Artık Biliyorsunuz.</h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün. Excel karmaşasına son.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Demo Talep Et <ArrowRight className="h-4 w-4" /></a>
+            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>
             <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
           </div>
         </div>
@@ -95,9 +95,14 @@ function ButcelemePage() {
       <section className="mx-auto max-w-6xl px-4 py-16 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-8">
-            <h3 className="text-xl font-bold">Şu an:</h3>
+            <h3 className="text-xl font-bold">Tanıdık geliyor mu?</h3>
             <ul className="mt-5 space-y-3">
-              {["Ay sonu ne kaldığını bilmiyorsun","Reklam harcıyor ama gerçek ROI'yi göremiyorsun","Stok takibi Excel'de, satışlar başka yerde","Kar mı ettim, zarar mı? Cevap yok"].map(t => (
+              {[
+                "Ay sonunda cebinizde ne kaldığını hâlâ merak mı ediyorsunuz?",
+                "Reklamlara para gidiyor ama gerçekten işe yarıyor mu, göremiyorsunuz?",
+                "Stok bitti ama siz farketmediniz, sipariş iptal oldu?",
+                "Excel'de formül bozuldu, bir ayın verisi gitti?",
+              ].map(t => (
                 <li key={t} className="flex gap-3 text-muted-foreground"><X className="mt-0.5 h-5 w-5 shrink-0 text-destructive" /> {t}</li>
               ))}
             </ul>
@@ -105,7 +110,12 @@ function ButcelemePage() {
           <div className="rounded-2xl border border-primary/30 bg-primary-soft p-8">
             <h3 className="text-xl font-bold">BütçeCRM ile:</h3>
             <ul className="mt-5 space-y-3">
-              {["Gerçek zamanlı gelir, gider, net kâr","Reklam kampanyası bazlı gerçek ROI ve ROAS","FIFO stok takibi otomatik","Her şey tek ekranda, her zaman güncel"].map(t => (
+              {[
+                "Gerçek zamanlı gelir, gider, net kâr — her an güncel",
+                "Reklamlarınızın ne kadar kazandırdığını kampanya bazında görün",
+                "Stok kritik seviyeye düşünce otomatik uyarı",
+                "Her şey tek ekranda, Excel'e gerek yok",
+              ].map(t => (
                 <li key={t} className="flex gap-3 text-foreground"><Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" /> {t}</li>
               ))}
             </ul>
@@ -119,12 +129,12 @@ function ButcelemePage() {
           <h2 className="text-center text-4xl font-bold">Tek panelde tüm operasyon</h2>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { i: BarChart3, t: "Satış & Cari Takibi", d: "Müşteri bazlı tahsilat, kısmi ödeme, gecikme uyarısı." },
-              { i: Package, t: "Stok Yönetimi", d: "FIFO maliyet, kritik seviye uyarısı, otomatik düşüm." },
-              { i: Megaphone, t: "Reklam ROI", d: "Meta, Google, TikTok kampanyalarını satışa bağla." },
-              { i: Receipt, t: "Gider Takibi", d: "Kategori ve kişi bazlı, aylık trend." },
-              { i: FileText, t: "Otomatik Raporlar", d: "5 sekmeli rapor, Excel ve PDF export." },
-              { i: BellRing, t: "Hatırlatıcılar", d: "Gecikmiş tahsilat, tedarikçi borcu, kritik stok otomatik uyarısı." },
+              { i: BarChart3, t: "Alacaklarınızı Unutmayın", d: "Kimin ne kadar borcu var, anlık görün. Müşteri bazlı tahsilat, kısmi ödeme, gecikme uyarısı." },
+              { i: Package, t: "Ürünleriniz Bitmeden Haberiniz Olsun", d: "Kritik stok seviyelerinde otomatik uyarı. FIFO maliyet, otomatik düşüm." },
+              { i: Megaphone, t: "Reklamlarınız Gerçekten İşe Yarıyor mu?", d: "Meta, Google, TikTok kampanyalarınızın hangi satışları getirdiğini net görün." },
+              { i: Receipt, t: "Gider Takibi", d: "Nereye ne harcadığınızı kategoriye göre görün, aylık trendi takip edin." },
+              { i: FileText, t: "Otomatik Raporlar", d: "Ay sonu raporu 5 dakikada hazır. Excel ve PDF export dahil." },
+              { i: BellRing, t: "Hatırlatıcılar", d: "Gecikmiş tahsilat, tedarikçi borcu, kritik stok — otomatik uyarı." },
             ].map(f => (
               <div key={f.t} className="rounded-2xl border border-border bg-background p-6">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><f.i className="h-5 w-5" /></span>
@@ -157,17 +167,95 @@ function ButcelemePage() {
         </div>
       </section>
 
+      {/* Demo Önizleme */}
+      <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+        <div className="text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Önizleme</span>
+          <h2 className="mt-3 text-4xl font-bold">BütçeCRM Nasıl Görünür?</h2>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Tek ekranda tüm finansal tablonuz — gerçek zamanlı, her zaman güncel.</p>
+        </div>
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Günlük Kâr Görünümü</p>
+            <div className="mt-4 flex items-end gap-1.5 h-24">
+              {[40, 65, 50, 80, 55, 90, 70].map((h, i) => (
+                <div key={i} className="flex-1 rounded-t bg-primary/20 relative" style={{ height: `${h}%` }}>
+                  <div className="absolute bottom-0 left-0 right-0 rounded-t bg-primary" style={{ height: "40%" }} />
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-sm font-semibold text-primary">+₺12.480 bu hafta</p>
+            <p className="text-xs text-muted-foreground">Geçen haftaya göre +%18</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reklam Geliri</p>
+            <div className="mt-4 space-y-3">
+              {[{ label: "Meta Ads", val: 78 }, { label: "Google Ads", val: 55 }, { label: "TikTok Ads", val: 32 }].map(r => (
+                <div key={r.label}>
+                  <div className="flex justify-between text-xs mb-1"><span>{r.label}</span><span className="font-semibold">%{r.val}</span></div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${r.val}%` }} /></div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">Kampanya bazında gerçek gelir</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stok Durumu</p>
+            <div className="mt-4 space-y-2.5">
+              {[
+                { name: "Ürün A", stock: 142, ok: true },
+                { name: "Ürün B", stock: 8, ok: false },
+                { name: "Ürün C", stock: 67, ok: true },
+              ].map(s => (
+                <div key={s.name} className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${s.ok ? "bg-muted" : "bg-destructive/10"}`}>
+                  <span>{s.name}</span>
+                  <span className={`font-semibold ${s.ok ? "text-foreground" : "text-destructive"}`}>{s.stock} adet{!s.ok && " ⚠"}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">Kritik stok otomatik uyarı</p>
+          </div>
+        </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>
+          <a href="#demo" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">2 Dakikalık Tanıtım Videosunu İzle</a>
+        </div>
+      </section>
+
+      {/* Vaka Çalışması */}
+      <section className="border-y border-border/60 bg-card">
+        <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+          <div className="text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Vaka Çalışması</span>
+            <h2 className="mt-3 text-4xl font-bold">Gerçek Bir Senaryo: Tekstil E-Ticaret İşletmesi</h2>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              { label: "Problem", content: "Aylık ciro 120.000 TL. Kâr ne kadar bilmiyor. Excel'de takip ediyor, ay sonu 4 saat harcıyor. Reklamların işe yarayıp yaramadığını bilmiyor." },
+              { label: "Çözüm", content: "BütçeCRM kurulumu 2 günde tamamlandı. Satış, gider ve reklam geliri sisteme bağlandı. Otomatik raporlar devreye girdi." },
+              { label: "Sonuç", content: "%18 daha az reklam harcamasıyla aynı ciro elde edildi (gereksiz kampanya tespit edildi). Ay sonu raporu 4 saatten 5 dakikaya düştü." },
+            ].map(c => (
+              <div key={c.label} className="rounded-2xl border border-border bg-background p-7">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">{c.label}</span>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{c.content}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-xs text-muted-foreground">*Senaryo, benzer KOBİ işletmelerinin yaygın deneyimlerine dayanmaktadır.</p>
+        </div>
+      </section>
+
       <FaqBlock items={faqs} />
 
       {/* Demo form */}
       <section id="demo" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
-          <h2 className="text-3xl font-bold">Demo Talep Et</h2>
-          <p className="mt-2 text-muted-foreground">30 dakikada BütçeCRM'i birlikte keşfedelim.</p>
+          <h2 className="text-3xl font-bold">Canlı Demo Ayarla</h2>
+          <p className="mt-2 text-muted-foreground">30 dakikada BütçeCRM'i birlikte keşfedelim. Kredi kartı gerekmez.</p>
           <div className="mt-8">
             <BookingForm
               source="butcecrm-demo"
-              submitLabel="Demo Randevusu Al"
+              submitLabel="Görüşme Zamanı Seç"
               fields={[
                 { name: "name", label: "Ad Soyad", required: true },
                 { name: "company", label: "Firma Adı" },

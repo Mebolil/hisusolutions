@@ -46,12 +46,10 @@ const faqs: FaqItem[] = [
 ];
 
 const pains = [
-  "Siparişleri manuel takip etmek",
-  "Müşterilere tek tek hatırlatma göndermek",
-  "Raporları elle hazırlamak",
-  "Fatura ve muhasebe girişlerini tekrarlamak",
-  "Farklı platformlar arasında veri taşımak",
-  "Ekip içi iletişimi koordine etmek",
+  "Hâlâ siparişleri tek tek mi takip ediyorsunuz?",
+  "Müşterilere hatırlatmaları manuel mi gönderiyorsunuz?",
+  "Rapor hazırlamak saatlerinizi mi alıyor?",
+  "Farklı programlar arasında veri taşımaktan yoruldunuz mu?",
 ];
 
 const steps = [
@@ -61,12 +59,30 @@ const steps = [
 ];
 
 const solutions = [
-  { i: Mail, t: "E-posta & Bildirim Otomasyonu", d: "Müşteri takibi, sipariş bildirimleri, hatırlatmalar otomatik çalışır." },
-  { i: FileBarChart, t: "Raporlama & Analiz", d: "Günlük, haftalık, aylık raporlar siz istemeden hazırlanır ve iletilir." },
-  { i: Users, t: "CRM & Müşteri Yönetimi", d: "Lead takibi, teklif süreci ve müşteri iletişimi sistematik hale gelir." },
-  { i: Workflow, t: "Entegrasyon & Veri Akışı", d: "Farklı platformlarınız birbiriyle konuşur. Manuel veri taşıma biter." },
-  { i: MessageSquare, t: "WhatsApp & Mesajlaşma", d: "Müşteri sorularına anında yanıt, sipariş güncellemeleri otomatik iletilir." },
-  { i: ListTodo, t: "İş Akışı & Görev Yönetimi", d: "Ekip içi süreçler, onaylar ve görev atamaları otomatik tetiklenir." },
+  { i: Mail, t: "Müşterilerinizle Otomatik İletişim", d: "Sipariş onayı, kargo bilgisi, özel teklifler — doğru zamanda, otomatik." },
+  { i: FileBarChart, t: "Raporlar Sizi Bekler", d: "Günlük, haftalık, aylık raporlar hazırlanır ve gönderilir. Elle hazırlamaya gerek kalmaz." },
+  { i: Users, t: "Müşteri Takibi Sistematik Hale Gelir", d: "Lead takibi, teklif süreci ve müşteri iletişimi düzenli çalışır, hiçbir fırsat kaçmaz." },
+  { i: Workflow, t: "Farklı Programlarınız Artık Konuşuyor", d: "Veri taşıma bitti, sistemler birbirini besliyor. Manuel kopyala-yapıştır sona erer." },
+  { i: MessageSquare, t: "WhatsApp'tan Otomatik Bilgilendirme", d: "7/24 yanıt, müşteri memnuniyeti artar. Cevap vermeden müşteri bilgilendirilmiş olur." },
+  { i: ListTodo, t: "Ekip İçi İş Akışı Otomatik Tetiklenir", d: "Onaylar, görev atamaları, hatırlatmalar — koordinasyonu siz değil, sistem sağlar." },
+];
+
+const scenarios = [
+  {
+    title: "Sipariş Akışı",
+    desc: "Müşteri sipariş verir → otomatik onay WhatsApp → stoktan düşülür → kargo firmasına bildirim → müşteriye takip kodu.",
+    time: "Tahmini Kazanılan Zaman: Haftalık 6–8 Saat",
+  },
+  {
+    title: "Randevu Hatırlatma",
+    desc: "Randevu oluşturulur → 1 gün önce SMS/WhatsApp → katılım oranı artar, iptal azalır.",
+    time: "Tahmini Kazanılan Zaman: Haftalık 3–5 Saat",
+  },
+  {
+    title: "Haftalık Rapor",
+    desc: "Her Pazartesi sabahı geçen haftanın satış/gider özeti e-postanıza gelir. Elle hazırlamaya gerek yok.",
+    time: "Tahmini Kazanılan Zaman: Haftalık 2–4 Saat",
+  },
 ];
 
 function OtomasyonPage() {
@@ -76,24 +92,25 @@ function OtomasyonPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">AaaS — Automation as a Service</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">İş Süreci Otomasyonu | Türkiye KOBİ</h1>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Sistemi Biz Kurarız.<br/><span className="text-primary">Siz Sadece Büyüyün.</span></h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, KOBİ'lerin tekrarlayan iş süreçlerini — sipariş takibi, müşteri bildirimleri, raporlama — şirketinize özel otomasyon sistemleriyle otomatikleştirir. Anahtar teslim kurulum, sıfır teknik bilgi gerektirir.</p>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Sıkıcı İşleri Bize Bırakın, Siz Sadece Büyüyün</h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Tekrarlayan görevlerinizi otomatikleştirerek haftada onlarca saat kazanın.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">İhtiyacımı Anlat <ArrowRight className="h-4 w-4" /></a>
+            <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Görüşme Zamanı Seç <ArrowRight className="h-4 w-4" /></a>
             <a href="#cozumler" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Ne Yapıyoruz?</a>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-16 lg:px-8">
-        <h2 className="text-center text-3xl font-bold md:text-4xl">Her Gün Aynı İşleri mi Yapıyorsunuz?</h2>
+        <h2 className="text-center text-3xl font-bold md:text-4xl">Bunlardan Tanıdık Geliyor mu?</h2>
         <div className="mt-10 grid gap-3 sm:grid-cols-2">
           {pains.map(p => (
-            <div key={p} className="rounded-xl border border-border bg-card px-5 py-4 text-sm">{p}</div>
+            <div key={p} className="rounded-xl border border-border bg-card px-5 py-4 text-sm font-medium">{p}</div>
           ))}
         </div>
-        <p className="mt-8 text-center text-muted-foreground">Bunların hepsi otomatikleştirilebilir. Ve sizin zamanınız çok daha değerli.</p>
+        <div className="mt-8 rounded-2xl border border-primary/20 bg-primary-soft px-7 py-5 text-center">
+          <p className="text-sm text-muted-foreground">Eğer bu sorulardan en az birine <span className="font-semibold text-foreground">"Evet"</span> diyorsanız, işletmenizde gizli bir zaman kaçağı var demektir.</p>
+        </div>
       </section>
 
       <section className="border-y border-border/60 bg-card">
@@ -124,6 +141,43 @@ function OtomasyonPage() {
         </div>
       </section>
 
+      {/* Örnek Otomasyon Senaryoları */}
+      <section className="border-y border-border/60 bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+          <h2 className="text-center text-4xl font-bold">Hangi İşleri Otomatikleştirebilirsiniz?</h2>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {scenarios.map(s => (
+              <div key={s.title} className="rounded-2xl border border-border bg-background p-7">
+                <h3 className="text-xl font-bold">{s.title}</h3>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                <div className="mt-5 inline-flex rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">⏱ {s.time}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Vaka Çalışması */}
+      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <div className="text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Vaka Çalışması</span>
+          <h2 className="mt-3 text-4xl font-bold">Haftada 10 Saat Kazandı: Bir E-Ticaret İşletmesi</h2>
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {[
+            { label: "Problem", content: "Günde 2 saat sipariş takibi, stok güncelleme, müşteri bildirimleri. Tatile çıkamıyor, hasta olunca iş duruyor." },
+            { label: "Çözüm", content: "Sipariş akış otomasyonu + WhatsApp entegrasyonu kuruldu. 5 günde teslim, sıfır teknik bilgi gerekti." },
+            { label: "Sonuç", content: '"Günlük 2 saat → 15 dakika." İşletme sahibi o zamanı yeni ürün araştırmasına ve pazarlamaya ayırdı.' },
+          ].map(c => (
+            <div key={c.label} className="rounded-2xl border border-border bg-card p-7">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">{c.label}</span>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{c.content}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">*Senaryo, benzer e-ticaret işletmelerinin yaygın deneyimlerine dayanmaktadır.</p>
+      </section>
+
       <section id="anlat" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
           <h2 className="text-3xl font-bold">İhtiyacınızı Anlatın</h2>
@@ -131,7 +185,7 @@ function OtomasyonPage() {
           <div className="mt-8">
             <BookingForm
               source="otomasyon"
-              submitLabel="Keşif Görüşmesi Ayarla"
+              submitLabel="Görüşme Zamanı Seç"
               fields={[
                 { name: "name", label: "Ad Soyad", required: true },
                 { name: "company", label: "Firma Adı" },

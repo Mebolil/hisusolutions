@@ -42,10 +42,10 @@ const faqs: FaqItem[] = [
 ];
 
 const letters = [
-  { l: "H", t: "Hacking", d: "Doğru araçlarla yenilikçi yöntemler geliştirme. Kısıtları değil, fırsatları görme." },
-  { l: "I", t: "Innovation", d: "Mevcut sorunlara yeni ve değerli çözümler getirme. Alışılageldik yoldan gitmeme." },
-  { l: "S", t: "Solutions", d: "Her iş kolunda somut, uygulanabilir çözümler. Teori değil, sonuç." },
-  { l: "U", t: "Ultimate", d: "En üst seviye değeri en erişilebilir maliyetle sunma. Müşterimiz kazanırsa biz kazanırız." },
+  { l: "H", t: "Hacking", d: "Standart çözümlerle yetinmiyoruz. Mevcut kaynaklarla en yaratıcı ve etkili çözümü buluyoruz." },
+  { l: "I", t: "Innovation", d: "Teknolojiyi işinize uyarlıyoruz. Siz teknolojiyi öğrenmek zorunda değilsiniz." },
+  { l: "S", t: "Solutions", d: "Sorun tanımlanmadan çözüm satılmaz. Önce dinliyor, sonra kuruyoruz." },
+  { l: "U", t: "Ultimate", d: "Kuruyoruz, bırakmıyoruz. Sistem çalışır durumda olana kadar yanınızdayız." },
 ];
 
 function AboutPage() {
@@ -56,7 +56,7 @@ function AboutPage() {
         <div className="mx-auto max-w-4xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Biz Kimiz?</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Hisu Solutions Kimdir | İstanbul Teknoloji Girişimi</h1>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Doğru Sistem, <span className="text-primary">Ölçeklenebilir Sonuç</span></h2>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">KOBİ'ler İçin <span className="text-primary">Gerçek Çözümler.</span> Karmaşık Değil, Etkili.</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions, Türkiye'deki KOBİ'lere otomasyon, bütçe yönetimi ve kurumsal web tasarım hizmetleri sunan bir AaaS platformudur. Gereksiz karmaşıklık olmadan işletmelerin teknolojiyle büyümesini sağlamak için kuruldu.</p>
         </div>
       </section>
@@ -80,10 +80,9 @@ function AboutPage() {
       </section>
 
       <section className="mx-auto max-w-4xl px-4 py-20 lg:px-8">
-        <h2 className="text-4xl font-bold">Neden Hisu?</h2>
-        <p className="mt-5 text-lg text-muted-foreground">Çoğu teknoloji şirketi size yazılım satar ve sizi kendi halinize bırakır. Biz farklı çalışıyoruz.</p>
-        <p className="mt-4 text-lg text-muted-foreground">AaaS — Automation as a Service anlayışıyla her çözümü işinize özel tasarlıyor, kuruyoruz ve yanınızda kalıyoruz. Sistemi siz öğrenmek zorunda değilsiniz. Biz kuruyoruz, siz kullanıyorsunuz.</p>
-        <p className="mt-4 text-lg font-semibold">Doğru araç. Maksimum değer. Yenilikçi çözüm.</p>
+        <h2 className="text-4xl font-bold">Biz Sadece Yazılım Satmıyoruz — İş Ortağınız Oluyoruz.</h2>
+        <p className="mt-5 text-lg text-muted-foreground">Çoğu teknoloji firması size yazılım verir ve sizi kendi halinize bırakır. Hisu farklı çalışır: sistemi biz kurarız, çalışır duruma getiririz, sorun çıkarsa yanınızdayız.</p>
+        <p className="mt-4 text-lg text-muted-foreground">AaaS — Automation as a Service anlayışıyla her çözümü işinize özel tasarlıyor, kuruyoruz ve sonuç üretene kadar yanınızda kalıyoruz. Teknolojiyi siz öğrenmek zorunda değilsiniz. Biz kuruyoruz, siz büyüyorsunuz.</p>
       </section>
 
       <section className="border-t border-border/60 bg-card">
@@ -91,9 +90,9 @@ function AboutPage() {
           <h2 className="text-center text-4xl font-bold">Bugüne Kadar</h2>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
-              { n: "3", t: "Aktif Ürün & Hizmet" },
-              { n: "%100", t: "Anahtar Teslim Süreç" },
-              { n: "AaaS", t: "SaaS Değil, Şirketinize Özel" },
+              { n: "3", t: "İş Gününde Web Sitesi Teslimi" },
+              { n: "2", t: "Günde BütçeCRM Kurulumu" },
+              { n: "24s", t: "Destek Dönüş Süresi" },
             ].map(s => (
               <div key={s.t} className="rounded-2xl border border-border bg-background p-8 text-center">
                 <p className="text-5xl font-bold text-primary">{s.n}</p>

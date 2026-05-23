@@ -51,8 +51,8 @@ function ContactPage() {
         <div className="mx-auto max-w-3xl px-4 py-20 text-center lg:px-8 lg:py-24">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">İletişim</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Hisu Solutions İletişim | Demo ve Teklif Al</h1>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl"><span className="text-primary">Ücretsiz</span> Görüşme Al</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Hisu Solutions ile iletişime geçin: otomasyon, BütçeCRM veya web tasarım projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde dönüş yapıyoruz.</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">İşinizi Büyütmek İçin <span className="text-primary">İlk Adımı Atın</span></h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Ücretsiz keşif görüşmesi ayarlayın. İhtiyacınızı anlatın, size özel çözümü birlikte tasarlayalım. 24 saat içinde geri dönüyoruz.</p>
         </div>
       </section>
 
@@ -67,24 +67,26 @@ function ContactPage() {
                   { name: "company", label: "Firma Adı" },
                   { name: "email", label: "E-posta", type: "email", required: true },
                   { name: "phone", label: "Telefon", type: "tel" },
-                  { name: "topic", label: "Hangi konuda görüşelim?", type: "select", options: ["BütçeCRM","Web Sitesi","Otomasyon","Diğer / Karar vermedim"] },
+                  { name: "topic", label: "Hangi konuda görüşelim?", type: "select", options: ["BütçeCRM","Web Sitesi","Otomasyon","Genel Danışmanlık","Fiyat Bilgisi","Diğer / Karar vermedim"] },
                   { name: "message", label: "Mesajınız", type: "textarea" },
                 ]}
+                submitLabel="Ücretsiz Görüşme Talep Et"
               />
+              <p className="mt-3 text-center text-sm text-muted-foreground">Kredi kartı gerekmez · Sadece 15 dakika</p>
             </div>
           </div>
           <div className="space-y-4 lg:col-span-2">
             <a href="https://wa.me/905539003459" className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><MessageCircle className="h-5 w-5" /></span>
-              <div><p className="font-semibold">WhatsApp</p><p className="text-sm text-muted-foreground">Anında yanıt</p></div>
+              <div><p className="font-semibold">Hızlı Yanıt — WhatsApp</p><p className="text-sm text-muted-foreground">Genellikle 1 saat içinde dönüş</p></div>
             </a>
             <a href="mailto:info@hisusolutions.com" className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><Mail className="h-5 w-5" /></span>
-              <div><p className="font-semibold">E-posta</p><p className="text-sm text-muted-foreground">info@hisusolutions.com</p></div>
+              <div><p className="font-semibold">Detaylı Sorular için E-posta</p><p className="text-sm text-muted-foreground">info@hisusolutions.com</p></div>
             </a>
             <a href="tel:+905539003459" className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><Phone className="h-5 w-5" /></span>
-              <div><p className="font-semibold">Telefon</p><p className="text-sm text-muted-foreground">+90 553 900 34 59</p></div>
+              <div><p className="font-semibold">Hemen Konuşalım</p><p className="text-sm text-muted-foreground">+90 553 900 34 59</p></div>
             </a>
           </div>
         </div>

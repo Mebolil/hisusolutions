@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote } from "lucide-react";
+import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote, LayoutDashboard } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
             { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
             { "@type": "Question", "name": "AaaS nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." } },
             { "@type": "Question", "name": "Neden sadece yazılım satmıyorsunuz?", "acceptedAnswer": { "@type": "Answer", "text": "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." } },
-            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." } },
+            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Dört ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı), özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
             { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
             { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
@@ -46,7 +46,7 @@ const faqs: FaqItem[] = [
   { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir dijital çözüm platformudur." },
   { q: "AaaS nedir?", a: "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." },
   { q: "Neden sadece yazılım satmıyorsunuz?", a: "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." },
-  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Üç ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı) ve özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan)." },
+  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Dört ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı), özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
   { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
   { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
@@ -56,6 +56,7 @@ const products = [
   { to: "/butceleme", icon: BarChart3, title: "BütçeCRM", desc: "Paranız nereye gidiyor? Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün." },
   { to: "/web-sitesi", icon: Monitor, title: "Özel Tasarım Site", desc: "3 günde hazır, müşteri çeken web sitenizle dijitalde yerinizi alın." },
   { to: "/otomasyon", icon: Workflow, title: "Otomasyon Sistemleri", desc: "Sıkıcı, tekrarlayan işleri otomatikleştirin — siz sadece büyüyün." },
+  { to: "/uctan-uca-yazilim", icon: LayoutDashboard, title: "Uçtan Uca Yazılım", desc: "Tüm iş akışınız tek panelde. Sektörünüze özel kurulur, anahtarı size teslim edilir.", badge: "Yeni" },
 ];
 
 const categories = [
@@ -118,9 +119,12 @@ function HomePage() {
           </div>
 
           {/* Product cards */}
-          <div id="hizmetler" className="mt-20 grid gap-5 md:grid-cols-3">
+          <div id="hizmetler" className="mt-20 grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((p) => (
               <Link key={p.to} to={p.to} className="group relative rounded-2xl border border-border bg-card p-7 text-left transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
+                {"badge" in p && p.badge && (
+                  <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">{p.badge}</span>
+                )}
                 <div className="flex items-start justify-between">
                   <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><p.icon className="h-6 w-6" /></span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-accent-foreground">

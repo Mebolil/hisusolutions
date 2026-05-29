@@ -18,6 +18,7 @@ export function Footer() {
               <li><Link to="/butceleme" className="hover:text-foreground">BütçeCRM</Link></li>
               <li><Link to="/web-sitesi" className="hover:text-foreground">Özel Tasarım Site</Link></li>
               <li><Link to="/otomasyon" className="hover:text-foreground">Otomasyon</Link></li>
+              <li><Link to="/uctan-uca-yazilim" className="hover:text-foreground">Uçtan Uca Yazılım</Link></li>
             </ul>
           </div>
           <div>

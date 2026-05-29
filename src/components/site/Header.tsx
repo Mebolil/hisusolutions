@@ -20,6 +20,7 @@ export function Header() {
     { to: "/butceleme", label: "BütçeCRM" },
     { to: "/web-sitesi", label: "Web Sitesi" },
     { to: "/otomasyon", label: "Otomasyon" },
+    { to: "/uctan-uca-yazilim", label: "Uçtan Uca" },
     { to: "/hakkimizda", label: "Hakkımızda" },
   ];
 

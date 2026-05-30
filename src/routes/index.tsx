@@ -16,6 +16,7 @@ export const Route = createFileRoute("/")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
       { property: "og:description", content: "Türkiye'nin AaaS platformu. BütçeCRM, otomasyon sistemleri ve özel tasarım web siteleri — işinize özel kurulur, teslim edilir." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/" },

@@ -15,6 +15,7 @@ export const Route = createFileRoute("/web-sitesi")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "Kurumsal Web Sitesi Tasarımı — 3 Günde Teslim | Hisu Solutions" },
       { property: "og:description", content: "Şablon değil, marka DNA'nıza özel. 3 iş gününde modern ve dönüşüm odaklı web siteniz hazır. Starter ₺9.900'dan başlayan fiyatlarla." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/web-sitesi" },

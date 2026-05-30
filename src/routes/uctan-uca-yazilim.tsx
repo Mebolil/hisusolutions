@@ -15,6 +15,7 @@ export const Route = createFileRoute("/uctan-uca-yazilim")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "Uçtan Uca Yazılım — İhtiyacınıza Özel Sistem | Hisu Solutions" },
       { property: "og:description", content: "İşletmenizin tüm süreçleri tek panelde. Sektörünüze özel kurulan, 2-3 haftada teslim edilen anahtar teslim yazılım çözümü." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/uctan-uca-yazilim" },

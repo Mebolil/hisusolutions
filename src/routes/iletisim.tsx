@@ -15,6 +15,7 @@ export const Route = createFileRoute("/iletisim")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "İletişim — Ücretsiz Keşif Görüşmesi | Hisu Solutions" },
       { property: "og:description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde geri dönüş garantisi." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/iletisim" },

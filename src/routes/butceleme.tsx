@@ -15,6 +15,7 @@ export const Route = createFileRoute("/butceleme")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
       { property: "og:description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret ve KOBİ'ler için anahtar teslim bütçe yönetimi." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/butceleme" },

@@ -15,6 +15,7 @@ export const Route = createFileRoute("/otomasyon")({
       { property: "og:site_name", content: "Hisu Solutions" },
       { property: "og:title", content: "İş Süreci Otomasyonu — AaaS Çözümleri | Hisu Solutions" },
       { property: "og:description", content: "Tekrarlayan iş süreçlerini otomatikleştirin. Şirketinize özel, ölçeklenebilir otomasyon sistemleri Hisu Solutions tarafından kurulur ve teslim edilir." },
+      { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
       { rel: "canonical", href: "https://hisusolutions.com/otomasyon" },

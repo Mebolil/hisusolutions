@@ -6,4 +6,9 @@ import "./styles.css";
 const router = getRouter();
 
 const rootElement = document.getElementById("app")!;
-ReactDOM.createRoot(rootElement).render(<RouterProvider router={router} />);
+
+if (rootElement.hasChildNodes()) {
+  ReactDOM.hydrateRoot(rootElement, <RouterProvider router={router} />);
+} else {
+  ReactDOM.createRoot(rootElement).render(<RouterProvider router={router} />);
+}

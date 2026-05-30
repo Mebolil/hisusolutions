@@ -1,0 +1,121 @@
+import puppeteer from 'puppeteer';
+import { createServer } from 'node:http';
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { join, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const distDir = join(__dirname, '..', 'dist');
+
+const ROUTES = [
+  '/',
+  '/butceleme',
+  '/web-sitesi',
+  '/otomasyon',
+  '/uctan-uca-yazilim',
+  '/hakkimizda',
+  '/iletisim',
+];
+
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.woff2': 'font/woff2',
+};
+
+function readFileSafe(p) {
+  try {
+    if (!existsSync(p)) return null;
+    const content = readFileSync(p);
+    return content;
+  } catch {
+    return null;
+  }
+}
+
+function createStaticServer(dir, port) {
+  const server = createServer((req, res) => {
+    const filePath = req.url.split('?')[0];
+    let fullPath = join(dir, filePath);
+
+    const content = readFileSafe(fullPath);
+    if (!content) {
+      fullPath = join(dir, 'index.html');
+    }
+
+    const ext = extname(fullPath) || '.html';
+    const finalContent = content || readFileSafe(fullPath);
+    if (!finalContent) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.end(finalContent);
+  });
+
+  server.listen(port);
+  return server;
+}
+
+async function prerender() {
+  const PORT = 4173;
+  const BASE = `http://localhost:${PORT}`;
+
+  console.log('Starting static server...');
+  const server = createStaticServer(distDir, PORT);
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
+
+  console.log(`Prerendering ${ROUTES.length} routes...`);
+
+  for (const route of ROUTES) {
+    const page = await browser.newPage();
+
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const type = req.resourceType();
+      if (['image', 'media', 'font'].includes(type)) req.abort();
+      else req.continue();
+    });
+
+    await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle0', timeout: 30000 });
+
+    await page
+      .waitForFunction(
+        () => document.querySelector('script[type="application/ld+json"]') !== null,
+        { timeout: 10000 }
+      )
+      .catch(() =>
+        console.warn(`  Warning: No JSON-LD found on ${route} — check head() definition`)
+      );
+
+    const html = await page.evaluate(() => document.documentElement.outerHTML);
+
+    const outDir = route === '/' ? distDir : join(distDir, route.slice(1));
+    const outPath = join(outDir, 'index.html');
+
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(outPath, `<!DOCTYPE html>\n${html}`);
+
+    console.log(`  ✓ ${route} → ${outPath.replace(distDir, 'dist')}`);
+    await page.close();
+  }
+
+  await browser.close();
+  server.close();
+  console.log('Prerender complete.');
+}
+
+prerender().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

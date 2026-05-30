@@ -1,4 +1,3 @@
-import puppeteer from 'puppeteer';
 import { createServer } from 'node:http';
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
@@ -30,8 +29,7 @@ const mimeTypes = {
 function readFileSafe(p) {
   try {
     if (!existsSync(p)) return null;
-    const content = readFileSync(p);
-    return content;
+    return readFileSync(p);
   } catch {
     return null;
   }
@@ -63,6 +61,26 @@ function createStaticServer(dir, port) {
   return server;
 }
 
+async function launchBrowser() {
+  const isCI = process.env.CI || process.env.VERCEL;
+
+  if (isCI) {
+    const chromium = await import('@sparticuz/chromium');
+    const { default: puppeteerCore } = await import('puppeteer-core');
+    return puppeteerCore.launch({
+      executablePath: await chromium.default.executablePath(),
+      args: chromium.default.args,
+      headless: chromium.default.headless,
+    });
+  } else {
+    const { default: puppeteer } = await import('puppeteer');
+    return puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+  }
+}
+
 async function prerender() {
   const PORT = 4173;
   const BASE = `http://localhost:${PORT}`;
@@ -70,10 +88,7 @@ async function prerender() {
   console.log('Starting static server...');
   const server = createStaticServer(distDir, PORT);
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  });
+  const browser = await launchBrowser();
 
   console.log(`Prerendering ${ROUTES.length} routes...`);
 

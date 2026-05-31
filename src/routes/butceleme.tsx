@@ -86,9 +86,10 @@ function ButcelemePage() {
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Paranız Nereye Gidiyor?<br />Artık Biliyorsunuz.</h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün. Excel karmaşasına son.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>
+            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></a>
             <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
         </div>
       </section>
 

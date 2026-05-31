@@ -56,9 +56,11 @@ function AuthPage() {
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm md:p-10">
           <div className="text-center">
-            <h1 className="text-3xl font-bold">{mode === "signin" ? "Giriş Yap" : "Kayıt Ol"}</h1>
+            <h1 className="text-3xl font-bold">{mode === "signin" ? "Giriş Yap" : "15 Gün Ücretsiz Dene"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {mode === "signin" ? "Hesabınıza giriş yaparak otomasyonlarınızı yönetin" : "Yeni bir hesap oluşturun"}
+              {mode === "signin"
+                ? "Hesabınıza giriş yaparak paneli açın"
+                : "Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık"}
             </p>
           </div>
 
@@ -94,14 +96,14 @@ function AuthPage() {
               </label>
             )}
             <Button type="submit" disabled={loading} className="w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90">
-              {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "Kayıt Ol"}
+              {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "15 Gün Ücretsiz Başla"}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signin" ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
             <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="font-semibold text-primary hover:underline">
-              {mode === "signin" ? "Kayıt Ol" : "Giriş Yap"}
+              {mode === "signin" ? "15 Gün Ücretsiz Başla" : "Giriş Yap"}
             </button>
           </p>
         </div>

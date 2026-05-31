@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote, LayoutDashboard } from "lucide-react";
+import { FloatingPaths } from "@/components/ui/background-paths";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,6 +86,10 @@ function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
+        <div className="absolute inset-0 -z-10">
+          <FloatingPaths position={1} />
+          <FloatingPaths position={-1} />
+        </div>
         <div className="mx-auto max-w-7xl px-4 pb-20 pt-20 text-center lg:px-8 lg:pt-28">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-sm font-medium text-accent-foreground">
             <Sparkles className="h-4 w-4" /> Türkiye'nin AaaS Platformu

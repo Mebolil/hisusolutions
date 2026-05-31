@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote, LayoutDashboard } from "lucide-react";
 import { FloatingPaths } from "@/components/ui/background-paths";
+import { ElegantShape } from "@/components/ui/shape-landing-hero";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -89,6 +90,48 @@ function HomePage() {
         <div className="absolute inset-0 -z-10">
           <FloatingPaths position={1} />
           <FloatingPaths position={-1} />
+        </div>
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <ElegantShape
+            delay={0.3}
+            width={580}
+            height={130}
+            rotate={12}
+            gradient="from-primary/[0.10]"
+            className="left-[-8%] top-[18%]"
+          />
+          <ElegantShape
+            delay={0.5}
+            width={460}
+            height={110}
+            rotate={-14}
+            gradient="from-emerald-400/[0.08]"
+            className="right-[-4%] top-[68%]"
+          />
+          <ElegantShape
+            delay={0.4}
+            width={280}
+            height={72}
+            rotate={-8}
+            gradient="from-teal-400/[0.10]"
+            className="left-[8%] bottom-[8%]"
+          />
+          <ElegantShape
+            delay={0.6}
+            width={190}
+            height={54}
+            rotate={20}
+            gradient="from-violet-500/[0.07]"
+            className="right-[18%] top-[12%]"
+          />
+          <ElegantShape
+            delay={0.7}
+            width={140}
+            height={38}
+            rotate={-25}
+            gradient="from-primary/[0.08]"
+            className="left-[24%] top-[6%]"
+          />
         </div>
         <div className="mx-auto max-w-7xl px-4 pb-20 pt-20 text-center lg:px-8 lg:pt-28">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-sm font-medium text-accent-foreground">

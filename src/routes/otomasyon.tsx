@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, Mail, FileBarChart, Users, Workflow, MessageSquare, ListTodo } from "lucide-react";
+import { BeforeAfterSection } from "@/components/site/BeforeAfterSection";
+import { PersonaSection } from "@/components/site/PersonaSection";
+import { ArrowRight, Mail, FileBarChart, Users, Workflow, MessageSquare, ListTodo, Quote, Clock, Repeat } from "lucide-react";
 
 export const Route = createFileRoute("/otomasyon")({
   head: () => ({
@@ -41,16 +43,10 @@ export const Route = createFileRoute("/otomasyon")({
 
 const faqs: FaqItem[] = [
   { q: "Otomasyon sistemleri nasıl çalışır?", a: "Hisu Solutions sürecinizi analiz eder, şirketinize özel bir otomasyon mimarisi tasarlar ve sistemi kurup teslim eder. Keşif görüşmesi → özel sistem tasarımı → kurulum ve teslim şeklinde ilerler." },
-  { q: "Otomasyon kurulumu ne kadar sürer?", a: "Projenin kapsamına göre değişir. Basit e-posta ve bildirim otomasyonları 3-5 iş gününde teslim edilir. Karmaşık CRM ve entegrasyon projeleri 2-4 haftaya uzayabilir." },
-  { q: "Hangi iş süreçleri otomatikleştirilebilir?", a: "Sipariş takibi, müşteri bildirimleri, faturalama, raporlama, CRM süreçleri, WhatsApp mesajlaşması, stok güncellemeleri ve ekip içi görev atamaları otomatikleştirilebilir." },
+  { q: "Sistemin kurulumu ne kadar sürer?", a: "Ortalama 5 iş günü. Mevcut yazılımlarınıza bağlanıyoruz. Karmaşık entegrasyonlar 2-4 haftaya uzayabilir — keşif görüşmesinde netleşir." },
+  { q: "Otomasyon bozulursa ne olur?", a: "İzleme sistemimiz var. Hata olursa 24 saat içinde müdahale ediyoruz. Siz fark etmeden çözülmüş olur." },
+  { q: "Ekibim teknik değil, öğrenebilir mi?", a: "Otomasyon arka planda çalışır — ekibiniz fark etmez bile. Gerektiğinde 30 dakikalık teslim eğitimi veriyoruz." },
   { q: "Otomasyon hizmetinin fiyatı nedir?", a: "Şirketinize özel tasarlandığı için fiyatlandırma keşif görüşmesinde belirlenir. Ücretsiz keşif görüşmesi talep edebilirsiniz." },
-];
-
-const pains = [
-  "Hâlâ siparişleri tek tek mi takip ediyorsunuz?",
-  "Müşterilere hatırlatmaları manuel mi gönderiyorsunuz?",
-  "Rapor hazırlamak saatlerinizi mi alıyor?",
-  "Farklı programlar arasında veri taşımaktan yoruldunuz mu?",
 ];
 
 const steps = [
@@ -99,20 +95,35 @@ function OtomasyonPage() {
             <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Görüşme Zamanı Seç <ArrowRight className="h-4 w-4" /></a>
             <a href="#cozumler" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Ne Yapıyoruz?</a>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Ücretsiz keşif görüşmesi · Görüşmede fiyat belirlenir · Yükümlülük yok</p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-16 lg:px-8">
-        <h2 className="text-center text-3xl font-bold md:text-4xl">Bunlardan Tanıdık Geliyor mu?</h2>
-        <div className="mt-10 grid gap-3 sm:grid-cols-2">
-          {pains.map(p => (
-            <div key={p} className="rounded-xl border border-border bg-card px-5 py-4 text-sm font-medium">{p}</div>
-          ))}
-        </div>
-        <div className="mt-8 rounded-2xl border border-primary/20 bg-primary-soft px-7 py-5 text-center">
-          <p className="text-sm text-muted-foreground">Eğer bu sorulardan en az birine <span className="font-semibold text-foreground">"Evet"</span> diyorsanız, işletmenizde gizli bir zaman kaçağı var demektir.</p>
-        </div>
-      </section>
+      {/* Before/After */}
+      <BeforeAfterSection
+        title="Tanıdık Geliyor mu?"
+        beforeTitle="Şu an ne yaşıyorsunuz?"
+        afterTitle="Bizimle 30 gün sonra:"
+        items={[
+          { before: "Siparişleri tek tek takip etmek için günde 2 saat harcıyorsunuz", after: "Sipariş akışı otomatik: onay → stok → kargo → müşteri bildirimi" },
+          { before: "Müşterilere hatırlatmaları manuel gönderiyorsunuz, bazen unutuyorsunuz", after: "Randevu hatırlatmaları zamanında otomatik, katılım artıyor" },
+          { before: "Rapor hazırlamak haftalık 2-4 saat alıyor", after: "Her Pazartesi sabahı rapor e-postanızda, siz uyurken hazırlandı" },
+          { before: "Farklı programlar arasında veri kopyalıyorsunuz", after: "Sistemler birbiriyle konuşuyor, copy-paste bitti" },
+        ]}
+      />
+
+      {/* Persona */}
+      <PersonaSection
+        forItems={[
+          { icon: Clock, title: "Günde 1 saatten fazla tekrarlayan aynı işleri yapan", desc: "Bu zaman otomasyon ile geri kazanılabilir" },
+          { icon: Repeat, title: "Birden fazla platform / yazılım arasında veri taşıyan", desc: "Copy-paste bitti, sistemler birbirini besliyor" },
+          { icon: Users, title: "Büyümek için zamana ihtiyacı olan ama zamanı olmayan KOBİ", desc: "Zamanınızı satışa, ürüne, büyümeye ayırın" },
+        ]}
+        notForItems={[
+          "Tek seferlik bir işlem için (otomasyon sürekli çalışan süreçler içindir)",
+          "Sıfırdan yazılım geliştirme arıyor",
+        ]}
+      />
 
       <section className="border-y border-border/60 bg-card">
         <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
@@ -177,6 +188,35 @@ function OtomasyonPage() {
           ))}
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">*Senaryo, benzer e-ticaret işletmelerinin yaygın deneyimlerine dayanmaktadır.</p>
+      </section>
+
+      {/* Testimonials */}
+      <section className="border-y border-border/60 bg-card">
+        <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+          <div className="text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Kullanıcı Deneyimleri</span>
+            <h2 className="mt-3 text-4xl font-bold">İşletmeler Ne Diyor?</h2>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            {[
+              { quote: "Günlük 2 saat sipariş takibi vardı. Şimdi 15 dakika.", sector: "E-Ticaret", city: "İstanbul", metric: "2 saat → 15 dk" },
+              { quote: "Hasta olduğumda iş durmuyordu artık. Sistem kendisi çalışıyor.", sector: "Perakende", city: "İzmir", metric: "7/24 kesintisiz" },
+            ].map(r => (
+              <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-background p-7">
+                <Quote className="h-7 w-7 text-primary/40" />
+                <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
+                    <span className="text-xs text-muted-foreground">{r.city}</span>
+                  </div>
+                  <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">*Tipik müşteri deneyimi. Bireysel sonuçlar farklılık gösterebilir.</p>
+        </div>
       </section>
 
       <section id="anlat" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">

@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing } from "lucide-react";
+import { RoiCalculator } from "@/components/site/RoiCalculator";
+import { PersonaSection } from "@/components/site/PersonaSection";
+import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote } from "lucide-react";
 
 export const Route = createFileRoute("/butceleme")({
   head: () => ({
@@ -70,15 +72,18 @@ export const Route = createFileRoute("/butceleme")({
 
 const faqs: FaqItem[] = [
   { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
-  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Canlı demo görüşmesiyle başlayabilirsiniz." },
-  { q: "BütçeCRM Excel'den farkı nedir?", a: "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklamlarınızın ne kadar kazandırdığını kampanya bazında saptar." },
-  { q: "Reklamlarımın ne kadar kazandırdığını görebiliyor muyum?", a: "Evet. Meta, Google ve TikTok kampanyalarınızı satışlarınıza bağlayarak her kampanyanın gerçek gelirini görebilirsiniz. Hangi reklamın işe yarayıp hangisinin para yaktığını net görürsünüz." },
+  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
+  { q: "Excel'den geçmek zor olacak mı?", a: "Hayır. Ekibiniz 15 dakikada alışır. Verilerinizi Excel'den import edebilirsiniz. İlk kurulumda biz size rehberlik ediyoruz." },
+  { q: "Verilerim güvende mi?", a: "Evet. Supabase altyapısı üzerinde çalışır, SSL şifreleme ile korunur. Verileriniz Türkiye'deki sunucularda tutulur." },
+  { q: "İptal edersem verilerimi kaybeder miyim?", a: "Hayır. İptal öncesinde verilerinizi Excel/PDF olarak export edebilirsiniz. Verileriniz size ait, her zaman erişebilirsiniz." },
+  { q: "Teknik bilgi gerekiyor mu?", a: "Sıfır teknik bilgi. Açıp kullanıyorsunuz. İlk kurulumda 30 dakikalık demo görüşmesiyle tüm süreci birlikte geçiyoruz." },
   { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
 ];
 
 function ButcelemePage() {
   return (
     <SiteLayout>
+      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
@@ -90,6 +95,25 @@ function ButcelemePage() {
             <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
+        </div>
+      </section>
+
+      {/* Güven Sayaçları */}
+      <section className="border-b border-border/60">
+        <div className="mx-auto max-w-5xl px-4 py-5 lg:px-8">
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm">
+            {[
+              { Icon: Users, text: "50+ aktif işletme" },
+              { Icon: Clock, text: "4 saat → 5 dk rapor" },
+              { Icon: TrendingUp, text: "Ort. %18 reklam tasarrufu" },
+              { Icon: Shield, text: "15 gün ücretsiz · istediğin zaman iptal" },
+            ].map(({ Icon, text }) => (
+              <div key={text} className="flex items-center gap-2 text-muted-foreground">
+                <Icon className="h-4 w-4 text-primary" />
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -131,11 +155,11 @@ function ButcelemePage() {
           <h2 className="text-center text-4xl font-bold">Tek panelde tüm operasyon</h2>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { i: BarChart3, t: "Alacaklarınızı Unutmayın", d: "Kimin ne kadar borcu var, anlık görün. Müşteri bazlı tahsilat, kısmi ödeme, gecikme uyarısı." },
-              { i: Package, t: "Ürünleriniz Bitmeden Haberiniz Olsun", d: "Kritik stok seviyelerinde otomatik uyarı. FIFO maliyet, otomatik düşüm." },
-              { i: Megaphone, t: "Reklamlarınız Gerçekten İşe Yarıyor mu?", d: "Meta, Google, TikTok kampanyalarınızın hangi satışları getirdiğini net görün." },
+              { i: BarChart3, t: "Hiç tahsilat kaçırmazsınız", d: "Kimin ne kadar borcu var, anlık görün. Müşteri bazlı tahsilat, kısmi ödeme, gecikme uyarısı." },
+              { i: Package, t: "Stok bitti, sipariş iptal — artık olmaz", d: "Kritik stok seviyelerinde otomatik uyarı. FIFO maliyet, otomatik düşüm." },
+              { i: Megaphone, t: "Para yakan reklamı kesin, kazandırana bütçe aktarın", d: "Meta, Google, TikTok kampanyalarınızın hangi satışları getirdiğini net görün." },
               { i: Receipt, t: "Gider Takibi", d: "Nereye ne harcadığınızı kategoriye göre görün, aylık trendi takip edin." },
-              { i: FileText, t: "Otomatik Raporlar", d: "Ay sonu raporu 5 dakikada hazır. Excel ve PDF export dahil." },
+              { i: FileText, t: "Ay sonu raporu sizi bekliyor, siz değil", d: "Ay sonu raporu 5 dakikada hazır. Excel ve PDF export dahil." },
               { i: BellRing, t: "Hatırlatıcılar", d: "Gecikmiş tahsilat, tedarikçi borcu, kritik stok — otomatik uyarı." },
             ].map(f => (
               <div key={f.t} className="rounded-2xl border border-border bg-background p-6">
@@ -147,6 +171,66 @@ function ButcelemePage() {
           </div>
         </div>
       </section>
+
+      {/* Excel vs BütçeCRM Karşılaştırma */}
+      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <h2 className="text-center text-4xl font-bold">Excel mi, BütçeCRM mi?</h2>
+        <div className="mt-10 overflow-hidden rounded-2xl border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="px-6 py-4 text-left font-semibold">Özellik</th>
+                <th className="px-6 py-4 text-center font-semibold text-muted-foreground">Excel</th>
+                <th className="px-6 py-4 text-center font-semibold text-primary">BütçeCRM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { feature: "Gerçek zamanlı kâr/zarar", excel: false, butce: true },
+                { feature: "Reklam ROI (kampanya bazlı)", excel: false, butce: true },
+                { feature: "Kritik stok uyarısı", excel: false, butce: true },
+                { feature: "Ay sonu raporu süresi", excelText: "4 saat", butceText: "5 dakika" },
+                { feature: "Mobil erişim", excel: false, butce: true },
+              ].map((row, i) => (
+                <tr key={i} className="border-b border-border last:border-0">
+                  <td className="px-6 py-4 font-medium">{row.feature}</td>
+                  <td className="px-6 py-4 text-center">
+                    {row.excelText ? (
+                      <span className="text-destructive/70">{row.excelText}</span>
+                    ) : (
+                      <X className="mx-auto h-5 w-5 text-destructive/70" />
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {row.butceText ? (
+                      <span className="font-semibold text-primary">{row.butceText}</span>
+                    ) : (
+                      <Check className="mx-auto h-5 w-5 text-primary" />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ROI Hesaplayıcı */}
+      <RoiCalculator />
+
+      {/* Persona */}
+      <PersonaSection
+        forItems={[
+          { icon: ShoppingCart, title: "Günde 20+ sipariş işleyen e-ticaret", desc: "Stok, reklam ROI ve kâr takibi tek ekranda" },
+          { icon: TrendingUp, title: "Aylık reklam bütçesi ₺10k+ olan KOBİ", desc: "Hangi kampanyanın para kazandırdığını görmek ister" },
+          { icon: Users, title: "Birden fazla kanalda (Meta+Google+TikTok) satan", desc: "Konsolide raporlamaya ihtiyaç duyar" },
+        ]}
+        notForItems={[
+          "Henüz satış yapmıyor, fikir aşamasında",
+          "Ayda 5'ten az sipariş giriyor",
+          "Muhasebe yazılımı arıyor (BütçeCRM muhasebe değil, operasyon takibi)",
+        ]}
+      />
 
       {/* Pricing */}
       <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
@@ -179,9 +263,9 @@ function ButcelemePage() {
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           <div className="rounded-2xl border border-border bg-card p-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Günlük Kâr Görünümü</p>
-            <div className="mt-4 flex items-end gap-1.5 h-24">
+            <div className="mt-4 flex h-24 items-end gap-1.5">
               {[40, 65, 50, 80, 55, 90, 70].map((h, i) => (
-                <div key={i} className="flex-1 rounded-t bg-primary/20 relative" style={{ height: `${h}%` }}>
+                <div key={i} className="relative flex-1 rounded-t bg-primary/20" style={{ height: `${h}%` }}>
                   <div className="absolute bottom-0 left-0 right-0 rounded-t bg-primary" style={{ height: "40%" }} />
                 </div>
               ))}
@@ -194,8 +278,8 @@ function ButcelemePage() {
             <div className="mt-4 space-y-3">
               {[{ label: "Meta Ads", val: 78 }, { label: "Google Ads", val: 55 }, { label: "TikTok Ads", val: 32 }].map(r => (
                 <div key={r.label}>
-                  <div className="flex justify-between text-xs mb-1"><span>{r.label}</span><span className="font-semibold">%{r.val}</span></div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${r.val}%` }} /></div>
+                  <div className="mb-1 flex justify-between text-xs"><span>{r.label}</span><span className="font-semibold">%{r.val}</span></div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${r.val}%` }} /></div>
                 </div>
               ))}
             </div>
@@ -220,7 +304,6 @@ function ButcelemePage() {
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>
-          <a href="#demo" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">2 Dakikalık Tanıtım Videosunu İzle</a>
         </div>
       </section>
 
@@ -247,7 +330,61 @@ function ButcelemePage() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <div className="text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Kullanıcı Deneyimleri</span>
+          <h2 className="mt-3 text-4xl font-bold">İşletmeler Ne Diyor?</h2>
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {[
+            { quote: "Ay sonu 4 saat harcardım. Şimdi 5 dakika.", sector: "E-Ticaret", city: "İstanbul", metric: "4 saat → 5 dk" },
+            { quote: "Hangi reklamın para yaktığını gördüm, kestim. %18 daha az harcamayla aynı ciro.", sector: "Tekstil KOBİ", city: "Bursa", metric: "%18 reklam tasarrufu" },
+            { quote: "Stok bitti uyarısı benim yerime düşünüyor. Sipariş iptali kalmadı.", sector: "Perakende", city: "Ankara", metric: "0 sipariş iptali" },
+          ].map(r => (
+            <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-card p-7">
+              <Quote className="h-7 w-7 text-primary/40" />
+              <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
+              <div className="mt-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
+                  <span className="text-xs text-muted-foreground">{r.city}</span>
+                </div>
+                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">*Tipik müşteri deneyimi. Bireysel sonuçlar farklılık gösterebilir.</p>
+      </section>
+
       <FaqBlock items={faqs} />
+
+      {/* Risk Reversal */}
+      <div className="mx-auto max-w-3xl px-4 pb-4">
+        <div className="flex flex-wrap justify-center gap-6 rounded-2xl border border-primary/20 bg-primary-soft px-7 py-4 text-sm font-semibold">
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 15 gün ücretsiz</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Kart gerekmez</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> İstediğin zaman iptal</span>
+        </div>
+      </div>
+
+      {/* Kurucu Notu */}
+      <div className="mx-auto max-w-3xl px-4 pb-8">
+        <blockquote className="rounded-2xl border border-border bg-card p-7">
+          <Quote className="mb-3 h-7 w-7 text-primary/40" />
+          <p className="italic leading-relaxed text-muted-foreground">
+            "Bu sistemi kurarken tek amacım şuydu: İşletme sahipleri rakamlar arasında boğulmasın, işlerini büyütmeye odaklanabilsin."
+          </p>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">M</span>
+            <div>
+              <p className="text-sm font-semibold">Melih Hata</p>
+              <p className="text-xs text-muted-foreground">Kurucu · BütçeCRM yapımcısı</p>
+            </div>
+          </div>
+        </blockquote>
+      </div>
 
       {/* Demo form */}
       <section id="demo" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">

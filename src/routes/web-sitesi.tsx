@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, Check } from "lucide-react";
+import { BeforeAfterSection } from "@/components/site/BeforeAfterSection";
+import { PersonaSection } from "@/components/site/PersonaSection";
+import { ArrowRight, Check, Globe, Smartphone, Monitor } from "lucide-react";
 
 export const Route = createFileRoute("/web-sitesi")({
   head: () => ({
@@ -41,8 +43,10 @@ export const Route = createFileRoute("/web-sitesi")({
 
 const faqs: FaqItem[] = [
   { q: "Web sitesi gerçekten 3 günde teslim ediliyor mu?", a: "Evet. Gün 1: marka analizi, Gün 2: tasarım ve strateji, Gün 3: teslim ve domain bağlantısı. Starter paket için 3 iş günü garantidir." },
+  { q: "Hazır şablon kullanılıyor mu, ayırt edilemez olur muyum?", a: "Hayır. Her site marka DNA'nıza özel tasarlanır. Logo, renk, hedef kitle ve referans siteleriniz analiz edilerek özgün bir tasarım üretilir. Şablon değil, kimlik." },
+  { q: "3 günde kaliteli olur mu?", a: "Hız kaliteden ödün vermez. Test edilmiş, kanıtlanmış modüller + markanıza özel dokunuş ile hız ve kalite bir arada olur." },
   { q: "Web sitesi fiyatı ne kadar?", a: "Starter paket ₺9.900 + KDV tek seferlik ödeme. Çok sayfalı, kurumsal siteler için Nihai Paket teklif bazlıdır. Her iki pakette de 3 ay bakım mevcuttur." },
-  { q: "Hazır şablon mu kullanılıyor?", a: "Hayır. Her site marka DNA'nıza özel tasarlanır. Logo, renk, hedef kitle ve referans siteleriniz analiz edilerek özgün bir tasarım üretilir." },
+  { q: "İleride güncelleme yapabilir miyim?", a: "Evet. Teslimde admin paneli eğitimi veriyoruz — içerikleri kendiniz güncelleyebilirsiniz. Teknik değişiklikler için de yanınızdayız." },
   { q: "Teslimden sonra destek var mı?", a: "Starter pakette 1 revizyon hakkı bulunur. Nihai pakette 3 ay ücretsiz bakım ve sınırsız revizyon dahildir." },
 ];
 
@@ -86,6 +90,32 @@ function WebSitePage() {
           </div>
         </div>
       </section>
+
+      {/* Before/After */}
+      <BeforeAfterSection
+        title="Web Siteniz Müşteri Çekiyor mu?"
+        beforeTitle="Şu an ne yaşıyorsunuz?"
+        afterTitle="Bizimle 3 gün sonra:"
+        items={[
+          { before: "Eski site mobilde açılmıyor, müşteriler ilk bakışta kaçıyor", after: "Mobil öncelikli, hızlı açılan, modern site" },
+          { before: "Google'da bulunmak zor, rakipler hep üstte", after: "Temel SEO kurulu, Google'a hazır yapı" },
+          { before: "Müşteriler 'sizi nasıl bulabilirim?' diye soruyor", after: "WhatsApp butonu + form ile direkt müşteri gelir" },
+          { before: "Site yaptırmak 2-3 ay sürer ve yüksek bütçe ister", after: "3 iş gününde teslim, ₺9.900'dan başlayan" },
+        ]}
+      />
+
+      {/* Persona */}
+      <PersonaSection
+        forItems={[
+          { icon: Globe, title: "Web'de hiç görünürlüğü olmayan yerel hizmet işletmeleri", desc: "Telefon rehberinde kalmak yetmez, Google'da olmak şart" },
+          { icon: Monitor, title: "Eski / mobil uyumsuz sitesi olan KOBİ'ler", desc: "Müşteri ilk bakışta kaçıyorsa, site çalışmıyordur" },
+          { icon: Smartphone, title: "Hızla dijitale açılmak isteyen yeni girişimler", desc: "3 günde yayında, hemen müşteri almaya başlayın" },
+        ]}
+        notForItems={[
+          "E-ticaret / büyük ürün kataloğu arıyor (bu Starter için değil, Nihai Paket görüşerek belirlenir)",
+          "Kendi kodlamasını yapmak istiyor",
+        ]}
+      />
 
       <section id="surec" className="border-y border-border/60 bg-card">
         <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
@@ -135,6 +165,11 @@ function WebSitePage() {
             <a href="#basla" className="mt-7 block rounded-full bg-foreground py-3 text-center text-sm font-semibold text-background hover:opacity-90">Teklif Al</a>
           </div>
         </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-5 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Domain + hosting kurulumu dahil</span>
+          <span className="flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> 3 ay bakım garantisi</span>
+          <span className="flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Beğenmezsen geri öderiz</span>
+        </div>
       </section>
 
       {/* Vaka Çalışması */}
@@ -158,6 +193,46 @@ function WebSitePage() {
           </div>
           <p className="mt-6 text-center text-xs text-muted-foreground">*Benzer hizmet sektörü işletmelerinin tipik deneyimi.</p>
         </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <div className="text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Müşteri Deneyimleri</span>
+          <h2 className="mt-3 text-4xl font-bold">İşletmeler Ne Diyor?</h2>
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {[
+            { quote: "İlk hafta 3 form geldi. Daha önce web sitemiz yoktu.", sector: "Muhasebe Bürosu", city: "Ankara", metric: "İlk haftada 3 form" },
+            { quote: "3 günde hazır dediler, gerçekten 3 günde teslim aldık.", sector: "Hizmet Sektörü", city: "İzmir", metric: "3 günde teslim" },
+          ].map(r => (
+            <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-card p-7">
+              <span className="text-3xl font-serif text-primary/30">"</span>
+              <p className="mt-2 flex-1 text-base font-medium italic leading-relaxed">{r.quote}</p>
+              <div className="mt-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
+                  <span className="text-xs text-muted-foreground">{r.city}</span>
+                </div>
+                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 rounded-2xl border border-border bg-card p-7">
+          <span className="text-3xl font-serif text-primary/30">"</span>
+          <p className="mt-2 italic leading-relaxed text-muted-foreground">
+            "Web siteniz müşteri çekmiyorsa, var olmakla yok olmak arasında fark kalmıyor."
+          </p>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">M</span>
+            <div>
+              <p className="text-sm font-semibold">Melih Hata</p>
+              <p className="text-xs text-muted-foreground">Kurucu · Hisu Solutions</p>
+            </div>
+          </div>
+        </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">*Tipik müşteri deneyimi. Bireysel sonuçlar farklılık gösterebilir.</p>
       </section>
 
       <FaqBlock items={faqs} />

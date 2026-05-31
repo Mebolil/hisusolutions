@@ -287,16 +287,19 @@ function HomePage() {
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {[
-              { quote: "Ay sonu kâr hesabı artık 5 dakika sürüyor.", sector: "E-ticaret İşletmesi", city: "İstanbul" },
-              { quote: "3 günde web sitemiz hazırdı, ilk hafta 3 form geldi.", sector: "Muhasebe Bürosu", city: "Ankara" },
-              { quote: "Sipariş takibi için harcadığım 2 saati artık işime ayırıyorum.", sector: "Lojistik Firması", city: "İzmir" },
+              { quote: "Ay sonu kâr hesabı artık 5 dakika sürüyor.", sector: "E-ticaret İşletmesi", city: "İstanbul", metric: "4 saat → 5 dk" },
+              { quote: "3 günde web sitemiz hazırdı, ilk hafta 3 form geldi.", sector: "Muhasebe Bürosu", city: "Ankara", metric: "İlk haftada 3 form" },
+              { quote: "Sipariş takibi için harcadığım 2 saati artık işime ayırıyorum.", sector: "Lojistik Firması", city: "İzmir", metric: "2 saat/gün kazanıldı" },
             ].map((r) => (
               <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-background p-7">
                 <Quote className="h-7 w-7 text-primary/40" />
                 <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
-                <div className="mt-6 flex items-center gap-2">
-                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
-                  <span className="text-xs text-muted-foreground">{r.city}</span>
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
+                    <span className="text-xs text-muted-foreground">{r.city}</span>
+                  </div>
+                  <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
                 </div>
               </div>
             ))}

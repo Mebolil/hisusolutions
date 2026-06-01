@@ -12,6 +12,9 @@ function WhatsAppIcon() {
   );
 }
 
+let _exitShown = false;
+let _lmShown = false;
+
 function ExitIntentPopup() {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -20,13 +23,12 @@ function ExitIntentPopup() {
   const [phone, setPhone] = useState("");
 
   useEffect(() => {
-    if (document.cookie.includes("hi_exit=1")) return;
+    if (_exitShown) return;
 
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0) {
+      if (e.clientY <= 0 && !_exitShown) {
+        _exitShown = true;
         setOpen(true);
-        const exp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
-        document.cookie = `hi_exit=1; expires=${exp}; path=/`;
       }
     };
 
@@ -120,17 +122,15 @@ function LeadMagnetWidget() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (!document.cookie.includes("hi_lm=1")) {
-      const t = setTimeout(() => setDismissed(false), 5000);
-      return () => clearTimeout(t);
-    }
+    if (_lmShown) return;
+    const t = setTimeout(() => {
+      _lmShown = true;
+      setDismissed(false);
+    }, 5000);
+    return () => clearTimeout(t);
   }, []);
 
-  const dismiss = () => {
-    setDismissed(true);
-    const exp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `hi_lm=1; expires=${exp}; path=/`;
-  };
+  const dismiss = () => setDismissed(true);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

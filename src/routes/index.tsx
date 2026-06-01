@@ -306,19 +306,61 @@ function HomePage() {
       <section className="border-t border-border/60 bg-card">
         <div className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold md:text-5xl">Nasıl Çalışır?</h2>
-            <p className="mt-3 text-muted-foreground">3 basit adımda otomasyonunuzu kurun.</p>
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Nasıl Çalışır?</span>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">İşinizi Büyütmek Hiç Bu Kadar Kolay Olmamıştı</h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Sıkıcı işleri bize bırakın, siz sadece stratejiye odaklanın.</p>
           </div>
-          <div className="mt-14 grid gap-8 md:grid-cols-3">
+          <div className="mt-14 flex flex-col gap-6 md:flex-row md:items-start md:gap-4">
             {[
-              { n: "01", t: "Hizmet Seçin", d: "Kategoriler arasından ihtiyacınıza uygun otomasyon hizmetini bulun ve seçin." },
-              { n: "02", t: "Bilgilerinizi Girin", d: "Sadece gerekli bilgileri girin — API anahtarı, hesap bilgileri veya tercihler." },
-              { n: "03", t: "Otomasyonunuz Hazır", d: "Otomasyon hesabınıza tanımlanır ve anında çalışmaya başlar." },
-            ].map((s) => (
-              <div key={s.n} className="relative rounded-2xl border border-border bg-background p-7">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Adım {s.n}</span>
-                <h3 className="mt-3 text-2xl font-bold">{s.t}</h3>
-                <p className="mt-2 text-muted-foreground">{s.d}</p>
+              {
+                n: "01",
+                t: "İhtiyacını Belirle, Çözümü Biz Kuralım",
+                d: "Hangi iş akışını otomatikleştirmek istediğini bize anlat. Gerisini uzman ekibimiz halletsin, sana özel sistemi anahtar teslim kuralım.",
+                Icon: Lightbulb,
+                cta: null,
+              },
+              {
+                n: "02",
+                t: "Test Et, Onayla, Çalışmaya Başla",
+                d: "Kurduğumuz sistemi birlikte test edelim. Her şey istediğin gibi çalıştığında tek tıkla onay ver ve otomasyonun anında devreye girsin.",
+                Icon: CheckCircle2,
+                cta: null,
+              },
+              {
+                n: "03",
+                t: "Zaman Kazan, Verimliliğini Katla",
+                d: "Artık tekrarlayan işlerle uğraşmak zorunda değilsin. Otomasyonun senin için çalışırken, sen daha önemli işlere odaklan ve işini büyüt.",
+                Icon: TrendingUp,
+                cta: true,
+              },
+            ].map((s, index) => (
+              <div key={s.n} className="contents md:flex md:flex-1 md:items-start md:gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15 }}
+                  className="relative flex flex-1 flex-col rounded-2xl border border-border bg-background p-7"
+                >
+                  <span className="absolute right-5 top-4 select-none text-7xl font-black leading-none text-primary/10">{s.n}</span>
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <s.Icon className="h-6 w-6" />
+                  </div>
+                  <span className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Adım {s.n}</span>
+                  <h3 className="mt-2 text-xl font-bold">{s.t}</h3>
+                  <p className="mt-2 flex-1 text-muted-foreground">{s.d}</p>
+                  {s.cta && (
+                    <Link
+                      to="/iletisim"
+                      className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                    >
+                      Başlayalım <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                </motion.div>
+                {index < 2 && (
+                  <ArrowRight className="mx-auto my-2 hidden h-6 w-6 flex-shrink-0 text-primary/40 md:mt-16 md:block" />
+                )}
               </div>
             ))}
           </div>

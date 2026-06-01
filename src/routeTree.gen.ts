@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
+import { Route as UctanUcaYazilimRouteImport } from './routes/uctan-uca-yazilim'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as IletisimRouteImport } from './routes/iletisim'
@@ -32,6 +33,11 @@ import { Route as AppButcecrmAlislarRouteImport } from './routes/app.butcecrm.al
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
   path: '/web-sitesi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UctanUcaYazilimRoute = UctanUcaYazilimRouteImport.update({
+  id: '/uctan-uca-yazilim',
+  path: '/uctan-uca-yazilim',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanelRoute = PanelRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/iletisim': typeof IletisimRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/iletisim'
     | '/otomasyon'
     | '/panel'
+    | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/app/butcecrm'
     | '/app/butcecrm/alislar'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/iletisim'
     | '/otomasyon'
     | '/panel'
+    | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/iletisim'
     | '/otomasyon'
     | '/panel'
+    | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/app/butcecrm'
     | '/app/butcecrm/alislar'
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   IletisimRoute: typeof IletisimRoute
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
+  UctanUcaYazilimRoute: typeof UctanUcaYazilimRoute
   WebSitesiRoute: typeof WebSitesiRoute
   AppButcecrmRoute: typeof AppButcecrmRouteWithChildren
 }
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/web-sitesi'
       fullPath: '/web-sitesi'
       preLoaderRoute: typeof WebSitesiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uctan-uca-yazilim': {
+      id: '/uctan-uca-yazilim'
+      path: '/uctan-uca-yazilim'
+      fullPath: '/uctan-uca-yazilim'
+      preLoaderRoute: typeof UctanUcaYazilimRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/panel': {
@@ -442,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   IletisimRoute: IletisimRoute,
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,
+  UctanUcaYazilimRoute: UctanUcaYazilimRoute,
   WebSitesiRoute: WebSitesiRoute,
   AppButcecrmRoute: AppButcecrmRouteWithChildren,
 }

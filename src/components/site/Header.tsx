@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { HisuLogo } from "@/components/HisuLogo";

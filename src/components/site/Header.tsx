@@ -20,6 +20,7 @@ export function Header() {
   const nav = [
     { to: "/butceleme", label: "BütçeCRM" },
     { to: "/uctan-uca-yazilim", label: "Uçtan Uca" },
+    { to: "/blog", label: "Blog" },
     { to: "/hakkimizda", label: "Hakkımızda" },
   ];
 

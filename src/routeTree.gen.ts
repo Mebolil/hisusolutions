@@ -16,8 +16,10 @@ import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as IletisimRouteImport } from './routes/iletisim'
 import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
 import { Route as ButcelemeRouteImport } from './routes/butceleme'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
 import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
 import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
@@ -65,6 +67,11 @@ const ButcelemeRoute = ButcelemeRouteImport.update({
   path: '/butceleme',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -74,6 +81,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const AppButcecrmRoute = AppButcecrmRouteImport.update({
   id: '/app/butcecrm',
@@ -135,6 +147,7 @@ const AppButcecrmAlislarRoute = AppButcecrmAlislarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
@@ -143,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
@@ -157,6 +171,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
@@ -164,6 +179,7 @@ export interface FileRoutesByTo {
   '/panel': typeof PanelRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
@@ -179,6 +195,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
@@ -187,6 +204,7 @@ export interface FileRoutesById {
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
@@ -203,6 +221,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
@@ -211,6 +230,7 @@ export interface FileRouteTypes {
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/app/butcecrm'
+    | '/blog/$slug'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
@@ -225,6 +245,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
@@ -232,6 +253,7 @@ export interface FileRouteTypes {
     | '/panel'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
+    | '/blog/$slug'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
@@ -246,6 +268,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
@@ -254,6 +277,7 @@ export interface FileRouteTypes {
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/app/butcecrm'
+    | '/blog/$slug'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
@@ -269,6 +293,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
   ButcelemeRoute: typeof ButcelemeRoute
   HakkimizdaRoute: typeof HakkimizdaRoute
   IletisimRoute: typeof IletisimRoute
@@ -330,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ButcelemeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -343,6 +375,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/app/butcecrm': {
       id: '/app/butcecrm'
@@ -424,6 +463,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 interface AppButcecrmRouteChildren {
   AppButcecrmAlislarRoute: typeof AppButcecrmAlislarRoute
   AppButcecrmAyarlarRoute: typeof AppButcecrmAyarlarRoute
@@ -457,6 +506,7 @@ const AppButcecrmRouteWithChildren = AppButcecrmRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
   ButcelemeRoute: ButcelemeRoute,
   HakkimizdaRoute: HakkimizdaRoute,
   IletisimRoute: IletisimRoute,

@@ -14,6 +14,18 @@ const ROUTES = [
   '/uctan-uca-yazilim',
   '/hakkimizda',
   '/iletisim',
+  '/blog',
+  '/blog/eticaret-muhasebe-yazilimi-reklam-takip-fark',
+  '/blog/trendyol-reklam-net-kar-komisyon-kargo-hesaplama',
+  '/blog/roas-net-kar-marji-fark-eticaret',
+  '/blog/eticaret-reklam-butcesi-sizinti-noktalari',
+  '/blog/meta-google-trendyol-reklam-karsilastirma',
+  '/blog/reklam-takip-yazilimi-secim-rehberi-turkiye',
+  '/blog/basabas-analizi-nedir-eticaret',
+  '/blog/excel-eticaret-muhasebe-hatalari',
+  '/blog/butcecrm-nedir-eticaret-reklam-muhasebe',
+  '/blog/butcecrm-ilk-30-gun-kurulum-rehberi',
+  '/blog/trendyol-sku-bazli-karlilik-analizi',
 ];
 
 const mimeTypes = {

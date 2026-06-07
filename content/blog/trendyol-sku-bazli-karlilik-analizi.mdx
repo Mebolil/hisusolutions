@@ -1,0 +1,164 @@
+---
+title: "Trendyol'da SKU Bazlı Kârlılık: Hangi Ürün Gerçekten Para Kazandırıyor?"
+description: "Trendyol'da satışınız yüksek ama kâr düşük mü? SKU bazlı kârlılık analizi ile hangi ürünün para kazandırdığını, hangisinin sızdırdığını tam olarak görebilirsiniz."
+slug: "trendyol-sku-bazli-karlilik-analizi"
+date: "2026-05-04"
+category: "bütçe"
+keywords: ["trendyol sku bazlı karlılık", "trendyol ürün kârlılık analizi", "trendyol hangi ürün kazandırıyor", "sku karlılık hesaplama", "trendyol net kar analizi"]
+readingTime: 9
+author: "Melih Hata"
+ogImage: "/og-image.png"
+---
+
+100 ürün satıyorsunuz. Genel tabloya bakıyorsunuz: ROAS 4,5, aylık satış ₺180.000. Güzel görünüyor.
+
+Ama bu 100 üründen 15'i tüm kârı üretiyor. 60'ı başabaş noktasında. 25'i aktif biçimde zarar ettiriyor.
+
+Toplam rakama bakarak bu tabloyu görmek mümkün değil. Bunun için **SKU bazlı kârlılık analizi** gerekir.
+
+---
+
+## SKU Nedir?
+
+**SKU (Stock Keeping Unit / Stok Takip Birimi)**, her ürünü ayrı ayrı tanımlayan benzersiz bir koddur. Renk, beden, model gibi varyantları birbirinden ayırır.
+
+Örneğin:
+- Siyah, 42 numara spor ayakkabı → SKU: SPRT-SYH-42
+- Beyaz, 42 numara spor ayakkabı → SKU: SPRT-BYZ-42
+
+Aynı modelin iki farklı rengi farklı SKU'dur ve kârlılıkları farklı olabilir.
+
+---
+
+## Neden SKU Bazlı Analiz Gereklidir?
+
+### Problem 1: Kampanya Ortalaması Yanıltır
+
+Bir Trendyol kampanyasında 20 ürün var, ROAS 5. Harika görünüyor.
+
+Ama içine bakıldığında:
+- 5 ürün: ROAS 12 (çok kârlı)
+- 8 ürün: ROAS 4–5 (başabaş civarı)
+- 7 ürün: ROAS 2 (zararda)
+
+Ortalama ROAS 5, ama 7 ürün aktif zarar ettiriyor. Bu ürünlere verilen bütçe 5 kârlı ürünün getirisini yiyor.
+
+### Problem 2: Yüksek Cirolu Ürün Her Zaman Kârlı Değildir
+
+En çok satan ürün genellikle en çok dikkat çeker. Ama yüksek satış hacmi düşük kâr marjıyla birleştiğinde toplam kâra katkı düşük kalır.
+
+**Örnek:**
+- Ürün A: 50 adet/ay × ₺150 kâr/adet = ₺7.500
+- Ürün B: 200 adet/ay × ₺25 kâr/adet = ₺5.000
+
+Ürün B 4 kat fazla satıyor ama Ürün A'nın %33 daha az kâr getiriyor.
+
+---
+
+## SKU Bazlı Kârlılık Nasıl Hesaplanır?
+
+Her SKU için ayrı ayrı hesaplanması gereken kalemler:
+
+```
+Net Kâr = Satış Fiyatı
+         − Ürün Maliyeti (COGS)
+         − Trendyol Komisyonu (%)
+         − Platform Hizmet Bedeli (₺8,25)
+         − Kargo Ücreti
+         − SKU'ya atfedilen Reklam Harcaması
+         − İade Maliyeti (iade oranı × birim maliyet)
+```
+
+### Örnek Hesaplama — 3 Ürün Karşılaştırması
+
+| Kalem | Ürün A | Ürün B | Ürün C |
+|---|---|---|---|
+| Satış Fiyatı | ₺800 | ₺250 | ₺1.200 |
+| Ürün Maliyeti | ₺200 | ₺100 | ₺700 |
+| Komisyon (%15) | ₺120 | ₺37,5 | ₺180 |
+| Platform Bedeli | ₺8,25 | ₺8,25 | ₺8,25 |
+| Kargo | ₺35 | ₺28 | ₺45 |
+| Reklam (birim) | ₺40 | ₺20 | ₺80 |
+| **Net Kâr** | **₺396,75** | **₺56,25** | **₺186,75** |
+| **Net Kâr Marjı** | **%49,6** | **%22,5** | **%15,6** |
+
+Ürün C satış fiyatı en yüksek ve görünürde en prestijli. Ama net kâr marjı en düşük. Reklam bütçesinin büyük bölümü Ürün A'ya verilmeli.
+
+---
+
+## SKU Bazlı Analiz Nasıl Uygulanır?
+
+### Adım 1: Tüm SKU'lar için Maliyet Tablosu
+
+Her ürün için COGS, ortalama kargo ve komisyon oranını içeren tablo oluşturun. Bu tablonun güncel tutulması gerekir — tedarikçi fiyat değişimlerinde güncelleme yapın.
+
+### Adım 2: Reklam Harcamasını SKU'ya Dağıtın
+
+Kampanya düzeyindeki reklam harcamasını ürün satış adetlerine veya tıklamalara göre SKU'lara dağıtın.
+
+Trendyol Ads paneli kampanya içi ürün performansını gösterir — bunu indirin.
+
+### Adım 3: Net Kâr Matrisini Oluşturun
+
+| SKU | Aylık Satış Adedi | Net Kâr/Adet | Toplam Kâr | Sınıflandırma |
+|---|---|---|---|---|
+| SPRT-SYH-42 | 45 | ₺380 | ₺17.100 | 🟢 Yıldız |
+| SPRT-BYZ-38 | 120 | ₺45 | ₺5.400 | 🟡 Standart |
+| CAN-KRM-M | 30 | −₺25 | −₺750 | 🔴 Zarar |
+
+🟢 Yıldız SKU'lar: Bütçeyi artır  
+🟡 Standart: Optimize et veya koru  
+🔴 Zarar: Reklamı durdur, fiyatı veya maliyeti revize et  
+
+---
+
+## En Sık Yapılan SKU Analiz Hataları
+
+### Hata 1: Sadece Satış Adetine Bakmak
+
+Çok satan ürün her zaman kârlı değildir. Net kâr/adet ve toplam kâr katkısına bakın.
+
+### Hata 2: Reklam Maliyetini Dağıtmamak
+
+"Genel reklam gideri" kalemini SKU'lara dağıtmazsanız gerçek kâr marjını göremezsiniz.
+
+### Hata 3: İade Oranını Sabit Tutmak
+
+Her SKU'nun iade oranı farklıdır. Moda/beden ürünlerinde iade %25–35'e çıkabilir. Bu ürünler için iade maliyetini ayrıca hesaplayın.
+
+---
+
+## BütçeCRM ile Otomatik SKU Analizi
+
+[BütçeCRM](/butceleme), Trendyol sipariş ve reklam verilerini SKU bazında analiz eder:
+
+- Her SKU için komisyon + kargo + reklam dahil net kâr
+- Yıldız, standart ve zarar eden ürün sınıflandırması
+- SKU bazlı başabaş analizi
+- Düşük marjlı SKU'lar için otomatik uyarı
+
+Bu analizi Excel'de elle yapmak her ay 4–6 saat alır. BütçeCRM ile bu analiz otomatik ve anlıktır.
+
+---
+
+## Sık Sorulan Sorular
+
+**SKU bazlı analiz ne sıklıkla yapılmalıdır?**
+
+Minimum aylık yapılmalıdır. Sezon değişimlerinde, fiyat revizyonlarında ve yeni kampanya dönemlerinde ek analiz gereklidir.
+
+**Trendyol'da kaç SKU olduğunda analiz kritik hale gelir?**
+
+10'dan fazla aktif SKU'nuz varsa toplu bakış yanıltıcıdır. Bu noktada SKU bazlı analiz şarttır.
+
+**Reklam harcamasını SKU'ya nasıl dağıtabilirim?**
+
+Trendyol Ads panelinden kampanya içi ürün bazlı raporu indirin. Bu rapor hangi ürünün kaç tıklama aldığını gösterir. Harcamayı tıklama oranına göre dağıtın.
+
+**Zarar eden bir SKU'yu hemen listeden çıkarmak doğru mudur?**
+
+Mutlaka değil. Önce neden zararda olduğunu analiz edin: yüksek reklam mı, düşük fiyat mı, yüksek iade mi? Sorun çözülebilirse revize edin. Çözülemiyorsa kademeli olarak listeden çıkarın.
+
+**Düşük kâr marjlı ürünler neden listede tutulur?**
+
+Bazı ürünler diğer ürünlerin satışını tetikler (sepet büyütme). Ayrıca düşük marjlı ürünler yüksek satış hacmiyle mağaza sıralama puanını artırabilir. Bu taktiksel kararlar SKU analizinin yanında değerlendirilmelidir.

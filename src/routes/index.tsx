@@ -3,21 +3,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
-import { ArrowRight, BarChart3, Monitor, Workflow, Sparkles, Mail, Share2, Bot, FileBarChart, Shield, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote, LayoutDashboard } from "lucide-react";
+import { ArrowRight, BarChart3, Sparkles, CheckCircle2, Lightbulb, Wrench, TrendingUp, Quote, LayoutDashboard, Megaphone, Package, Clock } from "lucide-react";
 import { FloatingPaths } from "@/components/ui/background-paths";
 import { ElegantShape } from "@/components/ui/shape-landing-hero";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
-      { name: "description", content: "Türkiye'nin AaaS platformu. BütçeCRM ile finansal kontrolü ele alın, otomasyon sistemleriyle zamandan kazanın, özel tasarım web sitenizle öne çıkın. Anahtar teslim." },
+      { title: "Hisu Solutions — E-Ticaret KOBİ'leri İçin BütçeCRM ve Özel Yazılım" },
+      { name: "description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi, stok ve gelir yönetimi. BütçeCRM ile Meta/Google/TikTok hangi satışı getiriyor görün. Uçtan uca özel yazılım çözümleri." },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://hisusolutions.com/" },
       { property: "og:site_name", content: "Hisu Solutions" },
-      { property: "og:title", content: "Hisu Solutions — İşinizi Büyütün, Sistemi Biz Kurarız" },
-      { property: "og:description", content: "Türkiye'nin AaaS platformu. BütçeCRM, otomasyon sistemleri ve özel tasarım web siteleri — işinize özel kurulur, teslim edilir." },
+      { property: "og:title", content: "Hisu Solutions — E-Ticaret KOBİ'leri İçin BütçeCRM ve Özel Yazılım" },
+      { property: "og:description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi ve finansal yönetim. BütçeCRM + Uçtan Uca Yazılım." },
       { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
             { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
             { "@type": "Question", "name": "AaaS nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." } },
             { "@type": "Question", "name": "Neden sadece yazılım satmıyorsunuz?", "acceptedAnswer": { "@type": "Answer", "text": "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." } },
-            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "Dört ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı), özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü)." } },
+            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "İki ana hizmet: BütçeCRM (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺890) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
             { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
             { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
@@ -49,27 +49,35 @@ const faqs: FaqItem[] = [
   { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir dijital çözüm platformudur." },
   { q: "AaaS nedir?", a: "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." },
   { q: "Neden sadece yazılım satmıyorsunuz?", a: "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." },
-  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "Dört ana hizmet: BütçeCRM (KOBİ bütçe yönetim yazılımı, aylık ₺890), otomasyon sistemleri (iş süreçlerinin otomatikleştirilmesi, teklif bazlı), özel tasarım web siteleri (3 iş gününde teslim, ₺9.900'dan başlayan) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü)." },
+  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "İki ana hizmet: BütçeCRM (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺890) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
   { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
   { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
 ];
 
 const products = [
-  { to: "/butceleme", icon: BarChart3, title: "BütçeCRM", desc: "Paranız nereye gidiyor? Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün." },
-  { to: "/web-sitesi", icon: Monitor, title: "Özel Tasarım Site", desc: "3 günde hazır, müşteri çeken web sitenizle dijitalde yerinizi alın." },
-  { to: "/otomasyon", icon: Workflow, title: "Otomasyon Sistemleri", desc: "Sıkıcı, tekrarlayan işleri otomatikleştirin — siz sadece büyüyün." },
-  { to: "/uctan-uca-yazilim", icon: LayoutDashboard, title: "Uçtan Uca Yazılım", desc: "Tüm iş akışınız tek panelde. Sektörünüze özel kurulur, anahtarı size teslim edilir.", badge: "Yeni" },
+  {
+    to: "/butceleme",
+    icon: BarChart3,
+    title: "BütçeCRM",
+    badge: "₺890/ay",
+    desc: "Trendyol, Hepsiburada ve kendi sitenizde sattığınız geliri; Meta, Google ve TikTok reklamlarınızın ROAS'ını; stok ve giderleri tek ekranda görün.",
+    bullets: ["Reklam ROAS takibi (Türkiye'de rakiplerde yok)", "Kritik stok uyarısı", "Ay sonu raporu 5 dakika"],
+    cta: "15 Gün Ücretsiz Dene",
+    featured: true,
+  },
+  {
+    to: "/uctan-uca-yazilim",
+    icon: LayoutDashboard,
+    title: "Uçtan Uca Yazılım",
+    badge: "Proje Bazlı",
+    desc: "Anlat, biz kuralım. İşletmenizin tam ihtiyacına göre tasarlanan, 2-3 haftada teslim edilen özel yazılım.",
+    bullets: ["Talep ne ise arz da o", "Kod ve veriler size ait", "Aylık abonelik yok"],
+    cta: "Ücretsiz Keşif Görüşmesi",
+    featured: false,
+  },
 ];
 
-const categories = [
-  { icon: Mail, title: "E-posta Otomasyonu", count: "12 hizmet", desc: "Müşteriniz sipariş verdiğinde otomatik bilgi gitsin, siz uyurken bile iletişim kesilmesin." },
-  { icon: Share2, title: "Sosyal Medya", count: "8 hizmet", desc: "İçerik takvimi kurun, paylaşımlar otomatik gitsin — her gün aktif görünün, her gün uğraşmadan." },
-  { icon: Workflow, title: "İş Akışı", count: "15 hizmet", desc: "Stok, fatura, CRM — birbirini takip etsin, siz sadece karar verin." },
-  { icon: Bot, title: "Chatbot & AI", count: "6 hizmet", desc: "Müşteri soruları 7/24 yanıtlansın, siz yokken bile satış ve destek eksiksiz sürsün." },
-  { icon: FileBarChart, title: "Raporlama", count: "9 hizmet", desc: "Her Pazartesi sabahı geçen haftanın özeti e-postanıza gelsin, el ile hazırlamaya son." },
-  { icon: Shield, title: "Güvenlik", count: "7 hizmet", desc: "Verileriniz yedeklensin, sistemleriniz izlensin — sorun olmadan önce haberiniz olsun." },
-];
 
 function HomePage() {
   const titles = useMemo(() => ["büyüyün", "kazanın", "planlayın", "yönetin", "satın"], []);
@@ -168,26 +176,69 @@ function HomePage() {
           </div>
 
           {/* Product cards */}
-          <div id="hizmetler" className="mt-20 grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div id="hizmetler" className="mt-20 grid gap-5 grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto">
             {products.map((p) => (
-              <Link key={p.to} to={p.to} className="group relative rounded-2xl border border-border bg-card p-7 text-left transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl">
-                {"badge" in p && p.badge && (
-                  <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">{p.badge}</span>
-                )}
-                <div className="flex items-start justify-between">
-                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><p.icon className="h-6 w-6" /></span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-accent-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Aktif
-                  </span>
-                </div>
-                <h3 className="mt-6 text-xl font-bold">{p.title}</h3>
+              <Link key={p.to} to={p.to} className={`group relative rounded-2xl border p-7 text-left transition hover:-translate-y-1 hover:shadow-xl ${p.featured ? "border-primary/40 bg-primary-soft" : "border-border bg-card hover:border-primary/40"}`}>
+                <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">{p.badge}</span>
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-background text-primary"><p.icon className="h-6 w-6" /></span>
+                <h3 className="mt-5 text-xl font-bold">{p.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+                <ul className="mt-4 space-y-1.5">
+                  {p.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                  İncele <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  {p.cta} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                 </span>
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* BütçeCRM Spotlight */}
+      <section className="border-t border-border/60 bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+          <div className="text-center">
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Ana Ürün</span>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">
+              Trendyol'dan mı Satıyorsunuz?<br />
+              <span className="text-primary">Meta'ya Reklam mı Veriyorsunuz?</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              Hangisi gerçekten para kazandırıyor? BütçeCRM, reklam ROAS takibini finansal yönetime entegre eden Türkiye'deki tek yazılım. Paraşüt, Uyumsoft ve Logo İşbaşı'nda bu özellik yok.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            <div className="rounded-2xl border-2 border-primary/30 bg-primary-soft p-6">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-background text-primary"><Megaphone className="h-5 w-5" /></span>
+              <h3 className="mt-4 text-lg font-bold">Reklam ROAS Takibi</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">Meta, Google, TikTok kampanyalarınızın hangisinin satış getirdiğini görün. Rakip yazılımlarda bu modül yok.</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><Package className="h-5 w-5" /></span>
+              <h3 className="mt-4 text-lg font-bold">Stok + Sipariş</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">Kritik stok uyarısı, FIFO maliyet, otomatik düşüm. Sipariş iptali tarihe karışır.</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><Clock className="h-5 w-5" /></span>
+              <h3 className="mt-4 text-lg font-bold">Ay Sonu 5 Dakikada</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">Ay sonu raporu 4 saatten 5 dakikaya iner. Excel'e gerek kalmaz, raporunuz hazır bekler.</p>
+            </div>
+          </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link to="/butceleme" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:opacity-90">
+              15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/butceleme" className="rounded-full border border-border bg-background px-7 py-3.5 text-sm font-semibold transition hover:bg-accent">
+              Detayları Gör
+            </Link>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
         </div>
       </section>
 
@@ -261,9 +312,9 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
           <div className="text-center">
             <span className="text-sm font-semibold uppercase tracking-wider text-primary">Felsefemiz</span>
-            <h2 className="mt-3 text-4xl font-bold md:text-5xl">SaaS değil, AaaS</h2>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Neden Biz?</h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Binlerce kullanıcıya aynı kalıbı sunan SaaS modelini değil, <strong className="text-foreground">Automation as a Service</strong> yaklaşımını benimsiyoruz.
+              Büyük yazılım şirketleri herkese aynı ürünü satar. Biz Türkiye'deki e-ticaret KOBİ'lerini dinleyerek geliştiriyoruz.
             </p>
           </div>
           <div className="mt-14 grid gap-6 md:grid-cols-3">
@@ -282,117 +333,19 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold md:text-5xl">Otomasyon Kategorileri</h2>
-          <p className="mt-3 text-muted-foreground">İhtiyacınıza uygun kategoriyi seçin, size özel çözümü bulalım.</p>
-        </div>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((c) => (
-            <div key={c.title} className="group rounded-2xl border border-border bg-card p-6 transition hover:border-primary/40">
-              <div className="flex items-center justify-between">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary"><c.icon className="h-5 w-5" /></span>
-                <span className="text-xs font-medium text-muted-foreground">{c.count}</span>
-              </div>
-              <h3 className="mt-5 text-lg font-bold">{c.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
+      {/* Beta Framing */}
       <section className="border-t border-border/60 bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
+        <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
           <div className="text-center">
-            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Nasıl Çalışır?</span>
-            <h2 className="mt-3 text-4xl font-bold md:text-5xl">İşinizi Büyütmek Hiç Bu Kadar Kolay Olmamıştı</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Sıkıcı işleri bize bırakın, siz sadece stratejiye odaklanın.</p>
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Şu An Neredeyiz?</span>
+            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Beta Sürecinde, Dürüstçe</h2>
           </div>
-          <div className="mt-14 flex flex-col gap-6 md:flex-row md:items-start md:gap-4">
-            {[
-              {
-                n: "01",
-                t: "İhtiyacını Belirle, Çözümü Biz Kuralım",
-                d: "Hangi iş akışını otomatikleştirmek istediğini bize anlat. Gerisini uzman ekibimiz halletsin, sana özel sistemi anahtar teslim kuralım.",
-                Icon: Lightbulb,
-                cta: null,
-              },
-              {
-                n: "02",
-                t: "Test Et, Onayla, Çalışmaya Başla",
-                d: "Kurduğumuz sistemi birlikte test edelim. Her şey istediğin gibi çalıştığında tek tıkla onay ver ve otomasyonun anında devreye girsin.",
-                Icon: CheckCircle2,
-                cta: null,
-              },
-              {
-                n: "03",
-                t: "Zaman Kazan, Verimliliğini Katla",
-                d: "Artık tekrarlayan işlerle uğraşmak zorunda değilsin. Otomasyonun senin için çalışırken, sen daha önemli işlere odaklan ve işini büyüt.",
-                Icon: TrendingUp,
-                cta: true,
-              },
-            ].map((s, index) => (
-              <div key={s.n} className="contents md:flex md:flex-1 md:items-start md:gap-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.15 }}
-                  className="relative flex flex-1 flex-col rounded-2xl border border-border bg-background p-7"
-                >
-                  <span className="absolute right-5 top-4 select-none text-7xl font-black leading-none text-primary/10">{s.n}</span>
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
-                    <s.Icon className="h-6 w-6" />
-                  </div>
-                  <span className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Adım {s.n}</span>
-                  <h3 className="mt-2 text-xl font-bold">{s.t}</h3>
-                  <p className="mt-2 flex-1 text-muted-foreground">{s.d}</p>
-                  {s.cta && (
-                    <Link
-                      to="/iletisim"
-                      className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-                    >
-                      Başlayalım <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  )}
-                </motion.div>
-                {index < 2 && (
-                  <ArrowRight className="mx-auto my-2 hidden h-6 w-6 flex-shrink-0 text-primary/40 md:mt-16 md:block" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Referanslar */}
-      <section className="border-t border-border/60 bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
-          <div className="text-center">
-            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Referanslar</span>
-            <h2 className="mt-3 text-4xl font-bold md:text-5xl">Kimler Kullanıyor?</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Farklı sektörlerden işletmeler Hisu Solutions ile dijital altyapılarını kurdu.</p>
-          </div>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              { quote: "Ay sonu kâr hesabı artık 5 dakika sürüyor.", sector: "E-ticaret İşletmesi", city: "İstanbul", metric: "4 saat → 5 dk" },
-              { quote: "3 günde web sitemiz hazırdı, ilk hafta 3 form geldi.", sector: "Muhasebe Bürosu", city: "Ankara", metric: "İlk haftada 3 form" },
-              { quote: "Sipariş takibi için harcadığım 2 saati artık işime ayırıyorum.", sector: "Lojistik Firması", city: "İzmir", metric: "2 saat/gün kazanıldı" },
-            ].map((r) => (
-              <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-background p-7">
-                <Quote className="h-7 w-7 text-primary/40" />
-                <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
-                    <span className="text-xs text-muted-foreground">{r.city}</span>
-                  </div>
-                  <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
-                </div>
-              </div>
-            ))}
+          <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
+            <p className="text-lg font-medium leading-relaxed">Onlarca doğrulanmış müşteri yorumumuz yok — ve bunu söylemekten çekinmiyoruz.</p>
+            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">BütçeCRM beta sürecinde. İlk kullanıcılar ürünü şekillendiriyor. 15 gün ücretsiz deneyin — beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
+            <Link to="/butceleme" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+              BütçeCRM'i Ücretsiz Dene <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>

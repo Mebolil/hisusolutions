@@ -142,9 +142,9 @@ function UctanUcaYazilimPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
-          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">İhtiyacınıza Özel Sistem</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Tüm İşinizi Tek Panele Taşıyın. Anahtarı Size Teslim Edelim.</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Stoktan satışa, müşteriden rapora — işinizin tam haritasını çıkarıyor, size özel bir yazılım kuruyor ve teslim ediyoruz.</p>
+          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">Talep Ne İse Arz Da O · Proje Bazlı · Anahtar Teslim</span>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Anlat.<br /><span className="text-primary">Biz Kuralım.</span></h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Talep ne ise arz da o. İşletmenizin ihtiyacını anlatın — biz sıfırdan kurar, eğitir ve teslim ederiz.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#anlat" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">Ücretsiz Keşif Görüşmesi Al <ArrowRight className="h-4 w-4" /></a>
             <a href="#cozumler" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Neler Yapıyoruz?</a>
@@ -167,7 +167,7 @@ function UctanUcaYazilimPage() {
 
       <section className="border-y border-border/60 bg-card">
         <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
-          <h2 className="text-center text-4xl font-bold">Şirketinize Özel, Baştan Sona Biz Kurarız</h2>
+          <h2 className="text-center text-4xl font-bold">Talep Ne İse, Arz Da O</h2>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {steps.map(s => (
               <div key={s.n} className="relative rounded-2xl border border-border bg-background p-7">
@@ -250,6 +250,7 @@ function UctanUcaYazilimPage() {
       <section className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
         <div className="rounded-3xl bg-primary p-12 text-center text-primary-foreground md:p-16">
           <h2 className="text-3xl font-bold md:text-4xl">Yazılım Almıyorsunuz — Şirketinizin Çalışma Şeklini Satın Alıyorsunuz.</h2>
+          <a href="#anlat" className="mt-8 inline-flex items-center gap-2 rounded-full bg-background px-7 py-3.5 text-sm font-semibold text-foreground transition hover:opacity-90">Ücretsiz Keşif Görüşmesi Al <ArrowRight className="h-4 w-4" /></a>
         </div>
       </section>
     </SiteLayout>

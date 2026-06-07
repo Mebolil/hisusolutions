@@ -87,9 +87,9 @@ function ButcelemePage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--primary-soft),_transparent_60%)]" />
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
-          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">KOBİ Bütçe Yönetim Yazılımı</span>
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Paranız Nereye Gidiyor?<br />Artık Biliyorsunuz.</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklamlarınızın gelirini tek ekranda anlık görün. Excel karmaşasına son.</p>
+          <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">E-Ticaret KOBİ'leri İçin · Trendyol · Hepsiburada · Kendi Siteniz</span>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Trendyol'dan Satıyorsun.<br />Meta'ya Reklam Veriyorsun.<br /><span className="text-primary">Hangisi Gerçekten Para Kazandırıyor?</span></h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — BütçeCRM'de var.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></a>
             <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
@@ -103,10 +103,10 @@ function ButcelemePage() {
         <div className="mx-auto max-w-5xl px-4 py-5 lg:px-8">
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm">
             {[
-              { Icon: Users, text: "50+ aktif işletme" },
-              { Icon: Clock, text: "4 saat → 5 dk rapor" },
-              { Icon: TrendingUp, text: "Ort. %18 reklam tasarrufu" },
-              { Icon: Shield, text: "15 gün ücretsiz · istediğin zaman iptal" },
+              { Icon: Shield, text: "Beta sürecindeyiz · İlk kullanıcılar şekillendiriyor" },
+              { Icon: Megaphone, text: "Reklam ROAS takibi · Paraşüt, Uyumsoft'ta yok" },
+              { Icon: Package, text: "Stok + Gelir + Gider · Tek ekran" },
+              { Icon: Check, text: "15 gün ücretsiz · Kart gerekmez · İstediğin zaman iptal" },
             ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-2 text-muted-foreground">
                 <Icon className="h-4 w-4 text-primary" />
@@ -124,8 +124,8 @@ function ButcelemePage() {
             <h3 className="text-xl font-bold">Tanıdık geliyor mu?</h3>
             <ul className="mt-5 space-y-3">
               {[
-                "Ay sonunda cebinizde ne kaldığını hâlâ merak mı ediyorsunuz?",
-                "Reklamlara para gidiyor ama gerçekten işe yarıyor mu, göremiyorsunuz?",
+                "Trendyol komisyonunu, reklam harcamasını ve net kazancınızı aynı anda göremiyorsunuz?",
+                "Meta'ya 10.000₺ verdiniz, ama hangi ürünün satışını getirdiğini bilmiyorsunuz?",
                 "Stok bitti ama siz farketmediniz, sipariş iptal oldu?",
                 "Excel'de formül bozuldu, bir ayın verisi gitti?",
               ].map(t => (
@@ -155,9 +155,9 @@ function ButcelemePage() {
           <h2 className="text-center text-4xl font-bold">Tek panelde tüm operasyon</h2>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              { i: Megaphone, t: "Hangi Reklam Para Kazandırıyor?", d: "Meta, Google, TikTok kampanyalarınızın hangisinin satış getirdiğini kampanya bazında görün. Türkiye'deki muhasebe yazılımlarında bu özellik yok." },
               { i: BarChart3, t: "Hiç tahsilat kaçırmazsınız", d: "Kimin ne kadar borcu var, anlık görün. Müşteri bazlı tahsilat, kısmi ödeme, gecikme uyarısı." },
               { i: Package, t: "Stok bitti, sipariş iptal — artık olmaz", d: "Kritik stok seviyelerinde otomatik uyarı. FIFO maliyet, otomatik düşüm." },
-              { i: Megaphone, t: "Para yakan reklamı kesin, kazandırana bütçe aktarın", d: "Meta, Google, TikTok kampanyalarınızın hangi satışları getirdiğini net görün." },
               { i: Receipt, t: "Gider Takibi", d: "Nereye ne harcadığınızı kategoriye göre görün, aylık trendi takip edin." },
               { i: FileText, t: "Ay sonu raporu sizi bekliyor, siz değil", d: "Ay sonu raporu 5 dakikada hazır. Excel ve PDF export dahil." },
               { i: BellRing, t: "Hatırlatıcılar", d: "Gecikmiş tahsilat, tedarikçi borcu, kritik stok — otomatik uyarı." },
@@ -221,14 +221,16 @@ function ButcelemePage() {
       {/* Persona */}
       <PersonaSection
         forItems={[
-          { icon: ShoppingCart, title: "Günde 20+ sipariş işleyen e-ticaret", desc: "Stok, reklam ROI ve kâr takibi tek ekranda" },
-          { icon: TrendingUp, title: "Aylık reklam bütçesi ₺10k+ olan KOBİ", desc: "Hangi kampanyanın para kazandırdığını görmek ister" },
-          { icon: Users, title: "Birden fazla kanalda (Meta+Google+TikTok) satan", desc: "Konsolide raporlamaya ihtiyaç duyar" },
+          { icon: ShoppingCart, title: "Trendyol veya Hepsiburada'da aktif mağazası olan", desc: "Komisyon, kargo ve reklam maliyetiyle net kârı görmek ister" },
+          { icon: Megaphone, title: "Aylık ₺5.000+ reklam harcayan e-ticaret işletmesi", desc: "Meta, Google veya TikTok'ta kampanya yürütüyor, ROAS'ı bilmek ister" },
+          { icon: Users, title: "1-10 kişilik ekiple çalışan, büyümek isteyen KOBİ", desc: "Muhasebeciye gerek duymadan anlık finansal tablo görmeyi hedefler" },
         ]}
         notForItems={[
           "Henüz satış yapmıyor, fikir aşamasında",
           "Ayda 5'ten az sipariş giriyor",
           "Muhasebe yazılımı arıyor (BütçeCRM muhasebe değil, operasyon takibi)",
+          "Mobil uygulama tercih ediyor (şu an web tabanlı, mobil yol haritasında)",
+          "Yasal e-fatura yazılımı arıyor (BütçeCRM bu değil)",
         ]}
       />
 
@@ -312,7 +314,7 @@ function ButcelemePage() {
         <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
           <div className="text-center">
             <span className="text-sm font-semibold uppercase tracking-wider text-primary">Vaka Çalışması</span>
-            <h2 className="mt-3 text-4xl font-bold">Gerçek Bir Senaryo: Tekstil E-Ticaret İşletmesi</h2>
+            <h2 className="mt-3 text-4xl font-bold">Örnek Senaryo: Tekstil E-Ticaret İşletmesi</h2>
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
@@ -330,32 +332,18 @@ function ButcelemePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Beta Framing */}
       <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
         <div className="text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Kullanıcı Deneyimleri</span>
-          <h2 className="mt-3 text-4xl font-bold">İşletmeler Ne Diyor?</h2>
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Şu An Neredeyiz?</span>
+          <h2 className="mt-3 text-4xl font-bold">Dürüst Olmak Gerekirse</h2>
         </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {[
-            { quote: "Ay sonu 4 saat harcardım. Şimdi 5 dakika.", sector: "E-Ticaret", city: "İstanbul", metric: "4 saat → 5 dk" },
-            { quote: "Hangi reklamın para yaktığını gördüm, kestim. %18 daha az harcamayla aynı ciro.", sector: "Tekstil KOBİ", city: "Bursa", metric: "%18 reklam tasarrufu" },
-            { quote: "Stok bitti uyarısı benim yerime düşünüyor. Sipariş iptali kalmadı.", sector: "Perakende", city: "Ankara", metric: "0 sipariş iptali" },
-          ].map(r => (
-            <div key={r.quote} className="flex flex-col rounded-2xl border border-border bg-card p-7">
-              <Quote className="h-7 w-7 text-primary/40" />
-              <p className="mt-4 flex-1 text-base font-medium italic leading-relaxed">"{r.quote}"</p>
-              <div className="mt-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">{r.sector}</span>
-                  <span className="text-xs text-muted-foreground">{r.city}</span>
-                </div>
-                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">{r.metric}</span>
-              </div>
-            </div>
-          ))}
+        <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
+          <p className="text-lg font-medium leading-relaxed">BütçeCRM beta sürecinde. Henüz onlarca doğrulanmış müşteri yorumumuz yok —</p>
+          <p className="mt-2 text-muted-foreground">ve bunu söylemekten çekinmiyoruz.</p>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 15 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
+          <a href="#demo" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></a>
         </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">*Tipik müşteri deneyimi. Bireysel sonuçlar farklılık gösterebilir.</p>
       </section>
 
       <FaqBlock items={faqs} />

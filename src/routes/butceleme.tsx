@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
@@ -81,6 +82,15 @@ const faqs: FaqItem[] = [
 ];
 
 function ButcelemePage() {
+  const [demoSource, setDemoSource] = useState("butcecrm-demo");
+
+  function scrollToDemo(source: string) {
+    setDemoSource(source);
+    setTimeout(() => {
+      document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+  }
+
   return (
     <SiteLayout>
       {/* Hero */}
@@ -235,15 +245,49 @@ function ButcelemePage() {
       />
 
       {/* Pricing */}
-      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+      <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
         <h2 className="text-center text-4xl font-bold">Sade ve şeffaf fiyatlandırma</h2>
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {/* Kurucu Beta */}
+          <div className="relative rounded-2xl border-2 border-amber-400 bg-amber-50 p-8">
+            <span className="absolute right-6 top-6 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Sadece 10 Slot</span>
+            <span className="text-sm font-semibold text-amber-700">Kurucu Beta</span>
+            <p className="mt-3 text-4xl font-bold text-foreground">₺590 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <p className="mt-1 text-sm text-amber-700 line-through">₺890/ay</p>
+            <p className="mt-2 text-sm text-amber-700 font-medium">31 Temmuz'a kadar · Ömür boyu bu fiyat kilitlenir</p>
+            <button
+              onClick={() => scrollToDemo("butcecrm-beta-demo")}
+              className="mt-6 block w-full rounded-full bg-amber-500 py-3 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+            >
+              Demo ile Slot Ayır
+            </button>
+            <ul className="mt-6 space-y-2.5">
+              {[
+                "Gerçek zamanlı kâr/zarar takibi",
+                "Reklam ROAS takibi (Meta, Google, TikTok)",
+                "Kritik stok uyarısı",
+                "Ay sonu raporu (5 dakika)",
+                "Tahsilat & gider yönetimi",
+                "Excel/PDF export",
+                "Kurucu fiyatı her zaman korunur",
+              ].map(f => (
+                <li key={f} className="flex gap-2.5 text-sm text-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Aylık Plan */}
           <div className="rounded-2xl border border-border bg-card p-8">
             <span className="text-sm font-semibold text-muted-foreground">Aylık Plan</span>
             <p className="mt-3 text-4xl font-bold">₺890 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
             <a href="#demo" className="mt-6 block rounded-full border border-border py-3 text-center text-sm font-semibold hover:bg-accent">Demo Talep Et</a>
             <p className="mt-4 text-sm text-muted-foreground">Demo görüşmesinde ürünü birlikte inceleriz, soruların yanıtlanır.</p>
           </div>
+
+          {/* Yıllık Plan */}
           <div className="relative rounded-2xl border-2 border-primary bg-primary-soft p-8">
             <span className="absolute right-6 top-6 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">En Popüler</span>
             <span className="text-sm font-semibold text-primary">Yıllık Plan</span>
@@ -381,7 +425,7 @@ function ButcelemePage() {
           <p className="mt-2 text-muted-foreground">30 dakikada BütçeCRM'i birlikte keşfedelim. Kredi kartı gerekmez.</p>
           <div className="mt-8">
             <BookingForm
-              source="butcecrm-demo"
+              source={demoSource}
               submitLabel="Görüşme Zamanı Seç"
               fields={[
                 { name: "name", label: "Ad Soyad", required: true },

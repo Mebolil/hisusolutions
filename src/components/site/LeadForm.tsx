@@ -38,6 +38,9 @@ export function LeadForm({
       setLoading(false);
       return;
     }
+    supabase.functions.invoke("notify-lead", {
+      body: { record: { source, payload: values, created_at: new Date().toISOString() } },
+    });
     setLoading(false);
     setValues({});
     toast.success("Mesajınız alındı! 24 saat içinde dönüş yapıyoruz.");

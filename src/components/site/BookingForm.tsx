@@ -100,6 +100,18 @@ export function BookingForm({
       setLoading(false);
       return;
     }
+    // Webhook'tan bağımsız bildirim — fire-and-forget
+    supabase.functions.invoke("notify-lead", {
+      body: {
+        record: {
+          source,
+          payload: values,
+          booked_date: selectedDate,
+          booked_time: selectedTime,
+          created_at: new Date().toISOString(),
+        },
+      },
+    });
     setLoading(false);
     setSelectedDate("");
     setSelectedTime("");

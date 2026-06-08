@@ -40,6 +40,9 @@ function ExitIntentPopup() {
     e.preventDefault();
     setLoading(true);
     await supabase.from("leads").insert({ source: "exit-intent", payload: { name, phone } });
+    supabase.functions.invoke("notify-lead", {
+      body: { record: { source: "exit-intent", payload: { name, phone }, created_at: new Date().toISOString() } },
+    });
     setLoading(false);
     setSubmitted(true);
   };
@@ -136,6 +139,9 @@ function LeadMagnetWidget() {
     e.preventDefault();
     setLoading(true);
     await supabase.from("leads").insert({ source: "lead-magnet", payload: { name, email } });
+    supabase.functions.invoke("notify-lead", {
+      body: { record: { source: "lead-magnet", payload: { name, email }, created_at: new Date().toISOString() } },
+    });
     setLoading(false);
     setSubmitted(true);
   };

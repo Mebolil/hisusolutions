@@ -7,9 +7,14 @@ const FROM_EMAIL = "bildirim@hisusolutions.com";
 const SOURCE_LABELS: Record<string, string> = {
   "iletisim": "İletişim Formu",
   "butcecrm-demo": "BütçeCRM Demo Talebi",
+  "butcecrm-beta-demo": "BütçeCRM Kurucu Beta Demo",
   "otomasyon": "Otomasyon Keşif Görüşmesi",
   "websitesi": "Web Sitesi Teklif Talebi",
+  "lead-magnet": "ROAS Rehberi İsteği",
+  "exit-intent": "Çıkış Popup",
 };
+
+const PDF_URL = "https://dvrgeihpecdbtthvianx.supabase.co/storage/v1/object/public/public-assets/roas-rehberi.pdf";
 
 function buildCalendarLink(
   title: string,
@@ -102,7 +107,8 @@ serve(async (req) => {
         ${replyTo ? `<p style="margin:20px 0 0;font-size:12px;color:#94a3b8">Bu e-postayı yanıtlayarak doğrudan <strong>${replyTo}</strong> adresine ulaşabilirsiniz.</p>` : ""}
       </div>`;
 
-    const res = await fetch("https://api.resend.com/emails", {
+    // Admin bildirimi
+    const adminRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
@@ -117,10 +123,58 @@ serve(async (req) => {
       }),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Resend error:", err);
+    if (!adminRes.ok) {
+      const err = await adminRes.text();
+      console.error("Resend admin error:", err);
       return new Response("email_error", { status: 500 });
+    }
+
+    // Lead magnet: kullanıcıya PDF gönder
+    if (source === "lead-magnet" && replyTo) {
+      const userName = payload?.name ?? payload?.isim ?? "Merhaba";
+      const userHtml = `
+        <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px">
+          <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px">E-ticaret ROAS Hesaplama Rehberiniz</h2>
+          <p style="color:#64748b;margin:0 0 20px;font-size:14px">Merhaba ${userName},</p>
+          <p style="color:#1e293b;margin:0 0 16px;font-size:14px">
+            İstediğiniz <strong>E-ticaret ROAS Hesaplama Rehberi</strong> hazır!
+            Aşağıdaki butona tıklayarak indirebilirsiniz.
+          </p>
+          <p style="margin:24px 0">
+            <a href="${PDF_URL}"
+               style="display:inline-block;background:#e07b39;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
+              📥 Rehberi İndir (PDF)
+            </a>
+          </p>
+          <p style="color:#64748b;font-size:13px;margin:20px 0 4px">
+            Rehberde neler var?
+          </p>
+          <ul style="color:#475569;font-size:13px;padding-left:20px;line-height:1.8">
+            <li>ROAS nedir, nasıl hesaplanır?</li>
+            <li>Trendyol / Meta / Google Ads platform bazlı hesaplama</li>
+            <li>Başabaş ROAS ve kar analizi</li>
+            <li>Haftalık takip sistemi (15 dakika protokolü)</li>
+          </ul>
+          <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+          <p style="color:#94a3b8;font-size:12px">
+            BütçeCRM ile tüm bu verileri otomatik takip edebilirsiniz —
+            <a href="https://hisusolutions.com/butceleme" style="color:#e07b39">15 günlük ücretsiz deneme</a> başlatın.
+          </p>
+        </div>`;
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "rehber@hisusolutions.com",
+          to: [replyTo],
+          subject: "E-ticaret ROAS Hesaplama Rehberiniz — Hisu Solutions",
+          html: userHtml,
+        }),
+      });
     }
 
     return new Response("ok", { status: 200 });

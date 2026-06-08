@@ -81,7 +81,8 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
           {daysLeft === 0 ? "Bugün bitiyor" : `${daysLeft} gün kaldı`}
         </p>
         <Link
-          to="/iletisim"
+          to="/butceleme"
+          hash="demo"
           className="mt-2 block w-full rounded-lg bg-primary/90 py-1.5 text-center text-[11px] font-semibold text-white hover:bg-primary transition-colors"
         >
           Planı Al →

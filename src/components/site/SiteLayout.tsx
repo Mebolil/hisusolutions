@@ -156,7 +156,7 @@ function LeadMagnetWidget() {
             <div className="py-2 text-center">
               <p className="font-bold">Harika!</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Rehber e-posta adresinize gönderilecek.
+                Talebiniz alındı, en kısa sürede ulaşacağız.
               </p>
               <button
                 onClick={dismiss}
@@ -169,7 +169,7 @@ function LeadMagnetWidget() {
             <>
               <p className="pr-6 text-sm font-semibold">📥 Ücretsiz Rehber</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                KOBİ'ler İçin Otomasyon Başlangıç Kılavuzu
+                E-ticaret ROAS Hesaplama Rehberi
               </p>
               <form onSubmit={onSubmit} className="mt-3 space-y-2">
                 <input
@@ -192,7 +192,7 @@ function LeadMagnetWidget() {
                   disabled={loading}
                   className="w-full rounded-full bg-primary py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                 >
-                  {loading ? "Gönderiliyor..." : "Rehberi İndir"}
+                  {loading ? "Gönderiliyor..." : "Ücretsiz Rehberi İndir"}
                 </button>
               </form>
             </>

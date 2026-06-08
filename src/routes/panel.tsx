@@ -142,7 +142,8 @@ function PanelPage() {
               </p>
             </div>
             <Link
-              to="/iletisim"
+              to="/butceleme"
+              hash="demo"
               className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
             >
               Planı Al <ArrowRight className="h-3.5 w-3.5" />
@@ -161,7 +162,8 @@ function PanelPage() {
               </p>
             </div>
             <Link
-              to="/iletisim"
+              to="/butceleme"
+              hash="demo"
               className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
             >
               Plan Seç <ArrowRight className="h-3.5 w-3.5" />
@@ -218,7 +220,8 @@ function PanelPage() {
                       </Link>
                     ) : (
                       <Link
-                        to="/iletisim"
+                        to="/butceleme"
+                        hash="demo"
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
                       >
                         {trialExpired && isTrialProduct ? "Planı Aktifleştir" : "Yükselt"}

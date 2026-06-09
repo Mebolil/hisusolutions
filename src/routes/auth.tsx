@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
 import { HisuLogo } from "@/components/HisuLogo";
 import { supabase, REMEMBER_ME_KEY } from "@/lib/supabase";
@@ -27,6 +27,16 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Email doğrulama linkinden dönen kullanıcıyı panele yönlendir
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        navigate({ to: "/panel" });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +50,7 @@ function AuthPage() {
       window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signUp({
         email, password,
-        options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: name } },
       });
       if (error) toast.error(error.message);
       else toast.success("Kayıt oluşturuldu! E-postanızı kontrol edin.");

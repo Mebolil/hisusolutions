@@ -8,6 +8,8 @@ const SOURCE_LABELS: Record<string, string> = {
   "iletisim": "İletişim Formu",
   "butcecrm-demo": "BütçeCRM Demo Talebi",
   "butcecrm-beta-demo": "BütçeCRM Kurucu Beta Demo",
+  "butcecrm-signup": "BütçeCRM Yeni Kayıt",
+  "butcecrm-odeme": "BütçeCRM Ödeme Bildirimi",
   "otomasyon": "Otomasyon Keşif Görüşmesi",
   "websitesi": "Web Sitesi Teklif Talebi",
   "lead-magnet": "ROAS Rehberi İsteği",
@@ -52,6 +54,63 @@ serve(async (req) => {
     const name = payload?.name ?? payload?.isim ?? "—";
     const company = payload?.company ?? payload?.sirket ?? "";
     const replyTo: string | undefined = payload?.email;
+
+    // butcecrm-signup için özel email oluştur
+    if (source === "butcecrm-signup") {
+      const signupEmail = payload?.email ?? "—";
+      const confirmedAt = payload?.confirmed_at
+        ? new Date(payload.confirmed_at).toLocaleString("tr-TR")
+        : new Date().toLocaleString("tr-TR");
+
+      const signupSubject = `🎉 Yeni BütçeCRM Kayıt: ${signupEmail}`;
+      const signupHtml = `
+        <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px">
+          <h2 style="margin:0 0 4px;color:#0f172a;font-size:20px">🎉 Yeni BütçeCRM Kayıt</h2>
+          <p style="color:#64748b;margin:0 0 20px;font-size:13px">${confirmedAt}</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:20px">
+            <p style="margin:0 0 8px;font-size:13px;color:#64748b">Kayıt olan kullanıcı</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:#0f172a">${signupEmail}</p>
+          </div>
+          <table style="border-collapse:collapse;width:100%;background:#f8fafc;border-radius:10px;overflow:hidden">
+            <tr>
+              <td style="padding:6px 14px;color:#64748b;white-space:nowrap;font-size:13px">email</td>
+              <td style="padding:6px 14px;font-weight:500;font-size:13px">${signupEmail}</td>
+            </tr>
+            ${payload?.name ? `<tr>
+              <td style="padding:6px 14px;color:#64748b;white-space:nowrap;font-size:13px">isim</td>
+              <td style="padding:6px 14px;font-weight:500;font-size:13px">${payload.name}</td>
+            </tr>` : ""}
+            <tr>
+              <td style="padding:6px 14px;color:#64748b;white-space:nowrap;font-size:13px">kayıt tarihi</td>
+              <td style="padding:6px 14px;font-weight:500;font-size:13px">${confirmedAt}</td>
+            </tr>
+          </table>
+          <p style="margin:20px 0 0;font-size:12px;color:#94a3b8">Bu e-postayı yanıtlayarak doğrudan <strong>${signupEmail}</strong> adresine ulaşabilirsiniz.</p>
+        </div>`;
+
+      const signupRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: NOTIFY_EMAILS,
+          reply_to: signupEmail !== "—" ? signupEmail : undefined,
+          subject: signupSubject,
+          html: signupHtml,
+        }),
+      });
+
+      if (!signupRes.ok) {
+        const err = await signupRes.text();
+        console.error("Resend signup error:", err);
+        return new Response("email_error", { status: 500 });
+      }
+
+      return new Response("ok", { status: 200 });
+    }
 
     const dateFormatted = bookedDate
       ? new Date(bookedDate + "T12:00:00").toLocaleDateString("tr-TR", {

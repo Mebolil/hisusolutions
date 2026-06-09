@@ -245,7 +245,7 @@ function ButcelemePage() {
       />
 
       {/* Pricing */}
-      <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+      <section id="fiyatlandirma" className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
         <h2 className="text-center text-4xl font-bold">Sade ve şeffaf fiyatlandırma</h2>
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {/* Kurucu Beta */}
@@ -261,6 +261,13 @@ function ButcelemePage() {
               className="mt-6 block w-full rounded-full bg-amber-500 py-3 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
             >
               15 Gün Ücretsiz Başla
+            </Link>
+            <Link
+              to="/odeme"
+              search={{ plan: "kurucu-beta" }}
+              className="mt-2 block w-full rounded-full border border-amber-400 py-2.5 text-center text-sm font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+            >
+              Hemen Satın Al
             </Link>
             <ul className="mt-6 space-y-2.5">
               {[
@@ -285,6 +292,7 @@ function ButcelemePage() {
             <span className="text-sm font-semibold text-muted-foreground">Aylık Plan</span>
             <p className="mt-3 text-4xl font-bold">₺719 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
             <Link to="/auth" search={{ mode: "signup" }} className="mt-6 block rounded-full border border-border py-3 text-center text-sm font-semibold hover:bg-accent">15 Gün Ücretsiz Başla</Link>
+            <Link to="/odeme" search={{ plan: "aylik" }} className="mt-2 block rounded-full border border-primary py-2.5 text-center text-sm font-semibold text-primary hover:bg-primary-soft transition-colors">Hemen Satın Al</Link>
             <p className="mt-4 text-sm text-muted-foreground">Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık</p>
           </div>
 
@@ -295,6 +303,7 @@ function ButcelemePage() {
             <p className="mt-3 text-4xl font-bold">₺7.190 <span className="text-base font-medium text-muted-foreground">/ yıl + KDV</span></p>
             <p className="mt-1 text-sm text-primary">2 ay bedava · Yılda ₺1.438 tasarruf</p>
             <Link to="/auth" search={{ mode: "signup" }} className="mt-6 block rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90">15 Gün Ücretsiz Başla</Link>
+            <Link to="/odeme" search={{ plan: "yillik" }} className="mt-2 block rounded-full border border-primary py-2.5 text-center text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">Hemen Satın Al</Link>
             <p className="mt-4 text-sm text-muted-foreground">Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık</p>
           </div>
         </div>

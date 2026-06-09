@@ -11,7 +11,7 @@ export const Route = createFileRoute("/butceleme")({
   head: () => ({
     meta: [
       { title: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
-      { name: "description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret işletmeleri ve KOBİ'ler için Türkiye'nin en pratik bütçe yönetim yazılımı. Aylık ₺890." },
+      { name: "description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret işletmeleri ve KOBİ'ler için Türkiye'nin en pratik bütçe yönetim yazılımı. Aylık ₺719." },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://hisusolutions.com/butceleme" },
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/butceleme")({
           "@type": "FAQPage",
           "mainEntity": [
             { "@type": "Question", "name": "BütçeCRM nedir?", "acceptedAnswer": { "@type": "Answer", "text": "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." } },
-            { "@type": "Question", "name": "BütçeCRM ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). Demo görüşmesiyle başlayabilirsiniz." } },
+            { "@type": "Question", "name": "BütçeCRM ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Aylık ₺719 + KDV veya yıllık ₺7.190 + KDV (2 ay bedava, yılda ₺1.438 tasarruf). 15 gün ücretsiz deneyebilirsiniz, kart gerekmez." } },
             { "@type": "Question", "name": "BütçeCRM Excel'den farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." } },
             { "@type": "Question", "name": "Kimler BütçeCRM kullanabilir?", "acceptedAnswer": { "@type": "Answer", "text": "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." } },
           ]
@@ -50,11 +50,11 @@ export const Route = createFileRoute("/butceleme")({
           "inLanguage": "tr-TR",
           "offers": {
             "@type": "Offer",
-            "price": "890",
+            "price": "719",
             "priceCurrency": "TRY",
             "priceSpecification": {
               "@type": "UnitPriceSpecification",
-              "price": "890",
+              "price": "719",
               "priceCurrency": "TRY",
               "unitCode": "MON"
             }
@@ -73,11 +73,11 @@ export const Route = createFileRoute("/butceleme")({
 
 const faqs: FaqItem[] = [
   { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
-  { q: "BütçeCRM ne kadar?", a: "Aylık ₺890 + KDV veya yıllık ₺8.900 + KDV (2 ay bedava, yılda ₺1.780 tasarruf). 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
+  { q: "BütçeCRM ne kadar?", a: "Aylık ₺719 + KDV veya yıllık ₺7.190 + KDV (2 ay bedava, yılda ₺1.438 tasarruf). 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
   { q: "Excel'den geçmek zor olacak mı?", a: "Hayır. Ekibiniz 15 dakikada alışır. Verilerinizi Excel'den import edebilirsiniz. İlk kurulumda biz size rehberlik ediyoruz." },
   { q: "Verilerim güvende mi?", a: "Evet. Supabase altyapısı üzerinde çalışır, SSL şifreleme ile korunur. Verileriniz Türkiye'deki sunucularda tutulur." },
   { q: "İptal edersem verilerimi kaybeder miyim?", a: "Hayır. İptal öncesinde verilerinizi Excel/PDF olarak export edebilirsiniz. Verileriniz size ait, her zaman erişebilirsiniz." },
-  { q: "Teknik bilgi gerekiyor mu?", a: "Sıfır teknik bilgi. Açıp kullanıyorsunuz. İlk kurulumda 30 dakikalık demo görüşmesiyle tüm süreci birlikte geçiyoruz." },
+  { q: "Teknik bilgi gerekiyor mu?", a: "Sıfır teknik bilgi. Açıp kullanıyorsunuz. İçinde rehber videolar ve adım adım kurulum sihirbazı var. Takıldığınızda destek hattımız açık." },
   { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
 ];
 
@@ -252,15 +252,16 @@ function ButcelemePage() {
           <div className="relative rounded-2xl border-2 border-amber-400 bg-amber-50 p-8">
             <span className="absolute right-6 top-6 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Sadece 10 Slot</span>
             <span className="text-sm font-semibold text-amber-700">Kurucu Beta</span>
-            <p className="mt-3 text-4xl font-bold text-foreground">₺590 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
-            <p className="mt-1 text-sm text-amber-700 line-through">₺890/ay</p>
+            <p className="mt-3 text-4xl font-bold text-foreground">₺519 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <p className="mt-1 text-sm text-amber-700 line-through">₺719/ay</p>
             <p className="mt-2 text-sm text-amber-700 font-medium">31 Temmuz'a kadar · Ömür boyu bu fiyat kilitlenir</p>
-            <button
-              onClick={() => scrollToDemo("butcecrm-beta-demo")}
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
               className="mt-6 block w-full rounded-full bg-amber-500 py-3 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
             >
-              Demo ile Slot Ayır
-            </button>
+              15 Gün Ücretsiz Başla
+            </Link>
             <ul className="mt-6 space-y-2.5">
               {[
                 "Gerçek zamanlı kâr/zarar takibi",
@@ -282,19 +283,19 @@ function ButcelemePage() {
           {/* Aylık Plan */}
           <div className="rounded-2xl border border-border bg-card p-8">
             <span className="text-sm font-semibold text-muted-foreground">Aylık Plan</span>
-            <p className="mt-3 text-4xl font-bold">₺890 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
-            <a href="#demo" className="mt-6 block rounded-full border border-border py-3 text-center text-sm font-semibold hover:bg-accent">Demo Talep Et</a>
-            <p className="mt-4 text-sm text-muted-foreground">Demo görüşmesinde ürünü birlikte inceleriz, soruların yanıtlanır.</p>
+            <p className="mt-3 text-4xl font-bold">₺719 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <Link to="/auth" search={{ mode: "signup" }} className="mt-6 block rounded-full border border-border py-3 text-center text-sm font-semibold hover:bg-accent">15 Gün Ücretsiz Başla</Link>
+            <p className="mt-4 text-sm text-muted-foreground">Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık</p>
           </div>
 
           {/* Yıllık Plan */}
           <div className="relative rounded-2xl border-2 border-primary bg-primary-soft p-8">
             <span className="absolute right-6 top-6 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">En Popüler</span>
             <span className="text-sm font-semibold text-primary">Yıllık Plan</span>
-            <p className="mt-3 text-4xl font-bold">₺8.900 <span className="text-base font-medium text-muted-foreground">/ yıl + KDV</span></p>
-            <p className="mt-1 text-sm text-primary">2 ay bedava · Yılda ₺1.780 tasarruf</p>
-            <a href="#demo" className="mt-6 block rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90">Demo Talep Et</a>
-            <p className="mt-4 text-sm text-muted-foreground">Demo görüşmesinde ürünü birlikte inceleriz.</p>
+            <p className="mt-3 text-4xl font-bold">₺7.190 <span className="text-base font-medium text-muted-foreground">/ yıl + KDV</span></p>
+            <p className="mt-1 text-sm text-primary">2 ay bedava · Yılda ₺1.438 tasarruf</p>
+            <Link to="/auth" search={{ mode: "signup" }} className="mt-6 block rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90">15 Gün Ücretsiz Başla</Link>
+            <p className="mt-4 text-sm text-muted-foreground">Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık</p>
           </div>
         </div>
       </section>
@@ -386,7 +387,7 @@ function ButcelemePage() {
           <p className="text-lg font-medium leading-relaxed">BütçeCRM beta sürecinde. Henüz onlarca doğrulanmış müşteri yorumumuz yok —</p>
           <p className="mt-2 text-muted-foreground">ve bunu söylemekten çekinmiyoruz.</p>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 15 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
-          <a href="#demo" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></a>
+          <Link to="/auth" search={{ mode: "signup" }} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
 

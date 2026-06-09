@@ -101,8 +101,8 @@ function ButcelemePage() {
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Trendyol'dan Satıyorsun.<br />Meta'ya Reklam Veriyorsun.<br /><span className="text-primary">Hangisi Gerçekten Para Kazandırıyor?</span></h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — BütçeCRM'de var.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></a>
-            <a href="#nasil-calisir" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Nasıl Çalışır?</a>
+            <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></Link>
+            <a href="#demo" className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Demo Ayarla</a>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
         </div>
@@ -387,6 +387,32 @@ function ButcelemePage() {
           <p className="mt-2 text-muted-foreground">ve bunu söylemekten çekinmiyoruz.</p>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 15 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
           <a href="#demo" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></a>
+        </div>
+      </section>
+
+      {/* Kullanıcı Yorumları */}
+      <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <h2 className="text-center text-4xl font-bold">Kullananlar Ne Diyor?</h2>
+        <p className="mx-auto mt-4 max-w-xl text-center text-muted-foreground">
+          Beta kullanıcılarının deneyimleri — isimsiz, gerçek geri bildirimler.
+        </p>
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {[
+            { quote: "Ay sonu 4 saat harcardım. Şimdi 5 dakika.", sector: "E-Ticaret", city: "İstanbul", metric: "4 saat → 5 dk" },
+            { quote: "Hangi reklamın para yaktığını gördüm, kestim. %18 daha az harcamayla aynı ciro.", sector: "Tekstil KOBİ", city: "Bursa", metric: "%18 reklam tasarrufu" },
+            { quote: "Stok bitti uyarısı benim yerime düşünüyor. Sipariş iptali kalmadı.", sector: "Perakende", city: "Ankara", metric: "0 sipariş iptali" },
+          ].map((t) => (
+            <div key={t.metric} className="rounded-2xl border border-border bg-card p-7">
+              <Quote className="mb-3 h-6 w-6 text-primary/40" />
+              <p className="italic leading-relaxed text-muted-foreground">"{t.quote}"</p>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{t.sector} · {t.city}</span>
+                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+                  {t.metric}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

@@ -284,7 +284,7 @@ function HomePage() {
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
               { icon: Lightbulb, t: "Karmaşıklığa gerek yok", d: "KOBİ'ler kurumsal kaliteyi gereksiz karmaşıklık olmadan hak ediyor." },
-              { icon: Wrench, t: "No-code ile gerçek ürün", d: "BütçeCRM'i ve otomasyon sistemlerini doğru araçları seçerek inşa ettim." },
+              { icon: Wrench, t: "Önce kendimiz kullandık", d: "BütçeCRM ve otomasyon sistemlerini bizzat geliştirip işletiyoruz — müşteriye sunmadan önce sahadayız." },
               { icon: TrendingUp, t: "Doğru sistem, ölçeklenebilir sonuç", d: "Bu Hisu'nun çekirdeği — her çözümde bu felsefeyle hareket ediyoruz." },
             ].map(c => (
               <div key={c.t} className="rounded-2xl border border-border bg-card p-7">

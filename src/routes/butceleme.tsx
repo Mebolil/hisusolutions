@@ -316,47 +316,14 @@ function ButcelemePage() {
           <h2 className="mt-3 text-4xl font-bold">BütçeCRM Nasıl Görünür?</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Tek ekranda tüm finansal tablonuz — gerçek zamanlı, her zaman güncel.</p>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Günlük Kâr Görünümü</p>
-            <div className="mt-4 flex h-24 items-end gap-1.5">
-              {[40, 65, 50, 80, 55, 90, 70].map((h, i) => (
-                <div key={i} className="relative flex-1 rounded-t bg-primary/20" style={{ height: `${h}%` }}>
-                  <div className="absolute bottom-0 left-0 right-0 rounded-t bg-primary" style={{ height: "40%" }} />
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-sm font-semibold text-primary">+₺12.480 bu hafta</p>
-            <p className="text-xs text-muted-foreground">Geçen haftaya göre +%18</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reklam Geliri</p>
-            <div className="mt-4 space-y-3">
-              {[{ label: "Meta Ads", val: 78 }, { label: "Google Ads", val: 55 }, { label: "TikTok Ads", val: 32 }].map(r => (
-                <div key={r.label}>
-                  <div className="mb-1 flex justify-between text-xs"><span>{r.label}</span><span className="font-semibold">%{r.val}</span></div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${r.val}%` }} /></div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">Kampanya bazında gerçek gelir</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stok Durumu</p>
-            <div className="mt-4 space-y-2.5">
-              {[
-                { name: "Ürün A", stock: 142, ok: true },
-                { name: "Ürün B", stock: 8, ok: false },
-                { name: "Ürün C", stock: 67, ok: true },
-              ].map(s => (
-                <div key={s.name} className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${s.ok ? "bg-muted" : "bg-destructive/10"}`}>
-                  <span>{s.name}</span>
-                  <span className={`font-semibold ${s.ok ? "text-foreground" : "text-destructive"}`}>{s.stock} adet{!s.ok && " ⚠"}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">Kritik stok otomatik uyarı</p>
-          </div>
+        <div className="mt-12 relative overflow-hidden rounded-2xl border border-border shadow-2xl">
+          <img
+            src="/images/butcecrm-dashboard.png"
+            alt="BütçeCRM dashboard ekran görüntüsü — gelir, gider, stok ve reklam ROAS tek ekranda"
+            className="w-full"
+            loading="lazy"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>

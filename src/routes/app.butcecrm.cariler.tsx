@@ -2,7 +2,7 @@ import { friendlyDbError, formatCurrency, formatDate } from "@/lib/butcecrm-help
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,9 +16,18 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Users, Pencil, Trash2, ChevronRight, TrendingUp, TrendingDown, Clock } from "lucide-react";
+import {
+  Plus, Search, Users, Pencil, Trash2, ChevronRight, TrendingUp,
+  TrendingDown, Clock, ArrowUpDown, ArrowUp, ArrowDown, Phone,
+  Mail, MapPin, FileText, Building2, User, Landmark,
+} from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer,
+} from "recharts";
+import { format, parseISO, startOfMonth } from "date-fns";
+import { tr } from "date-fns/locale";
 
 type Party = {
   id: string;
@@ -29,6 +38,8 @@ type Party = {
   tax_no: string | null;
   tax_office: string | null;
   contact_person: string | null;
+  note: string | null;
+  bank_info?: string | null;
 };
 
 type PartyStats = {
@@ -48,15 +59,27 @@ type TxRow = {
 };
 
 type Kind = "customers" | "suppliers";
+type SortKey = "name" | "total" | "pending" | "count";
+type SortDir = "asc" | "desc";
 
-const partySchema = z.object({
+const customerSchema = z.object({
   name: z.string().trim().min(1, "İsim zorunludur").max(120),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  email: z.string().trim().email("Geçersiz email").max(255).optional().or(z.literal("")),
+  address: z.string().trim().max(500).optional().or(z.literal("")),
+  note: z.string().trim().max(1000).optional().or(z.literal("")),
+});
+
+const supplierSchema = z.object({
+  name: z.string().trim().min(1, "Firma adı zorunludur").max(120),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   email: z.string().trim().email("Geçersiz email").max(255).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
   tax_no: z.string().trim().max(20).optional().or(z.literal("")),
   tax_office: z.string().trim().max(80).optional().or(z.literal("")),
   contact_person: z.string().trim().max(80).optional().or(z.literal("")),
+  bank_info: z.string().trim().max(500).optional().or(z.literal("")),
+  note: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
 export const Route = createFileRoute("/app/butcecrm/cariler")({
@@ -78,13 +101,22 @@ function statusColor(s: string) {
   return "text-red-600";
 }
 
+function SortIcon({ col, active, dir }: { col: string; active: SortKey; dir: SortDir }) {
+  if (col !== active) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+  return dir === "asc"
+    ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
+    : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
+}
+
 function PartiesPage() {
   const [tab, setTab] = useState<Kind>("customers");
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6 text-primary" /> Cariler</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Users className="h-6 w-6 text-primary" /> Cariler
+        </h1>
         <p className="text-muted-foreground text-sm">Müşteri ve tedarikçi yönetimi</p>
       </div>
 
@@ -113,6 +145,8 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Party | null>(null);
   const [detail, setDetail] = useState<Party | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   async function load() {
     setLoading(true);
@@ -123,7 +157,6 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     const parties = (data as Party[]) || [];
     setItems(parties);
 
-    // Fetch financial summary for all parties at once
     if (parties.length > 0) {
       const ids = parties.map((p) => p.id);
       if (kind === "customers") {
@@ -170,21 +203,41 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [kind]);
 
   const filtered = useMemo(() => {
-    if (!q) return items;
-    const t = q.toLowerCase();
-    return items.filter((p) =>
-      [p.name, p.phone, p.email, p.address]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(t)),
-    );
-  }, [items, q]);
+    let list = items;
+    if (q) {
+      const t = q.toLowerCase();
+      list = list.filter((p) =>
+        [p.name, p.phone, p.email, p.address, p.contact_person, p.note]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(t)),
+      );
+    }
+    list = [...list].sort((a, b) => {
+      let diff = 0;
+      if (sortKey === "name") diff = a.name.localeCompare(b.name, "tr");
+      else if (sortKey === "total") diff = (statsMap[a.id]?.total || 0) - (statsMap[b.id]?.total || 0);
+      else if (sortKey === "pending") diff = (statsMap[a.id]?.pending || 0) - (statsMap[b.id]?.pending || 0);
+      else if (sortKey === "count") diff = (statsMap[a.id]?.count || 0) - (statsMap[b.id]?.count || 0);
+      return sortDir === "asc" ? diff : -diff;
+    });
+    return list;
+  }, [items, q, sortKey, sortDir, statsMap]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  }
 
   function openNew() { setEditing(null); setOpen(true); }
   function openEdit(p: Party) { setEditing(p); setOpen(true); }
 
   async function confirmDelete() {
     if (!deleting) return;
-    const { error } = await supabase.from(kind).delete().eq("id", deleting.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from(kind).delete()
+      .eq("id", deleting.id)
+      .eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success(`${title} silindi`);
     setItems((prev) => prev.filter((x) => x.id !== deleting.id));
@@ -199,6 +252,8 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     return { total, paid, pending };
   }, [statsMap]);
 
+  const deletingStats = deleting ? statsMap[deleting.id] : null;
+
   return (
     <div className="space-y-4">
       {/* Summary cards */}
@@ -210,6 +265,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
               {kind === "customers" ? "Toplam Satış" : "Toplam Alış"}
             </div>
             <div className="font-bold text-lg">{formatCurrency(totals.total)}</div>
+            <div className="text-xs text-muted-foreground mt-1">{items.length} {title.toLowerCase()}</div>
           </CardContent>
         </Card>
         <Card>
@@ -235,26 +291,71 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1">
           <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`${title} ara...`} className="pl-8" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={`${title} ara (isim, telefon, email, not)...`}
+            className="pl-8"
+          />
         </div>
         <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Yeni {title}</Button>
       </div>
+
+      {q && (
+        <div className="text-xs text-muted-foreground">
+          {filtered.length} / {items.length} {title.toLowerCase()} gösteriliyor
+          {filtered.length === 0 && (
+            <button className="ml-2 text-primary underline" onClick={() => setQ("")}>Aramayı temizle</button>
+          )}
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Yükleniyor...</div>
+          ) : items.length === 0 ? (
+            <div className="p-12 text-center text-muted-foreground">
+              <Users className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">Henüz {title.toLowerCase()} yok</p>
+              <p className="text-sm mt-1">Yeni {title.toLowerCase()} ekleyerek başlayın</p>
+              <Button className="mt-4 gap-2" onClick={openNew}><Plus className="h-4 w-4" /> Yeni {title}</Button>
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">Kayıt bulunamadı</div>
+            <div className="p-12 text-center text-muted-foreground">
+              <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">Arama sonucu bulunamadı</p>
+              <button className="mt-2 text-primary text-sm underline" onClick={() => setQ("")}>Aramayı temizle</button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>İsim</TableHead>
-                  <TableHead>Telefon</TableHead>
-                  <TableHead className="text-right">{kind === "customers" ? "Toplam Satış" : "Toplam Alış"}</TableHead>
-                  <TableHead className="text-right">{kind === "customers" ? "Tahsil Edilen" : "Ödenen"}</TableHead>
-                  <TableHead className="text-right">Bekleyen</TableHead>
+                  <TableHead>
+                    <button className="flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("name")}>
+                      İsim <SortIcon col="name" active={sortKey} dir={sortDir} />
+                    </button>
+                  </TableHead>
+                  <TableHead>İletişim</TableHead>
+                  <TableHead className="text-right">
+                    <button className="flex items-center gap-1 ml-auto hover:text-foreground" onClick={() => toggleSort("total")}>
+                      {kind === "customers" ? "Toplam Satış" : "Toplam Alış"}
+                      <SortIcon col="total" active={sortKey} dir={sortDir} />
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {kind === "customers" ? "Tahsil Edilen" : "Ödenen"}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <button className="flex items-center gap-1 ml-auto hover:text-foreground" onClick={() => toggleSort("pending")}>
+                      Bekleyen <SortIcon col="pending" active={sortKey} dir={sortDir} />
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <button className="flex items-center gap-1 ml-auto hover:text-foreground" onClick={() => toggleSort("count")}>
+                      İşlem <SortIcon col="count" active={sortKey} dir={sortDir} />
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
@@ -263,17 +364,26 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
                   const s = statsMap[p.id] || { total: 0, paid: 0, pending: 0, count: 0 };
                   return (
                     <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(p)}>
-                      <TableCell className="font-medium max-w-[180px] truncate">
-                        <div>{p.name}</div>
-                        {s.count > 0 && <div className="text-xs text-muted-foreground">{s.count} işlem</div>}
+                      <TableCell className="font-medium max-w-[180px]">
+                        <div className="truncate">{p.name}</div>
+                        {p.contact_person && (
+                          <div className="text-xs text-muted-foreground truncate">{p.contact_person}</div>
+                        )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">{p.phone || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {p.phone && <div className="whitespace-nowrap">{p.phone}</div>}
+                        {p.email && <div className="truncate max-w-[160px] text-xs">{p.email}</div>}
+                        {!p.phone && !p.email && <span>-</span>}
+                      </TableCell>
                       <TableCell className="text-right font-medium">{s.total > 0 ? formatCurrency(s.total) : "-"}</TableCell>
                       <TableCell className="text-right text-green-700">{s.paid > 0 ? formatCurrency(s.paid) : "-"}</TableCell>
                       <TableCell className="text-right">
                         {s.pending > 0
                           ? <span className="text-orange-600 font-medium">{formatCurrency(s.pending)}</span>
                           : s.total > 0 ? <span className="text-green-600 text-xs">Tamamlandı</span> : "-"}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground text-sm">
+                        {s.count > 0 ? s.count : "-"}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-1">
@@ -305,6 +415,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
           kind={kind}
           stats={statsMap[detail.id] || { total: 0, paid: 0, pending: 0, count: 0 }}
           onClose={() => setDetail(null)}
+          onEdit={() => { setDetail(null); openEdit(detail); }}
         />
       )}
 
@@ -313,7 +424,13 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Silmek istediğinize emin misiniz?</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{deleting?.name}</strong> kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              <strong>{deleting?.name}</strong> kalıcı olarak silinecek.
+              {deletingStats && deletingStats.count > 0 && (
+                <span className="block mt-2 text-orange-600 font-medium">
+                  Uyarı: Bu {title.toLowerCase()} ile ilişkili {deletingStats.count} işlem kaydı bulunmaktadır.
+                  {deletingStats.pending > 0 && ` (${formatCurrency(deletingStats.pending)} bekleyen bakiye)`}
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -327,52 +444,65 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
 }
 
 function PartyDetailDialog({
-  party, kind, stats, onClose,
+  party, kind, stats, onClose, onEdit,
 }: {
-  party: Party; kind: Kind; stats: PartyStats; onClose: () => void;
+  party: Party; kind: Kind; stats: PartyStats; onClose: () => void; onEdit: () => void;
 }) {
   const [txs, setTxs] = useState<TxRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchTxs() {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
       if (kind === "customers") {
-        const q = supabase
+        const { data } = await supabase
           .from("sales")
           .select("id, sale_date, product_name, total_amount, paid_amount, payment_status")
           .eq("customer_id", party.id)
+          .eq("user_id", uid!)
           .order("sale_date", { ascending: false });
-        const { data } = uid ? await q.eq("user_id", uid) : await q;
-        setTxs((data || []).map((r: { id: string; sale_date: string; product_name: string; total_amount: number; paid_amount: number; payment_status: string }) => ({
+        setTxs((data || []).map((r) => ({
           id: r.id, date: r.sale_date, product_name: r.product_name,
           amount: r.total_amount, paid_amount: r.paid_amount, payment_status: r.payment_status,
         })));
       } else {
-        const pq = supabase
+        const { data } = await supabase
           .from("purchases")
           .select("id, purchase_date, product_name, amount, paid_amount, payment_status")
           .eq("supplier_id", party.id)
+          .eq("user_id", uid!)
           .order("purchase_date", { ascending: false });
-        const { data } = uid ? await pq.eq("user_id", uid) : await pq;
-        setTxs((data || []).map((r: { id: string; purchase_date: string; product_name: string; amount: number; paid_amount: number; payment_status: string }) => ({
+        setTxs((data || []).map((r) => ({
           id: r.id, date: r.purchase_date, product_name: r.product_name,
           amount: r.amount, paid_amount: r.paid_amount, payment_status: r.payment_status,
         })));
       }
       setLoading(false);
     }
-    fetch();
+    fetchTxs();
   }, [party.id, kind]);
 
   const amountLabel = kind === "customers" ? "Toplam Satış" : "Toplam Alış";
   const paidLabel = kind === "customers" ? "Tahsil Edilen" : "Ödenen";
 
+  // Monthly trend for chart — last 6 months
+  const chartData = useMemo(() => {
+    const months: Record<string, number> = {};
+    for (const tx of txs) {
+      if (!tx.date) continue;
+      const key = format(startOfMonth(parseISO(tx.date)), "MMM yy", { locale: tr });
+      months[key] = (months[key] || 0) + tx.amount;
+    }
+    return Object.entries(months)
+      .slice(-6)
+      .map(([ay, tutar]) => ({ ay, tutar }));
+  }, [txs]);
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
@@ -380,11 +510,46 @@ function PartyDetailDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Info row */}
-        <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
-          {party.phone && <span>📞 {party.phone}</span>}
-          {party.email && <span>✉️ {party.email}</span>}
-          {party.address && <span>📍 {party.address}</span>}
+        {/* Info grid */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+          {party.phone && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Phone className="h-3.5 w-3.5 shrink-0" /> {party.phone}
+            </div>
+          )}
+          {party.email && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{party.email}</span>
+            </div>
+          )}
+          {party.address && (
+            <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> {party.address}
+            </div>
+          )}
+          {party.contact_person && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="h-3.5 w-3.5 shrink-0" /> {party.contact_person}
+            </div>
+          )}
+          {(party.tax_no || party.tax_office) && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              {party.tax_no}{party.tax_office ? ` / ${party.tax_office}` : ""}
+            </div>
+          )}
+          {party.bank_info && (
+            <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+              <Landmark className="h-3.5 w-3.5 shrink-0" /> {party.bank_info}
+            </div>
+          )}
+          {party.note && (
+            <div className="flex items-start gap-2 text-muted-foreground col-span-2">
+              <FileText className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span className="text-xs">{party.note}</span>
+            </div>
+          )}
         </div>
 
         {/* Stats */}
@@ -404,6 +569,26 @@ function PartyDetailDialog({
             </div>
           </div>
         </div>
+
+        {/* Monthly trend chart */}
+        {chartData.length > 1 && (
+          <Card className="shrink-0">
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm">Aylık {kind === "customers" ? "Satış" : "Alış"} Trendi</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-3 px-4">
+              <ResponsiveContainer width="100%" height={120}>
+                <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="ay" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                  <ReTooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Bar dataKey="tutar" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Transaction list */}
         <div className="flex-1 overflow-auto min-h-0">
@@ -426,7 +611,7 @@ function PartyDetailDialog({
                 {txs.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="whitespace-nowrap text-muted-foreground text-sm">{formatDate(tx.date)}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{tx.product_name}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{tx.product_name || "-"}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(tx.amount)}</TableCell>
                     <TableCell className="text-right text-green-700">{formatCurrency(tx.paid_amount)}</TableCell>
                     <TableCell>
@@ -441,8 +626,11 @@ function PartyDetailDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>Kapat</Button>
+          <Button variant="outline" onClick={onEdit} className="gap-2">
+            <Pencil className="h-3.5 w-3.5" /> Düzenle
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -460,6 +648,7 @@ function PartyDialog({
   const [form, setForm] = useState({
     name: "", phone: "", email: "", address: "",
     tax_no: "", tax_office: "", contact_person: "",
+    bank_info: "", note: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -473,31 +662,52 @@ function PartyDialog({
         tax_no: editing?.tax_no || "",
         tax_office: editing?.tax_office || "",
         contact_person: editing?.contact_person || "",
+        bank_info: editing?.bank_info || "",
+        note: editing?.note || "",
       });
     }
   }, [open, editing]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = partySchema.safeParse(form);
+    const schema = isSupplier ? supplierSchema : customerSchema;
+    const parsed = schema.safeParse(form);
     if (!parsed.success) {
       return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
     }
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
-    const base = {
-      user_id: session.user.id,
-      name: parsed.data.name,
-      phone: parsed.data.phone || null,
-      email: parsed.data.email || null,
-      address: parsed.data.address || null,
-    };
-    const payload = isSupplier
-      ? { ...base, tax_no: parsed.data.tax_no || null, tax_office: parsed.data.tax_office || null, contact_person: parsed.data.contact_person || null }
-      : base;
+
+    let payload: Record<string, unknown>;
+    if (isSupplier) {
+      const d = parsed.data as z.infer<typeof supplierSchema>;
+      payload = {
+        user_id: session.user.id,
+        name: d.name,
+        phone: d.phone || null,
+        email: d.email || null,
+        address: d.address || null,
+        tax_no: d.tax_no || null,
+        tax_office: d.tax_office || null,
+        contact_person: d.contact_person || null,
+        bank_info: d.bank_info || null,
+        note: d.note || null,
+      };
+    } else {
+      const d = parsed.data as z.infer<typeof customerSchema>;
+      payload = {
+        user_id: session.user.id,
+        name: d.name,
+        phone: d.phone || null,
+        email: d.email || null,
+        address: d.address || null,
+        note: d.note || null,
+      };
+    }
+
     const { error } = editing
-      ? await supabase.from(kind).update(payload).eq("id", editing.id)
+      ? await supabase.from(kind).update(payload).eq("id", editing.id).eq("user_id", session.user.id)
       : await supabase.from(kind).insert(payload);
     setSaving(false);
     if (error) return toast.error("Kaydedilemedi: " + friendlyDbError(error));
@@ -508,19 +718,24 @@ function PartyDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? `${title} Düzenle` : `Yeni ${title}`}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <Label>{isSupplier ? "Firma / Tedarikçi Adı" : "İsim"}</Label>
+            <Label>{isSupplier ? "Firma / Tedarikçi Adı *" : "İsim *"}</Label>
             <Input value={form.name} maxLength={120}
               onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
 
           {isSupplier && (
             <>
+              <div>
+                <Label>Yetkili Kişi</Label>
+                <Input value={form.contact_person} maxLength={80}
+                  onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Vergi No / TCKN</Label>
@@ -534,9 +749,10 @@ function PartyDialog({
                 </div>
               </div>
               <div>
-                <Label>Yetkili Kişi</Label>
-                <Input value={form.contact_person} maxLength={80}
-                  onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
+                <Label>Banka / IBAN Bilgisi</Label>
+                <Input value={form.bank_info} maxLength={500}
+                  onChange={(e) => setForm({ ...form, bank_info: e.target.value })}
+                  placeholder="Banka adı / IBAN / Hesap No" />
               </div>
             </>
           )}
@@ -557,6 +773,12 @@ function PartyDialog({
             <Label>Adres</Label>
             <Textarea value={form.address} rows={2} maxLength={500}
               onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          </div>
+          <div>
+            <Label>Not</Label>
+            <Textarea value={form.note} rows={2} maxLength={1000}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
+              placeholder="Ödeme koşulları, özel anlaşmalar vb." />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>

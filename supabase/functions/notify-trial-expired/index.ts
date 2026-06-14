@@ -9,7 +9,7 @@ const ADMIN_EMAILS = ["hatamelih245@gmail.com", "info@hisusolutions.com"];
 
 serve(async (req) => {
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "https://hisusolutions.com",
     "Access-Control-Allow-Headers": "authorization, content-type",
   };
 

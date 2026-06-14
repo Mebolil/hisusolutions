@@ -11,11 +11,24 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Megaphone, Target, Pencil } from "lucide-react";
+import { Plus, Search, Megaphone, Target, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveContainer, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
+import {
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths,
+  format, parseISO, isWithinInterval, eachWeekOfInterval,
+} from "date-fns";
+import { tr } from "date-fns/locale";
 
 type Campaign = {
   id: string;
@@ -23,18 +36,22 @@ type Campaign = {
   platform: string | null;
   status: string;
   spend: number;
+  budget: number | null;
   start_date: string;
   end_date: string | null;
 };
-type Sale = { campaign_id: string | null; total_amount: number };
+type Sale = { campaign_id: string | null; total_amount: number; sale_date: string };
 
 const STATUSES = ["aktif", "pasif"] as const;
 type Status = (typeof STATUSES)[number];
+type Period = "hafta" | "ay" | "3ay";
 
 const STATUS_BADGE: Record<string, string> = {
   aktif: "bg-emerald-100 text-emerald-700 border-emerald-200",
   pasif: "bg-secondary text-muted-foreground border-border",
 };
+
+const PERIOD_LABELS: Record<Period, string> = { hafta: "Son 7 Gün", ay: "Bu Ay", "3ay": "Son 3 Ay" };
 
 export const Route = createFileRoute("/app/butcecrm/reklam")({
   head: () => ({ meta: [{ title: "BütçeCRM — Reklam" }] }),
@@ -51,6 +68,8 @@ function AdsPage() {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
+  const [period, setPeriod] = useState<Period>("ay");
 
   async function load() {
     setLoading(true);
@@ -59,7 +78,7 @@ function AdsPage() {
     const uid = session.user.id;
     const [c, s] = await Promise.all([
       supabase.from("campaigns").select("*").eq("user_id", uid).order("start_date", { ascending: false }),
-      supabase.from("sales").select("campaign_id,total_amount").eq("user_id", uid),
+      supabase.from("sales").select("campaign_id,total_amount,sale_date").eq("user_id", uid).limit(2000),
     ]);
     setCampaigns((c.data as Campaign[]) || []);
     setSales((s.data as Sale[]) || []);
@@ -104,8 +123,70 @@ function AdsPage() {
     const spend = enriched.reduce((s, c) => s + Number(c.spend || 0), 0);
     const revenue = enriched.reduce((s, c) => s + c.revenue, 0);
     const roas = spend > 0 ? revenue / spend : 0;
-    return { count: enriched.length, active: active.length, spend, revenue, roas };
+    const totalBudget = enriched.reduce((s, c) => s + Number(c.budget || 0), 0);
+    return { count: enriched.length, active: active.length, spend, revenue, roas, totalBudget };
   }, [enriched]);
+
+  // Platform bazlı ROAS
+  const platformStats = useMemo(() => {
+    const map: Record<string, { spend: number; revenue: number }> = {};
+    enriched.forEach((c) => {
+      const p = c.platform || "Diğer";
+      if (!map[p]) map[p] = { spend: 0, revenue: 0 };
+      map[p].spend += Number(c.spend || 0);
+      map[p].revenue += c.revenue;
+    });
+    return Object.entries(map).map(([platform, d]) => ({
+      platform,
+      Harcama: Math.round(d.spend),
+      Gelir: Math.round(d.revenue),
+      ROAS: d.spend > 0 ? +(d.revenue / d.spend).toFixed(2) : 0,
+    })).sort((a, b) => b.ROAS - a.ROAS);
+  }, [enriched]);
+
+  // Trend verisi
+  const trendData = useMemo(() => {
+    const now = new Date();
+    if (period === "hafta") {
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (6 - i));
+        const day = format(d, "yyyy-MM-dd");
+        return {
+          label: format(d, "d MMM", { locale: tr }),
+          Gelir: sales.filter((s) => s.sale_date === day).reduce((sum, s) => sum + Number(s.total_amount || 0), 0),
+        };
+      });
+    }
+    if (period === "ay") {
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+      const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+      return weeks.map((weekStart) => {
+        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+        return {
+          label: format(weekStart, "d MMM", { locale: tr }),
+          Gelir: sales.filter((s) => {
+            try { return isWithinInterval(parseISO(s.sale_date), { start: weekStart, end: weekEnd }); }
+            catch { return false; }
+          }).reduce((sum, s) => sum + Number(s.total_amount || 0), 0),
+        };
+      });
+    }
+    // 3ay
+    return Array.from({ length: 3 }, (_, i) => {
+      const m = subMonths(now, 2 - i);
+      const start = startOfMonth(m);
+      const end = endOfMonth(m);
+      return {
+        label: format(m, "MMM yy", { locale: tr }),
+        Gelir: sales.filter((s) => {
+          try { return isWithinInterval(parseISO(s.sale_date), { start, end }); }
+          catch { return false; }
+        }).reduce((sum, s) => sum + Number(s.total_amount || 0), 0),
+      };
+    });
+  }, [sales, period]);
 
   async function toggleStatus(c: Campaign) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -115,6 +196,17 @@ function AdsPage() {
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success(`Kampanya ${next} olarak işaretlendi`);
     setCampaigns((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: next } : x)));
+  }
+
+  async function confirmDelete() {
+    if (!deletingCampaign) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { error } = await supabase.from("campaigns").delete().eq("id", deletingCampaign.id).eq("user_id", session.user.id);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success("Kampanya silindi");
+    setDeletingCampaign(null);
+    load();
   }
 
   return (
@@ -134,9 +226,28 @@ function AdsPage() {
         )}
       </div>
 
+      <AlertDialog open={!!deletingCampaign} onOpenChange={(o) => { if (!o) setDeletingCampaign(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kampanyayı sil?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deletingCampaign?.name}</strong> kampanyası kalıcı olarak silinecek. Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Özet kartlar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Toplam Kampanya" value={`${stats.count}`} sub={`${stats.active} aktif`} />
-        <StatCard label="Toplam Harcama" value={formatCurrency(stats.spend)} valueClass="text-red-600" />
+        <StatCard label="Toplam Harcama" value={formatCurrency(stats.spend)} valueClass="text-red-600"
+          sub={stats.totalBudget > 0 ? `Bütçe: ${formatCurrency(stats.totalBudget)}` : undefined} />
         <StatCard label="Toplam Gelir" value={formatCurrency(stats.revenue)} valueClass="text-emerald-600" />
         <StatCard
           label="Genel ROAS"
@@ -146,6 +257,73 @@ function AdsPage() {
         />
       </div>
 
+      {/* Grafikler */}
+      {enriched.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Platform bazlı ROAS */}
+          {platformStats.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Platform Karşılaştırması</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={platformStats} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="platform" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
+                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                    <Legend />
+                    <Bar dataKey="Harcama" fill="#f87171" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Gelir" fill="#34d399" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                {/* ROAS rozetleri */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {platformStats.map((p) => (
+                    <span key={p.platform} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${p.ROAS >= 1 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                      {p.platform}: {p.ROAS.toFixed(2)}x ROAS
+                    </span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Gelir trendi */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Gelir Trendi</CardTitle>
+                <div className="flex gap-1">
+                  {(["hafta", "ay", "3ay"] as Period[]).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPeriod(p)}
+                      className={`text-xs px-2.5 py-1 rounded border transition-colors ${period === p ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:bg-muted"}`}
+                    >
+                      {PERIOD_LABELS[p]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
+                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Line type="monotone" dataKey="Gelir" stroke="#34d399" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Filtreler */}
       <Card>
         <CardHeader><CardTitle className="text-base">Filtreler</CardTitle></CardHeader>
         <CardContent>
@@ -181,6 +359,7 @@ function AdsPage() {
         </CardContent>
       </Card>
 
+      {/* Tablo */}
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -194,43 +373,74 @@ function AdsPage() {
                   <TableHead>Kampanya</TableHead>
                   <TableHead>Platform</TableHead>
                   <TableHead>Tarih Aralığı</TableHead>
-                  <TableHead className="text-right">Harcama</TableHead>
+                  <TableHead className="text-right">Harcama / Bütçe</TableHead>
                   <TableHead className="text-right">Gelir</TableHead>
                   <TableHead className="text-right">ROAS</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="w-16"></TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium max-w-[220px] truncate">{c.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.platform || "-"}</TableCell>
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(c.start_date)} {c.end_date ? `→ ${formatDate(c.end_date)}` : "→ ..."}
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(Number(c.spend || 0))}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(c.revenue)}</TableCell>
-                    <TableCell className={`text-right font-semibold ${c.roas >= 1 ? "text-emerald-600" : c.roas > 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                      {c.roas > 0 ? `${c.roas.toFixed(2)}x` : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => toggleStatus(c)}
-                        className={`text-xs px-2.5 py-1 rounded border transition-colors ${STATUS_BADGE[c.status] || STATUS_BADGE.pasif} hover:opacity-80`}
-                        title="Durumu değiştirmek için tıkla"
-                      >
-                        {c.status}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <Button size="icon" variant="ghost" className="h-8 w-8"
-                        onClick={() => { setEditingCampaign(c); setEditOpen(true); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filtered.map((c) => {
+                  const budget = Number(c.budget || 0);
+                  const spend = Number(c.spend || 0);
+                  const pct = budget > 0 ? (spend / budget) * 100 : 0;
+                  return (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium max-w-[200px] truncate">{c.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.platform || "-"}</TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(c.start_date)} {c.end_date ? `→ ${formatDate(c.end_date)}` : "→ ..."}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {budget > 0 ? (
+                          <div className="min-w-[110px]">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="font-medium">{formatCurrency(spend)}</span>
+                              <span className="text-muted-foreground">{formatCurrency(budget)}</span>
+                            </div>
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-primary"}`}
+                                style={{ width: `${Math.min(100, pct)}%` }}
+                              />
+                            </div>
+                            <div className={`text-xs mt-0.5 text-right ${pct >= 100 ? "text-red-600" : "text-muted-foreground"}`}>
+                              %{pct.toFixed(0)}
+                            </div>
+                          </div>
+                        ) : (
+                          formatCurrency(spend)
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(c.revenue)}</TableCell>
+                      <TableCell className={`text-right font-semibold ${c.roas >= 1 ? "text-emerald-600" : c.roas > 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                        {c.roas > 0 ? `${c.roas.toFixed(2)}x` : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => toggleStatus(c)}
+                          className={`text-xs px-2.5 py-1 rounded border transition-colors ${STATUS_BADGE[c.status] || STATUS_BADGE.pasif} hover:opacity-80`}
+                          title="Durumu değiştirmek için tıkla"
+                        >
+                          {c.status}
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8"
+                            onClick={() => { setEditingCampaign(c); setEditOpen(true); }}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingCampaign(c)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -269,6 +479,7 @@ function EditCampaignDialog({
     newPlatform: "",
     status: campaign.status as Status,
     spend: String(campaign.spend ?? "0"),
+    budget: String(campaign.budget ?? ""),
     start_date: campaign.start_date,
     end_date: campaign.end_date || "",
   });
@@ -281,6 +492,7 @@ function EditCampaignDialog({
       newPlatform: "",
       status: campaign.status as Status,
       spend: String(campaign.spend ?? "0"),
+      budget: String(campaign.budget ?? ""),
       start_date: campaign.start_date,
       end_date: campaign.end_date || "",
     });
@@ -298,6 +510,7 @@ function EditCampaignDialog({
       platform: platform || null,
       status: form.status,
       spend: Number(form.spend) || 0,
+      budget: form.budget ? Number(form.budget) : null,
       start_date: form.start_date,
       end_date: form.end_date || null,
     }).eq("id", campaign.id).eq("user_id", session.user.id);
@@ -344,13 +557,20 @@ function EditCampaignDialog({
             <div>
               <Label>Yeni Platform Adı</Label>
               <Input value={form.newPlatform}
-                onChange={(e) => setForm({ ...form, newPlatform: e.target.value })} required />
+                onChange={(e) => setForm({ ...form, newPlatform: e.target.value })} />
             </div>
           )}
-          <div>
-            <Label>Harcama (₺)</Label>
-            <Input type="number" step="0.01" value={form.spend}
-              onChange={(e) => setForm({ ...form, spend: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Harcama (₺)</Label>
+              <Input type="number" step="0.01" value={form.spend}
+                onChange={(e) => setForm({ ...form, spend: e.target.value })} />
+            </div>
+            <div>
+              <Label>Hedef Bütçe (₺) <span className="text-muted-foreground text-xs">opsiyonel</span></Label>
+              <Input type="number" step="0.01" placeholder="Yok" value={form.budget}
+                onChange={(e) => setForm({ ...form, budget: e.target.value })} />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -387,6 +607,7 @@ function NewCampaignDialog({
     newPlatform: "",
     status: "aktif" as Status,
     spend: "0",
+    budget: "",
     start_date: today,
     end_date: "",
   });
@@ -395,7 +616,7 @@ function NewCampaignDialog({
   function reset() {
     setForm({
       name: "", platform: "", newPlatform: "", status: "aktif",
-      spend: "0", start_date: today, end_date: "",
+      spend: "0", budget: "", start_date: today, end_date: "",
     });
   }
 
@@ -407,16 +628,16 @@ function NewCampaignDialog({
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
-    const payload = {
+    const { error } = await supabase.from("campaigns").insert({
       user_id: session.user.id,
       name: form.name,
       platform: platform || null,
       status: form.status,
       spend: Number(form.spend) || 0,
+      budget: form.budget ? Number(form.budget) : null,
       start_date: form.start_date,
       end_date: form.end_date || null,
-    };
-    const { error } = await supabase.from("campaigns").insert(payload);
+    });
     setSaving(false);
     if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
     toast.success("Kampanya eklendi");
@@ -467,10 +688,17 @@ function NewCampaignDialog({
                 onChange={(e) => setForm({ ...form, newPlatform: e.target.value })} required />
             </div>
           )}
-          <div>
-            <Label>Harcama (₺)</Label>
-            <Input type="number" step="0.01" value={form.spend}
-              onChange={(e) => setForm({ ...form, spend: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Harcama (₺)</Label>
+              <Input type="number" step="0.01" value={form.spend}
+                onChange={(e) => setForm({ ...form, spend: e.target.value })} />
+            </div>
+            <div>
+              <Label>Hedef Bütçe (₺) <span className="text-muted-foreground text-xs">opsiyonel</span></Label>
+              <Input type="number" step="0.01" placeholder="Yok" value={form.budget}
+                onChange={(e) => setForm({ ...form, budget: e.target.value })} />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

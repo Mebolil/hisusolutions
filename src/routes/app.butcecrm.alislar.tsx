@@ -14,7 +14,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingCart, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, ShoppingCart, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
@@ -73,6 +77,9 @@ function PurchasesPage() {
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const [deletingPurchase, setDeletingPurchase] = useState<Purchase | null>(null);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -170,10 +177,23 @@ function PurchasesPage() {
     });
   }
 
+  async function reversePurchaseStock(purchase: Purchase) {
+    const matched = products.find(
+      (p) => p.name.trim().toLowerCase() === purchase.product_name.trim().toLowerCase()
+    );
+    if (matched && matched.quantity != null) {
+      await supabase.from("products").update({
+        quantity: Math.max(0, (matched.quantity ?? 0) - purchase.quantity),
+      }).eq("id", matched.id);
+    }
+  }
+
   async function handleBulkDelete() {
     const ids = Array.from(selectedIds);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
+    const toDelete = purchases.filter((p) => ids.includes(p.id));
+    for (const p of toDelete) await reversePurchaseStock(p);
     for (let i = 0; i < ids.length; i += 20) {
       const chunk = ids.slice(i, i + 20);
       const { error } = await supabase.from("purchases").delete().in("id", chunk).eq("user_id", session.user.id);
@@ -181,6 +201,17 @@ function PurchasesPage() {
     }
     toast.success(`${ids.length} alış silindi`);
     setSelectedIds(new Set());
+    load();
+  }
+
+  async function handleDelete(p: Purchase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    await reversePurchaseStock(p);
+    const { error } = await supabase.from("purchases").delete().eq("id", p.id).eq("user_id", session.user.id);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success("Alış silindi");
+    setDeletingPurchase(null);
     load();
   }
 
@@ -205,6 +236,14 @@ function PurchasesPage() {
           open={open} setOpen={setOpen}
           suppliers={suppliers} products={products} onCreated={load}
         />
+        {editingPurchase && (
+          <EditPurchaseDialog
+            open={editOpen} setOpen={setEditOpen}
+            purchase={editingPurchase}
+            suppliers={suppliers} products={products}
+            onSaved={() => { setEditingPurchase(null); load(); }}
+          />
+        )}
       </div>
 
       <CsvToolbar
@@ -307,6 +346,7 @@ function PurchasesPage() {
                     </TableHead>
                   ))}
                   <TableHead>Durum</TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -332,6 +372,18 @@ function PurchasesPage() {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button size="icon" variant="ghost" className="h-8 w-8"
+                          onClick={() => { setEditingPurchase(p); setEditOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700"
+                          onClick={() => setDeletingPurchase(p)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -349,6 +401,24 @@ function PurchasesPage() {
           </div>
         )}
       </Card>
+
+      <AlertDialog open={!!deletingPurchase} onOpenChange={(v) => !v && setDeletingPurchase(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alışı silmek istediğinize emin misiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deletingPurchase?.product_name}</strong> kaydı silinecek ve stoğu geri alınacak.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingPurchase && handleDelete(deletingPurchase)}
+              className="bg-red-600 hover:bg-red-700"
+            >Sil</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -631,6 +701,147 @@ function NewPurchaseDialog({
           </form>
         </DialogContent>
       </Dialog>
+    </Dialog>
+  );
+}
+
+function EditPurchaseDialog({
+  open, setOpen, purchase, suppliers, products, onSaved,
+}: {
+  open: boolean; setOpen: (v: boolean) => void;
+  purchase: Purchase; suppliers: Supplier[]; products: Product[]; onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    purchase_date: purchase.purchase_date,
+    supplier_id: purchase.supplier_id || "",
+    product_name: purchase.product_name,
+    quantity: String(purchase.quantity),
+    unit_price: String(purchase.unit_price ?? ""),
+    paid_amount: String(purchase.paid_amount ?? ""),
+    payment_status: purchase.payment_status as Status,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      purchase_date: purchase.purchase_date,
+      supplier_id: purchase.supplier_id || "",
+      product_name: purchase.product_name,
+      quantity: String(purchase.quantity),
+      unit_price: String(purchase.unit_price ?? ""),
+      paid_amount: String(purchase.paid_amount ?? ""),
+      payment_status: purchase.payment_status as Status,
+    });
+  }, [purchase]);
+
+  const computedAmount = (Number(form.quantity) || 0) * (Number(form.unit_price) || 0);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.product_name || !form.unit_price) return toast.error("Ürün ve birim fiyat zorunludur");
+    setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
+    const newQty = Number(form.quantity) || 1;
+    const total = computedAmount;
+    const paid = form.paid_amount ? Number(form.paid_amount) : (form.payment_status === "ödendi" ? total : 0);
+    const { error } = await supabase.from("purchases").update({
+      purchase_date: form.purchase_date,
+      supplier_id: form.supplier_id || null,
+      product_name: form.product_name,
+      quantity: newQty,
+      unit_price: Number(form.unit_price),
+      amount: total,
+      paid_amount: paid,
+      payment_status: form.payment_status,
+    }).eq("id", purchase.id).eq("user_id", session.user.id);
+    if (error) { setSaving(false); return toast.error("Güncellenemedi: " + friendlyDbError(error)); }
+
+    // Stok delta: miktar değiştiyse güncelle
+    const delta = newQty - purchase.quantity;
+    if (delta !== 0) {
+      const matched = products.find(
+        (p) => p.name.trim().toLowerCase() === form.product_name.trim().toLowerCase()
+      );
+      if (matched && matched.quantity != null) {
+        await supabase.from("products").update({
+          quantity: Math.max(0, (matched.quantity ?? 0) + delta),
+        }).eq("id", matched.id);
+      }
+    }
+
+    setSaving(false);
+    toast.success("Alış güncellendi");
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Alışı Düzenle</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tarih</Label>
+              <Input type="date" value={form.purchase_date}
+                onChange={(e) => setForm({ ...form, purchase_date: e.target.value })} required />
+            </div>
+            <div>
+              <Label>Tedarikçi</Label>
+              <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Seç (opsiyonel)" /></SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>Ürün Adı</Label>
+            <Input value={form.product_name}
+              onChange={(e) => setForm({ ...form, product_name: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>Miktar</Label>
+              <Input type="number" min="1" value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+            </div>
+            <div>
+              <Label>Birim Fiyat (₺)</Label>
+              <Input type="number" step="0.01" value={form.unit_price}
+                onChange={(e) => setForm({ ...form, unit_price: e.target.value })} required />
+            </div>
+            <div>
+              <Label>Tutar (₺)</Label>
+              <Input value={formatCurrency(computedAmount)} disabled />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Ödeme Durumu</Label>
+              <Select value={form.payment_status}
+                onValueChange={(v) => setForm({ ...form, payment_status: v as Status })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Ödenen (₺)</Label>
+              <Input type="number" step="0.01" value={form.paid_amount}
+                onChange={(e) => setForm({ ...form, paid_amount: e.target.value })}
+                placeholder="Boşsa duruma göre" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Güncelle"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }

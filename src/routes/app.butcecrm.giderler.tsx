@@ -93,8 +93,17 @@ function ExpensesPage() {
       supabase.from("sales").select("id,product_name,sale_date").eq("user_id", uid).order("sale_date", { ascending: false }).limit(200),
     ]);
     setExpenses((e.data as Expense[]) || []);
-    setCategories((c.data as Category[]) || []);
     setSales((s.data as SaleRef[]) || []);
+
+    // Yeni kullanıcıda tablo boşsa varsayılan kategorileri ekle
+    if (!c.data?.length) {
+      const defaults = ["Kira","Elektrik","Su","İnternet","Personel","Muhasebe","Reklam","Vergi","Kargo","Diğer"];
+      await supabase.from("expense_categories").insert(defaults.map((name) => ({ name })));
+      const { data: seeded } = await supabase.from("expense_categories").select("id,name").order("name");
+      setCategories((seeded as Category[]) || []);
+    } else {
+      setCategories((c.data as Category[]) || []);
+    }
     setLoading(false);
   }
 

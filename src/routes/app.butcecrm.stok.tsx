@@ -175,6 +175,13 @@ function StockPage() {
 
   async function loadCategories() {
     const { data } = await supabase.from("product_categories").select("id,name").order("name");
+    if (!data?.length) {
+      const defaults = ["Genel","Elektronik","Giyim","Aksesuar","Kozmetik","Gıda"];
+      await supabase.from("product_categories").insert(defaults.map((name) => ({ name })));
+      const { data: seeded } = await supabase.from("product_categories").select("id,name").order("name");
+      setCategories((seeded as Category[]) || []);
+      return;
+    }
     setCategories((data as Category[]) || []);
   }
 

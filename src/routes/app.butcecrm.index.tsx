@@ -52,8 +52,8 @@ function ButceCrmDashboard() {
         supabase.from("expenses").select("*").gte("expense_date", fetchFrom),
         supabase.from("products").select("*").limit(1000),
         supabase.from("campaigns").select("*").limit(500),
-        supabase.from("customers").select("id,name"),
-        supabase.from("purchases").select("id,amount,paid_amount,payment_status"),
+        supabase.from("customers").select("id,name").limit(2000),
+        supabase.from("purchases").select("id,amount,paid_amount,payment_status").limit(2000),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);

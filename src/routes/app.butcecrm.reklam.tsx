@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Megaphone, Target } from "lucide-react";
+import { Plus, Search, Megaphone, Target, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 type Campaign = {
@@ -49,6 +49,8 @@ function AdsPage() {
   const [platformFilter, setPlatformFilter] = useState("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   async function load() {
     setLoading(true);
@@ -123,6 +125,13 @@ function AdsPage() {
           <p className="text-muted-foreground text-sm">Reklam kampanyaları ve ROAS performansı</p>
         </div>
         <NewCampaignDialog open={open} setOpen={setOpen} platforms={platforms} onCreated={load} />
+        {editingCampaign && (
+          <EditCampaignDialog
+            open={editOpen} setOpen={setEditOpen}
+            campaign={editingCampaign} platforms={platforms}
+            onSaved={() => { setEditingCampaign(null); load(); }}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -189,6 +198,7 @@ function AdsPage() {
                   <TableHead className="text-right">Gelir</TableHead>
                   <TableHead className="text-right">ROAS</TableHead>
                   <TableHead>Durum</TableHead>
+                  <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -212,6 +222,12 @@ function AdsPage() {
                       >
                         {c.status}
                       </button>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="icon" variant="ghost" className="h-8 w-8"
+                        onClick={() => { setEditingCampaign(c); setEditOpen(true); }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -238,6 +254,124 @@ function StatCard({ label, value, valueClass, sub, icon }: { label: string; valu
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function EditCampaignDialog({
+  open, setOpen, campaign, platforms, onSaved,
+}: {
+  open: boolean; setOpen: (v: boolean) => void;
+  campaign: Campaign; platforms: string[]; onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: campaign.name,
+    platform: campaign.platform || "",
+    newPlatform: "",
+    status: campaign.status as Status,
+    spend: String(campaign.spend ?? "0"),
+    start_date: campaign.start_date,
+    end_date: campaign.end_date || "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      name: campaign.name,
+      platform: campaign.platform || "",
+      newPlatform: "",
+      status: campaign.status as Status,
+      spend: String(campaign.spend ?? "0"),
+      start_date: campaign.start_date,
+      end_date: campaign.end_date || "",
+    });
+  }, [campaign]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const platform = form.platform === "__new__" ? form.newPlatform.trim() : form.platform;
+    if (!form.name) return toast.error("Kampanya adı zorunludur");
+    if (!platform) return toast.error("Platform seçmelisiniz");
+    setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
+    const { error } = await supabase.from("campaigns").update({
+      name: form.name,
+      platform: platform || null,
+      status: form.status,
+      spend: Number(form.spend) || 0,
+      start_date: form.start_date,
+      end_date: form.end_date || null,
+    }).eq("id", campaign.id).eq("user_id", session.user.id);
+    setSaving(false);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
+    toast.success("Kampanya güncellendi");
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Kampanyayı Düzenle</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Kampanya Adı</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Platform</Label>
+              <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
+                <SelectTrigger><SelectValue placeholder="Seç" /></SelectTrigger>
+                <SelectContent>
+                  {["Meta", "Google", "TikTok", "Instagram", ...platforms.filter((p) => !["Meta", "Google", "TikTok", "Instagram"].includes(p))].map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                  <SelectItem value="__new__">+ Yeni platform</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Durum</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {form.platform === "__new__" && (
+            <div>
+              <Label>Yeni Platform Adı</Label>
+              <Input value={form.newPlatform}
+                onChange={(e) => setForm({ ...form, newPlatform: e.target.value })} required />
+            </div>
+          )}
+          <div>
+            <Label>Harcama (₺)</Label>
+            <Input type="number" step="0.01" value={form.spend}
+              onChange={(e) => setForm({ ...form, spend: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Başlangıç Tarihi</Label>
+              <Input type="date" value={form.start_date}
+                onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
+            </div>
+            <div>
+              <Label>Bitiş Tarihi</Label>
+              <Input type="date" value={form.end_date}
+                onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Güncelle"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

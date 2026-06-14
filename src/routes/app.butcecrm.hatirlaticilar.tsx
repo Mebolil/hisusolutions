@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Bell, Trash2, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, Search, Bell, Trash2, AlertCircle, RefreshCw, Pencil } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -82,6 +82,8 @@ function RemindersPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Reminder | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
 
   async function load() {
     setLoading(true);
@@ -143,6 +145,13 @@ function RemindersPage() {
           <p className="text-muted-foreground text-sm">Görev, ödeme ve tahsilat hatırlatıcıları</p>
         </div>
         <NewReminderDialog open={open} setOpen={setOpen} onCreated={load} />
+        {editingReminder && (
+          <EditReminderDialog
+            open={editOpen} setOpen={setEditOpen}
+            reminder={editingReminder}
+            onSaved={() => { setEditingReminder(null); load(); }}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -255,10 +264,16 @@ function RemindersPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700"
-                          onClick={() => setDeleting(r)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8"
+                            onClick={() => { setEditingReminder(r); setEditOpen(true); }}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700"
+                            onClick={() => setDeleting(r)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -295,6 +310,133 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
         <p className={`text-2xl font-bold ${valueClass || ""}`}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function EditReminderDialog({
+  open, setOpen, reminder, onSaved,
+}: { open: boolean; setOpen: (v: boolean) => void; reminder: Reminder; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    title: reminder.title,
+    type: reminder.type,
+    due_date: reminder.due_date,
+    status: reminder.status as Status,
+    related_record: reminder.related_record || "",
+    note: reminder.note || "",
+    is_recurring: reminder.is_recurring || false,
+    recurrence_interval: reminder.recurrence_interval || "Aylık" as RecurrenceInterval,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      title: reminder.title,
+      type: reminder.type,
+      due_date: reminder.due_date,
+      status: reminder.status as Status,
+      related_record: reminder.related_record || "",
+      note: reminder.note || "",
+      is_recurring: reminder.is_recurring || false,
+      recurrence_interval: reminder.recurrence_interval || "Aylık",
+    });
+  }, [reminder]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = reminderSchema.safeParse(form);
+    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
+    setSaving(true);
+    const { error } = await supabase.from("reminders").update({
+      title: parsed.data.title,
+      type: parsed.data.type,
+      due_date: parsed.data.due_date,
+      status: parsed.data.status,
+      related_record: parsed.data.related_record || null,
+      note: parsed.data.note || null,
+      is_recurring: form.is_recurring,
+      recurrence_interval: form.is_recurring ? form.recurrence_interval : null,
+    }).eq("id", reminder.id);
+    setSaving(false);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
+    toast.success("Hatırlatıcı güncellendi");
+    setOpen(false);
+    onSaved();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Hatırlatıcıyı Düzenle</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Başlık</Label>
+            <Input value={form.title} maxLength={200}
+              onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tür</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Tarih</Label>
+              <Input type="date" value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })} required />
+            </div>
+          </div>
+          <div>
+            <Label>Durum</Label>
+            <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>İlgili Kayıt (opsiyonel)</Label>
+            <Input value={form.related_record} maxLength={200}
+              placeholder="Müşteri / fatura no / vs."
+              onChange={(e) => setForm({ ...form, related_record: e.target.value })} />
+          </div>
+          <div>
+            <Label>Not</Label>
+            <Textarea value={form.note} rows={2} maxLength={1000}
+              onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </div>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5 text-blue-600" /> Tekrar Eden Görev
+                </p>
+              </div>
+              <Switch checked={form.is_recurring} onCheckedChange={(v) => setForm({ ...form, is_recurring: v })} />
+            </div>
+            {form.is_recurring && (
+              <div>
+                <Label className="text-xs">Tekrar Sıklığı</Label>
+                <Select value={form.recurrence_interval} onValueChange={(v) => setForm({ ...form, recurrence_interval: v as RecurrenceInterval })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCE_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Güncelle"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

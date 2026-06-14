@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "prerender": "node scripts/prerender.mjs",
     "build:ssg": "vite build && node scripts/prerender.mjs",
-    "vercel-build": "vite build && node scripts/prerender.mjs"
+    "vercel-build": "node scripts/generate-sitemap.mjs && vite build && node scripts/prerender.mjs"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

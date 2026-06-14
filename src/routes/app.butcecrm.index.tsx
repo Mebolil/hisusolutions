@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear,
-  parseISO, isWithinInterval, subMonths, format, differenceInDays,
+  parseISO, isWithinInterval, subMonths, format, differenceInDays, startOfDay,
 } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -41,11 +41,17 @@ function ButceCrmDashboard() {
 
   useEffect(() => {
     (async () => {
+      // Trend chart 6 ay + year period için yılın başı — hangisi daha eskiyse onu al
+      const now = new Date();
+      const fetchFrom = format(
+        startOfDay(subMonths(now, 11) < startOfYear(now) ? subMonths(now, 11) : startOfYear(now)),
+        "yyyy-MM-dd"
+      );
       const [s, e, p, c, cu, pu] = await Promise.all([
-        supabase.from("sales").select("*"),
-        supabase.from("expenses").select("*"),
-        supabase.from("products").select("*"),
-        supabase.from("campaigns").select("*"),
+        supabase.from("sales").select("*").gte("sale_date", fetchFrom),
+        supabase.from("expenses").select("*").gte("expense_date", fetchFrom),
+        supabase.from("products").select("*").limit(1000),
+        supabase.from("campaigns").select("*").limit(500),
         supabase.from("customers").select("id,name"),
         supabase.from("purchases").select("id,amount,paid_amount,payment_status"),
       ]);

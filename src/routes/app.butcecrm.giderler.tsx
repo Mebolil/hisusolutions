@@ -413,7 +413,8 @@ function NewExpenseDialog({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const cat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const rawCat = form.category === "__new__" ? form.newCategory.trim() : form.category;
+    const cat = rawCat.replace(/\s+/g, " ").trim().replace(/^./, c => c.toLocaleUpperCase("tr-TR"));
     if (!cat || !form.amount) return toast.error("Kategori ve tutar zorunludur");
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();

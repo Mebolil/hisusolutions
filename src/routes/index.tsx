@@ -213,7 +213,25 @@ function HomePage() {
               Hangisi gerçekten para kazandırıyor? BütçeCRM, reklam ROAS takibini finansal yönetime entegre eden Türkiye'deki tek yazılım. Paraşüt, Uyumsoft ve Logo İşbaşı'nda bu özellik yok.
             </p>
           </div>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {/* Video */}
+          <div className="mt-12 relative">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 ring-1 ring-primary/10">
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 to-transparent" />
+              <video
+                src="/videos/butcecrm-16x9.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full rounded-2xl"
+                aria-label="BütçeCRM ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
+              />
+              <div className="absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-card/80 to-transparent" />
+            </div>
+            <div className="absolute -inset-px -z-10 rounded-2xl bg-gradient-to-br from-primary/20 via-transparent to-emerald-400/10 blur-xl" />
+          </div>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
             <div className="rounded-2xl border-2 border-primary/30 bg-primary-soft p-6">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-background text-primary"><Megaphone className="h-5 w-5" /></span>
               <h3 className="mt-4 text-lg font-bold">Reklam ROAS Takibi</h3>

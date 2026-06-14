@@ -316,14 +316,20 @@ function ButcelemePage() {
           <h2 className="mt-3 text-4xl font-bold">BütçeCRM Nasıl Görünür?</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Tek ekranda tüm finansal tablonuz — gerçek zamanlı, her zaman güncel.</p>
         </div>
-        <div className="mt-12 relative overflow-hidden rounded-2xl border border-border shadow-2xl">
-          <img
-            src="/images/butcecrm-dashboard.png"
-            alt="BütçeCRM dashboard ekran görüntüsü — gelir, gider, stok ve reklam ROAS tek ekranda"
-            className="w-full"
-            loading="lazy"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        <div className="mt-12 relative">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 ring-1 ring-primary/10">
+            <video
+              src="/videos/butcecrm-16x9.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full rounded-2xl"
+              aria-label="BütçeCRM ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl bg-gradient-to-t from-background/80 to-transparent" />
+          </div>
+          <div className="absolute -inset-px -z-10 rounded-2xl bg-gradient-to-br from-primary/20 via-transparent to-emerald-400/10 blur-xl" />
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>

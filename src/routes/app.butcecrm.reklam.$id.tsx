@@ -45,9 +45,9 @@ type Sale = {
   id: string;
   sale_date: string;
   total_amount: number;
-  customer_name: string | null;
   product_name: string | null;
   quantity: number | null;
+  customers: { name: string } | null;
 };
 
 const STATUSES = ["aktif", "pasif"] as const;
@@ -79,7 +79,7 @@ function CampaignDetail() {
     const uid = session.user.id;
     const [c, s] = await Promise.all([
       supabase.from("campaigns").select("*").eq("id", id).eq("user_id", uid).single(),
-      supabase.from("sales").select("id,sale_date,total_amount,customer_name,product_name,quantity")
+      supabase.from("sales").select("id,sale_date,total_amount,product_name,quantity,customers(name)")
         .eq("campaign_id", id).eq("user_id", uid).order("sale_date", { ascending: false }).limit(500),
     ]);
     if (c.error || !c.data) {
@@ -350,7 +350,7 @@ function CampaignDetail() {
                 {sales.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="whitespace-nowrap text-sm">{formatDate(s.sale_date)}</TableCell>
-                    <TableCell className="text-muted-foreground">{s.customer_name || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{s.customers?.name || "-"}</TableCell>
                     <TableCell className="text-muted-foreground">{s.product_name || "-"}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{s.quantity ?? "-"}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(s.total_amount)}</TableCell>

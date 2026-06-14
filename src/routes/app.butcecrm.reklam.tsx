@@ -290,7 +290,6 @@ function EditCampaignDialog({
     e.preventDefault();
     const platform = form.platform === "__new__" ? form.newPlatform.trim() : form.platform;
     if (!form.name) return toast.error("Kampanya adı zorunludur");
-    if (!platform) return toast.error("Platform seçmelisiniz");
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }

@@ -87,9 +87,12 @@ function RemindersPage() {
 
   async function load() {
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
     const { data } = await supabase
       .from("reminders")
       .select("*")
+      .eq("user_id", session.user.id)
       .order("due_date", { ascending: true });
     setItems((data as Reminder[]) || []);
     setLoading(false);
@@ -123,14 +126,18 @@ function RemindersPage() {
 
   async function toggleDone(r: Reminder, done: boolean) {
     const next: Status = done ? "tamamlandı" : "bekliyor";
-    const { error } = await supabase.from("reminders").update({ status: next }).eq("id", r.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { error } = await supabase.from("reminders").update({ status: next }).eq("id", r.id).eq("user_id", session.user.id);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     setItems((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: next } : x)));
   }
 
   async function confirmDelete() {
     if (!deleting) return;
-    const { error } = await supabase.from("reminders").delete().eq("id", deleting.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { error } = await supabase.from("reminders").delete().eq("id", deleting.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Hatırlatıcı silindi");
     setItems((prev) => prev.filter((x) => x.id !== deleting.id));

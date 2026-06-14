@@ -41,6 +41,9 @@ function ButceCrmDashboard() {
 
   useEffect(() => {
     (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const uid = session.user.id;
       // Trend chart 6 ay + year period için yılın başı — hangisi daha eskiyse onu al
       const now = new Date();
       const fetchFrom = format(
@@ -48,12 +51,12 @@ function ButceCrmDashboard() {
         "yyyy-MM-dd"
       );
       const [s, e, p, c, cu, pu] = await Promise.all([
-        supabase.from("sales").select("*").gte("sale_date", fetchFrom),
-        supabase.from("expenses").select("*").gte("expense_date", fetchFrom),
-        supabase.from("products").select("*").limit(1000),
-        supabase.from("campaigns").select("*").limit(500),
-        supabase.from("customers").select("id,name").limit(2000),
-        supabase.from("purchases").select("id,amount,paid_amount,payment_status").limit(2000),
+        supabase.from("sales").select("*").eq("user_id", uid).gte("sale_date", fetchFrom),
+        supabase.from("expenses").select("*").eq("user_id", uid).gte("expense_date", fetchFrom),
+        supabase.from("products").select("*").eq("user_id", uid).limit(1000),
+        supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
+        supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
+        supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).limit(2000),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);

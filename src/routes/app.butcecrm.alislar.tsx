@@ -178,13 +178,19 @@ function PurchasesPage() {
   }
 
   async function reversePurchaseStock(purchase: Purchase) {
-    const matched = products.find(
-      (p) => p.name.trim().toLowerCase() === purchase.product_name.trim().toLowerCase()
-    );
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    // Stale state riski: taze veri çek
+    const { data: rows } = await supabase
+      .from("products")
+      .select("id,name,quantity")
+      .eq("user_id", session.user.id)
+      .ilike("name", purchase.product_name.trim());
+    const matched = rows?.[0];
     if (matched && matched.quantity != null) {
       await supabase.from("products").update({
         quantity: Math.max(0, (matched.quantity ?? 0) - purchase.quantity),
-      }).eq("id", matched.id);
+      }).eq("id", matched.id).eq("user_id", session.user.id);
     }
   }
 
@@ -219,7 +225,9 @@ function PurchasesPage() {
     const patch: Partial<Purchase> = { payment_status: newStatus };
     if (newStatus === "ödendi") patch.paid_amount = Number(p.amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
-    const { error } = await supabase.from("purchases").update(patch).eq("id", p.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from("purchases").update(patch).eq("id", p.id).eq("user_id", session.user.id);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setPurchases((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } as Purchase : x)));
@@ -757,16 +765,34 @@ function EditPurchaseDialog({
     }).eq("id", purchase.id).eq("user_id", session.user.id);
     if (error) { setSaving(false); return toast.error("Güncellenemedi: " + friendlyDbError(error)); }
 
-    // Stok delta: miktar değiştiyse güncelle
+    // Stok delta: ürün adı veya miktar değiştiyse güncelle
+    const productNameChanged = form.product_name.trim().toLowerCase() !== purchase.product_name.trim().toLowerCase();
     const delta = newQty - purchase.quantity;
-    if (delta !== 0) {
-      const matched = products.find(
-        (p) => p.name.trim().toLowerCase() === form.product_name.trim().toLowerCase()
-      );
-      if (matched && matched.quantity != null) {
+    if (productNameChanged) {
+      // Eski ürünün stoğunu geri al
+      const { data: oldRows } = await supabase.from("products").select("id,quantity")
+        .eq("user_id", session.user.id).ilike("name", purchase.product_name.trim());
+      if (oldRows?.[0] && oldRows[0].quantity != null) {
         await supabase.from("products").update({
-          quantity: Math.max(0, (matched.quantity ?? 0) + delta),
-        }).eq("id", matched.id);
+          quantity: Math.max(0, (oldRows[0].quantity ?? 0) - purchase.quantity),
+        }).eq("id", oldRows[0].id).eq("user_id", session.user.id);
+      }
+      // Yeni ürünün stoğunu artır
+      const { data: newRows } = await supabase.from("products").select("id,quantity")
+        .eq("user_id", session.user.id).ilike("name", form.product_name.trim());
+      if (newRows?.[0] && newRows[0].quantity != null) {
+        await supabase.from("products").update({
+          quantity: (newRows[0].quantity ?? 0) + newQty,
+        }).eq("id", newRows[0].id).eq("user_id", session.user.id);
+      }
+    } else if (delta !== 0) {
+      // Sadece miktar değişti
+      const { data: rows } = await supabase.from("products").select("id,quantity")
+        .eq("user_id", session.user.id).ilike("name", form.product_name.trim());
+      if (rows?.[0] && rows[0].quantity != null) {
+        await supabase.from("products").update({
+          quantity: Math.max(0, (rows[0].quantity ?? 0) + delta),
+        }).eq("id", rows[0].id).eq("user_id", session.user.id);
       }
     }
 

@@ -1,13 +1,14 @@
 -- Tekrar eden giderleri + hatırlatıcıları tüm kullanıcılar için otomatik oluşturan sistem
--- Supabase Dashboard > SQL Editor'de çalıştır
+-- Her gün 09:00'da çalışır. O gün "doğum günü" olan recurring giderin bir sonraki periyodunu oluşturur.
+-- Supabase Dashboard > SQL Editor'de sıfırdan çalıştırılacaksa buradan başla.
 
 -- 1. pg_cron aktif et
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- 2. reminders.auto_key unique constraint (mükerrer önleme)
-ALTER TABLE reminders ADD CONSTRAINT reminders_auto_key_unique UNIQUE (auto_key);
+ALTER TABLE reminders ADD CONSTRAINT IF NOT EXISTS reminders_auto_key_unique UNIQUE (auto_key);
 
--- 3. Ortak fonksiyon: tüm kullanıcılar için gider + hatırlatıcı oluştur
+-- 3. Ana fonksiyon
 CREATE OR REPLACE FUNCTION create_recurring_expenses_and_reminders(p_interval text)
 RETURNS void
 LANGUAGE plpgsql
@@ -17,52 +18,58 @@ AS $func$
 DECLARE
   rec RECORD;
   new_expense_id uuid;
-  expense_date_val date;
+  next_date date;
   remind_on_val date;
 BEGIN
-  -- Aralığa göre gider tarihi hesapla
-  CASE p_interval
-    WHEN 'Aylık'    THEN expense_date_val := date_trunc('month', CURRENT_DATE)::date;
-    WHEN 'Haftalık' THEN expense_date_val := CURRENT_DATE;
-    WHEN 'Senelik'  THEN expense_date_val := date_trunc('year', CURRENT_DATE)::date;
-    WHEN 'Günlük'   THEN expense_date_val := CURRENT_DATE;
-    ELSE RETURN;
-  END CASE;
-
-  -- Her kullanıcı + kategori + tutar için en son recurring kaydı al
-  -- SECURITY DEFINER + postgres owner sayesinde RLS bypass edilir → tüm kullanıcılar kapsanır
+  -- Bugün hangi recurring giderler var? (orijinal kaydın "doğum günü" mü kontrol et)
   FOR rec IN
     SELECT DISTINCT ON (user_id, category, amount)
-      id, user_id, category, amount, note, recurrence_interval
+      id, user_id, category, amount, note, recurrence_interval, expense_date
     FROM expenses
     WHERE is_recurring = true
       AND recurrence_interval = p_interval
+      AND CASE p_interval
+        WHEN 'Günlük'   THEN true
+        WHEN 'Haftalık' THEN EXTRACT(DOW FROM expense_date) = EXTRACT(DOW FROM CURRENT_DATE)
+        WHEN 'Aylık'    THEN EXTRACT(DAY FROM expense_date) = EXTRACT(DAY FROM CURRENT_DATE)
+        WHEN 'Senelik'  THEN EXTRACT(MONTH FROM expense_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+                         AND EXTRACT(DAY FROM expense_date) = EXTRACT(DAY FROM CURRENT_DATE)
+        ELSE false
+      END
     ORDER BY user_id, category, amount, expense_date DESC
   LOOP
-    -- Bu dönem için zaten oluşturulduysa geç
+    -- Bir sonraki periyot tarihi
+    next_date := CASE p_interval
+      WHEN 'Günlük'   THEN CURRENT_DATE + interval '1 day'
+      WHEN 'Haftalık' THEN CURRENT_DATE + interval '1 week'
+      WHEN 'Aylık'    THEN CURRENT_DATE + interval '1 month'
+      WHEN 'Senelik'  THEN CURRENT_DATE + interval '1 year'
+    END;
+
+    -- O tarihte zaten kayıt varsa geç
     CONTINUE WHEN EXISTS (
       SELECT 1 FROM expenses e2
       WHERE e2.user_id = rec.user_id
         AND e2.category = rec.category
         AND e2.amount = rec.amount
         AND e2.is_recurring = true
-        AND e2.expense_date = expense_date_val
+        AND e2.expense_date = next_date
     );
 
-    -- Yeni gider oluştur (bekliyor statüsünde)
+    -- Yeni gider: bekliyor statüsünde
     INSERT INTO expenses (
       user_id, expense_date, category, amount,
       paid_amount, payment_status, note,
       is_recurring, recurrence_interval
     ) VALUES (
-      rec.user_id, expense_date_val, rec.category, rec.amount,
+      rec.user_id, next_date, rec.category, rec.amount,
       0, 'bekliyor', rec.note,
       true, rec.recurrence_interval
     )
     RETURNING id INTO new_expense_id;
 
-    -- Hatırlatıcı: ödeme gününden 3 gün önce, minimum bugün
-    remind_on_val := GREATEST(expense_date_val - interval '3 days', CURRENT_DATE)::date;
+    -- Hatırlatıcı: 3 gün önce
+    remind_on_val := next_date - interval '3 days';
 
     INSERT INTO reminders (
       user_id, expense_id, type, title, message,
@@ -73,12 +80,12 @@ BEGIN
       new_expense_id,
       'expense',
       rec.category || ' ödemesi yaklaşıyor',
-      rec.category || ' için ' || to_char(rec.amount, 'FM999G999G990') || ' ₺ ödeme ' || to_char(expense_date_val, 'DD.MM.YYYY') || ' tarihinde yapılacak.',
+      rec.category || ' için ' || to_char(rec.amount, 'FM999G999G990') || ' ₺ ödeme ' || to_char(next_date, 'DD.MM.YYYY') || ' tarihinde yapılacak.',
       remind_on_val,
-      expense_date_val,
+      next_date,
       'pending',
       'auto',
-      'recurring-' || p_interval || '-' || rec.user_id::text || '-' || rec.category || '-' || expense_date_val::text,
+      'recurring-' || p_interval || '-' || rec.user_id::text || '-' || rec.category || '-' || next_date::text,
       true,
       rec.recurrence_interval
     )
@@ -88,13 +95,13 @@ BEGIN
 END;
 $func$;
 
--- 4. Cron job'ları (önceki varsa önce kaldır)
+-- 4. Cron job'ları — her gece 09:00, tüm aralıkları kontrol et
 SELECT cron.unschedule(jobname) FROM cron.job WHERE jobname LIKE 'recurring-expenses%';
 
-SELECT cron.schedule('recurring-expenses-monthly', '0 9 1 * *', $$SELECT create_recurring_expenses_and_reminders('Aylık');$$);
-SELECT cron.schedule('recurring-expenses-weekly',  '0 9 * * 1', $$SELECT create_recurring_expenses_and_reminders('Haftalık');$$);
-SELECT cron.schedule('recurring-expenses-yearly',  '0 9 1 1 *', $$SELECT create_recurring_expenses_and_reminders('Senelik');$$);
 SELECT cron.schedule('recurring-expenses-daily',   '0 9 * * *', $$SELECT create_recurring_expenses_and_reminders('Günlük');$$);
+SELECT cron.schedule('recurring-expenses-weekly',  '0 9 * * *', $$SELECT create_recurring_expenses_and_reminders('Haftalık');$$);
+SELECT cron.schedule('recurring-expenses-monthly', '0 9 * * *', $$SELECT create_recurring_expenses_and_reminders('Aylık');$$);
+SELECT cron.schedule('recurring-expenses-yearly',  '0 9 * * *', $$SELECT create_recurring_expenses_and_reminders('Senelik');$$);
 
 -- Doğrulama
 -- SELECT jobname, schedule, active FROM cron.job WHERE jobname LIKE 'recurring-expenses%';

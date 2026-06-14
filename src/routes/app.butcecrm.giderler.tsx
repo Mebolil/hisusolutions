@@ -98,8 +98,9 @@ function ExpensesPage() {
   const [sales, setSales] = useState<SaleRef[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [catFilter, setCatFilter] = useState("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // Varsayılan: bu ayın 1'i → son günü
+  const [from, setFrom] = useState(() => getMonthRange(0).from);
+  const [to, setTo] = useState(() => getMonthRange(0).to);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
@@ -284,10 +285,13 @@ function ExpensesPage() {
     setExpenses((prev) => prev.map((x) => (x.id === exp.id ? { ...x, ...patch } as Expense : x)));
   }
 
-  const hasActiveFilters = statusFilter !== "all" || catFilter !== "all" || from || to || q;
+  const defaultFrom = getMonthRange(0).from;
+  const defaultTo = getMonthRange(0).to;
+  const hasActiveFilters = statusFilter !== "all" || catFilter !== "all" || from !== defaultFrom || to !== defaultTo || q;
 
   function clearFilters() {
-    setStatusFilter("all"); setCatFilter("all"); setFrom(""); setTo(""); setQ("");
+    setStatusFilter("all"); setCatFilter("all");
+    setFrom(defaultFrom); setTo(defaultTo); setQ("");
   }
 
   function applyPreset(preset: "thisMonth" | "lastMonth" | "thisYear") {
@@ -430,6 +434,10 @@ function ExpensesPage() {
                   {label}
                 </Button>
               ))}
+              <Button variant="outline" size="sm" className="h-7 text-xs"
+                onClick={() => { setFrom(""); setTo(""); }}>
+                Tüm Zamanlar
+              </Button>
             </div>
           </CardHeader>
           <CardContent>

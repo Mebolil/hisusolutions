@@ -1,132 +1,84 @@
--- Tekrar eden giderleri otomatik oluşturan pg_cron job'ları
+-- Tekrar eden giderleri + hatırlatıcıları otomatik oluşturan sistem
 -- Supabase Dashboard > SQL Editor'de çalıştır
--- pg_cron extension Supabase'de varsayılan olarak aktif
 
--- Aylık tekrar edenler — her ayın 1'i saat 09:00
-SELECT cron.schedule(
-  'recurring-expenses-monthly',
-  '0 9 1 * *',
-  $$
-    INSERT INTO expenses (user_id, expense_date, category, amount, paid_amount, payment_status, note, is_recurring, recurrence_interval)
-    SELECT
-      user_id,
-      date_trunc('month', CURRENT_DATE)::date,  -- Bu ayın 1'i
-      category,
-      amount,
-      0,
-      'bekliyor',
-      note,
-      true,
-      recurrence_interval
+-- 1. pg_cron aktif et
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- 2. reminders.auto_key için unique index (mükerrer önleme)
+CREATE UNIQUE INDEX IF NOT EXISTS reminders_auto_key_unique ON reminders(auto_key) WHERE auto_key IS NOT NULL;
+
+-- 3. Ortak fonksiyon: gider oluştur + hatırlatıcı ekle
+CREATE OR REPLACE FUNCTION create_recurring_expenses_and_reminders(p_interval text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $func$
+DECLARE
+  rec RECORD;
+  new_expense_id uuid;
+  expense_date_val date;
+  remind_on_val date;
+BEGIN
+  CASE p_interval
+    WHEN 'Aylık'    THEN expense_date_val := date_trunc('month', CURRENT_DATE)::date;
+    WHEN 'Haftalık' THEN expense_date_val := CURRENT_DATE;
+    WHEN 'Senelik'  THEN expense_date_val := date_trunc('year', CURRENT_DATE)::date;
+    WHEN 'Günlük'   THEN expense_date_val := CURRENT_DATE;
+    ELSE RETURN;
+  END CASE;
+
+  FOR rec IN
+    SELECT DISTINCT ON (user_id, category, amount)
+      user_id, category, amount, note, recurrence_interval
     FROM expenses
     WHERE is_recurring = true
-      AND recurrence_interval = 'Aylık'
-      -- Geçen ay bu kategori + tutar + user kombinasyonu zaten kopyalanmış mı kontrolü
+      AND recurrence_interval = p_interval
       AND NOT EXISTS (
         SELECT 1 FROM expenses e2
         WHERE e2.user_id = expenses.user_id
           AND e2.category = expenses.category
           AND e2.amount = expenses.amount
           AND e2.is_recurring = true
-          AND date_trunc('month', e2.expense_date) = date_trunc('month', CURRENT_DATE)
+          AND e2.expense_date = expense_date_val
       )
-    GROUP BY user_id, category, amount, paid_amount, note, is_recurring, recurrence_interval;
-  $$
-);
-
--- Haftalık tekrar edenler — her Pazartesi saat 09:00
-SELECT cron.schedule(
-  'recurring-expenses-weekly',
-  '0 9 * * 1',
-  $$
+    ORDER BY user_id, category, amount, expense_date DESC
+  LOOP
+    -- Gider oluştur
     INSERT INTO expenses (user_id, expense_date, category, amount, paid_amount, payment_status, note, is_recurring, recurrence_interval)
-    SELECT
-      user_id,
-      CURRENT_DATE,
-      category,
-      amount,
-      0,
-      'bekliyor',
-      note,
-      true,
-      recurrence_interval
-    FROM expenses
-    WHERE is_recurring = true
-      AND recurrence_interval = 'Haftalık'
-      AND NOT EXISTS (
-        SELECT 1 FROM expenses e2
-        WHERE e2.user_id = expenses.user_id
-          AND e2.category = expenses.category
-          AND e2.amount = expenses.amount
-          AND e2.is_recurring = true
-          AND e2.expense_date >= CURRENT_DATE - interval '7 days'
-          AND e2.expense_date < CURRENT_DATE
-      )
-    GROUP BY user_id, category, amount, paid_amount, note, is_recurring, recurrence_interval;
-  $$
-);
+    VALUES (rec.user_id, expense_date_val, rec.category, rec.amount, 0, 'bekliyor', rec.note, true, rec.recurrence_interval)
+    RETURNING id INTO new_expense_id;
 
--- Senelik tekrar edenler — her yılın 1 Ocak'ı saat 09:00
-SELECT cron.schedule(
-  'recurring-expenses-yearly',
-  '0 9 1 1 *',
-  $$
-    INSERT INTO expenses (user_id, expense_date, category, amount, paid_amount, payment_status, note, is_recurring, recurrence_interval)
-    SELECT
-      user_id,
-      date_trunc('year', CURRENT_DATE)::date,
-      category,
-      amount,
-      0,
-      'bekliyor',
-      note,
-      true,
-      recurrence_interval
-    FROM expenses
-    WHERE is_recurring = true
-      AND recurrence_interval = 'Senelik'
-      AND NOT EXISTS (
-        SELECT 1 FROM expenses e2
-        WHERE e2.user_id = expenses.user_id
-          AND e2.category = expenses.category
-          AND e2.amount = expenses.amount
-          AND e2.is_recurring = true
-          AND date_trunc('year', e2.expense_date) = date_trunc('year', CURRENT_DATE)
-      )
-    GROUP BY user_id, category, amount, paid_amount, note, is_recurring, recurrence_interval;
-  $$
-);
+    -- Hatırlatıcı: ödeme gününden 3 gün önce, minimum bugün
+    remind_on_val := expense_date_val - interval '3 days';
+    IF remind_on_val < CURRENT_DATE THEN
+      remind_on_val := CURRENT_DATE;
+    END IF;
 
--- Günlük tekrar edenler — her gün saat 09:00
-SELECT cron.schedule(
-  'recurring-expenses-daily',
-  '0 9 * * *',
-  $$
-    INSERT INTO expenses (user_id, expense_date, category, amount, paid_amount, payment_status, note, is_recurring, recurrence_interval)
-    SELECT
-      user_id,
-      CURRENT_DATE,
-      category,
-      amount,
-      0,
-      'bekliyor',
-      note,
+    INSERT INTO reminders (user_id, expense_id, type, title, message, remind_on, due_date, status, source, auto_key, is_recurring, recurrence_interval)
+    VALUES (
+      rec.user_id,
+      new_expense_id,
+      'expense',
+      rec.category || ' ödemesi yaklaşıyor',
+      rec.category || ' için ' || to_char(rec.amount, 'FM999G999G990D00') || ' ₺ ödeme ' || to_char(expense_date_val, 'DD.MM.YYYY') || ' tarihinde.',
+      remind_on_val,
+      expense_date_val,
+      'pending',
+      'auto',
+      'recurring-' || p_interval || '-' || rec.user_id::text || '-' || rec.category || '-' || expense_date_val::text,
       true,
-      recurrence_interval
-    FROM expenses
-    WHERE is_recurring = true
-      AND recurrence_interval = 'Günlük'
-      AND NOT EXISTS (
-        SELECT 1 FROM expenses e2
-        WHERE e2.user_id = expenses.user_id
-          AND e2.category = expenses.category
-          AND e2.amount = expenses.amount
-          AND e2.is_recurring = true
-          AND e2.expense_date = CURRENT_DATE
-      )
-    GROUP BY user_id, category, amount, paid_amount, note, is_recurring, recurrence_interval;
-  $$
-);
+      rec.recurrence_interval
+    )
+    ON CONFLICT (auto_key) DO NOTHING;
+  END LOOP;
+END;
+$func$;
 
--- Kurulum doğrulama — çalıştırdıktan sonra bu sorgu aktif job'ları gösterir
+-- 4. Cron job'ları
+SELECT cron.schedule('recurring-expenses-monthly', '0 9 1 * *', $$SELECT create_recurring_expenses_and_reminders('Aylık');$$);
+SELECT cron.schedule('recurring-expenses-weekly',  '0 9 * * 1', $$SELECT create_recurring_expenses_and_reminders('Haftalık');$$);
+SELECT cron.schedule('recurring-expenses-yearly',  '0 9 1 1 *', $$SELECT create_recurring_expenses_and_reminders('Senelik');$$);
+SELECT cron.schedule('recurring-expenses-daily',   '0 9 * * *', $$SELECT create_recurring_expenses_and_reminders('Günlük');$$);
+
+-- Doğrulama
 -- SELECT jobname, schedule, active FROM cron.job WHERE jobname LIKE 'recurring-expenses%';

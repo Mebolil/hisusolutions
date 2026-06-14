@@ -299,6 +299,7 @@ function SalesPage() {
         sale={editing}
         onClose={() => setEditing(null)}
         platforms={platformList}
+        campaigns={campaigns}
         onSaved={(updated) => {
           setSales((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
           setEditing(null);
@@ -1221,12 +1222,13 @@ function parseCostsFromNote(note: string | null | undefined): { costs: EditCostI
 }
 
 function EditSaleDialog({
-  sale, onClose, onSaved, platforms,
+  sale, onClose, onSaved, platforms, campaigns,
 }: {
   sale: Sale | null;
   onClose: () => void;
   onSaved: (updated: Sale) => void;
   platforms: string[];
+  campaigns: Campaign[];
 }) {
   const [form, setForm] = useState<Sale | null>(sale);
   const [saving, setSaving] = useState(false);
@@ -1272,6 +1274,7 @@ function EditSaleDialog({
       paid_amount: form.paid_amount == null || form.paid_amount === ("" as unknown) ? null : Number(form.paid_amount),
       payment_status: form.payment_status,
       platform: form.platform || null,
+      campaign_id: form.campaign_id || null,
       note: combinedNote || null,
     };
     let { error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid);
@@ -1307,7 +1310,18 @@ function EditSaleDialog({
             <Select value={form.platform || ""} onValueChange={(v) => setForm({ ...form, platform: v })}>
               <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="">—</SelectItem>
                 {platforms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Kampanya (opsiyonel)</Label>
+            <Select value={form.campaign_id || ""} onValueChange={(v) => setForm({ ...form, campaign_id: v || null })}>
+              <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">—</SelectItem>
+                {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

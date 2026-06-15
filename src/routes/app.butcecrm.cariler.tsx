@@ -16,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Plus, Search, Users, Pencil, Trash2, ChevronRight, TrendingUp,
   TrendingDown, Clock, ArrowUpDown, ArrowUp, ArrowDown, Phone,
@@ -147,6 +148,8 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
   const [detail, setDetail] = useState<Party | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -200,7 +203,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     setLoading(false);
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [kind]);
+  useEffect(() => { load(); setSelected(new Set()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [kind]);
 
   const filtered = useMemo(() => {
     let list = items;
@@ -242,6 +245,48 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     toast.success(`${title} silindi`);
     setItems((prev) => prev.filter((x) => x.id !== deleting.id));
     setDeleting(null);
+  }
+
+  async function confirmBulkDelete() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const ids = Array.from(selected);
+    const { error } = await supabase.from(kind).delete()
+      .in("id", ids)
+      .eq("user_id", session.user.id);
+    if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
+    toast.success(`${ids.length} ${title.toLowerCase()} silindi`);
+    setItems((prev) => prev.filter((x) => !ids.includes(x.id)));
+    setSelected(new Set());
+    setBulkDeleting(false);
+  }
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const someSelected = filtered.some((p) => selected.has(p.id));
+
+  function toggleAll() {
+    if (allFilteredSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((p) => next.delete(p.id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((p) => next.add(p.id));
+        return next;
+      });
+    }
+  }
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   const totals = useMemo(() => {
@@ -298,6 +343,11 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
             className="pl-8"
           />
         </div>
+        {selected.size > 0 && (
+          <Button variant="destructive" onClick={() => setBulkDeleting(true)} className="gap-2">
+            <Trash2 className="h-4 w-4" /> {selected.size} Seçili Sil
+          </Button>
+        )}
         <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Yeni {title}</Button>
       </div>
 
@@ -331,6 +381,14 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={allFilteredSelected}
+                      data-state={someSelected && !allFilteredSelected ? "indeterminate" : undefined}
+                      onCheckedChange={toggleAll}
+                      aria-label="Tümünü seç"
+                    />
+                  </TableHead>
                   <TableHead>
                     <button className="flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("name")}>
                       İsim <SortIcon col="name" active={sortKey} dir={sortDir} />
@@ -364,6 +422,13 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
                   const s = statsMap[p.id] || { total: 0, paid: 0, pending: 0, count: 0 };
                   return (
                     <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(p)}>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selected.has(p.id)}
+                          onCheckedChange={() => toggleOne(p.id)}
+                          aria-label={`${p.name} seç`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium max-w-[180px]">
                         <div className="truncate">{p.name}</div>
                         {p.contact_person && (
@@ -418,6 +483,23 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
           onEdit={() => { setDetail(null); openEdit(detail); }}
         />
       )}
+
+      <AlertDialog open={bulkDeleting} onOpenChange={(v) => !v && setBulkDeleting(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{selected.size} {title.toLowerCase()} silinecek</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seçili {selected.size} kayıt kalıcı olarak silinecek. Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-red-600 hover:bg-red-700">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
         <AlertDialogContent>

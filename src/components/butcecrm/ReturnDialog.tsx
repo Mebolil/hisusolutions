@@ -148,6 +148,14 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props)
     setSaving(false);
     if (error) return toast.error("İade kaydedilemedi: " + friendlyDbError(error));
 
+    // İade başarılı — satışın status'unu 'iade_edildi' yap
+    // (status kolonu migration henüz uygulanmadıysa sessizce başarısız olur, hata fırlatmaz)
+    await supabase
+      .from("sales")
+      .update({ status: "iade_edildi" })
+      .eq("id", sale.id)
+      .eq("user_id", uid);
+
     const newReturn: ReturnRecord = {
       id: data as string,
       sale_id: sale.id,

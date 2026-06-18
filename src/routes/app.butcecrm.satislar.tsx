@@ -54,6 +54,7 @@ type Sale = {
   campaign_id: string | null;
   platform: string | null;
   note?: string | null;
+  status?: string | null;
 };
 
 
@@ -69,6 +70,8 @@ type Product = { id: string; name: string; quantity: number; unit_price: number 
 
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
+
+const SALE_STATUSES = ["aktif", "iptal", "iade_edildi"] as const;
 
 
 
@@ -94,6 +97,7 @@ function SalesPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [saleStatusFilter, setSaleStatusFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -142,6 +146,7 @@ function SalesPage() {
   const filtered = useMemo(() => {
     return sales.filter((s) => {
       if (statusFilter !== "all" && s.payment_status !== statusFilter) return false;
+      if (saleStatusFilter !== "all" && (s.status || "aktif") !== saleStatusFilter) return false;
       if (platformFilter !== "all" && (s.platform || "") !== platformFilter) return false;
       if (from && s.sale_date < from) return false;
       if (to && s.sale_date > to) return false;
@@ -151,10 +156,10 @@ function SalesPage() {
       }
       return true;
     });
-  }, [sales, statusFilter, platformFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, saleStatusFilter, platformFilter, from, to, q, customerMap]);
 
   // Filter değişince sayfayı sıfırla
-  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q]);
+  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q, saleStatusFilter]);
 
   const [sortKey, setSortKey] = useState<keyof Sale>("sale_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -191,7 +196,9 @@ function SalesPage() {
     const profit = total - cost;
     const margin = total > 0 ? (profit / total) * 100 : 0;
     const avg = filtered.length > 0 ? total / filtered.length : 0;
-    return { total, paid, cost, profit, margin, avg, remaining: total - paid, count: filtered.length };
+    const cancelledCount = filtered.filter((s) => s.status === "iptal" || s.status === "iade_edildi").length;
+    const activeCount = filtered.filter((s) => !s.status || s.status === "aktif").length;
+    return { total, paid, cost, profit, margin, avg, remaining: total - paid, count: filtered.length, cancelledCount, activeCount };
   }, [filtered]);
 
   const platformBreakdown = useMemo(() => {
@@ -360,6 +367,11 @@ function SalesPage() {
         <StatCard label="Ortalama Sepet" value={formatCurrency(totals.avg)} />
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Aktif Satış" value={String(totals.activeCount)} />
+        <StatCard label="İptal / İade" value={String(totals.cancelledCount)} valueClass="text-amber-600" />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Filtreler</CardTitle>
@@ -373,6 +385,18 @@ function SalesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
                   {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Satış Durumu</Label>
+              <Select value={saleStatusFilter} onValueChange={setSaleStatusFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  <SelectItem value="aktif">Aktif</SelectItem>
+                  <SelectItem value="iptal">İptal</SelectItem>
+                  <SelectItem value="iade_edildi">İade Edildi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -514,6 +538,7 @@ function SalesPage() {
                     <span className="inline-flex items-center justify-end gap-1">Tahsil<SortIcon col="paid_amount" /></span>
                   </TableHead>
                   <TableHead>Durum</TableHead>
+                  <TableHead>Satış Durumu</TableHead>
                   <TableHead className="w-[90px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
@@ -575,6 +600,21 @@ function SalesPage() {
                           {STATUSES.map((st) => <SelectItem key={st} value={st}>{st}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      {s.status && s.status !== "aktif" ? (
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                          s.status === "iptal"
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : "bg-amber-100 text-amber-700 border-amber-200"
+                        }`}>
+                          {s.status === "iptal" ? "İptal" : "İade Edildi"}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+                          Aktif
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
@@ -672,6 +712,7 @@ function NewSaleDialog({
     total_cost: "",
     paid_amount: "",
     payment_status: "bekliyor" as Status,
+    status: "aktif",
     campaign_id: "",
     platform: "",
     notes: "",
@@ -701,7 +742,7 @@ function NewSaleDialog({
       sale_date: today, due_date: "", customer_id: "", product_id: "", product_name: "", quantity: "1",
       unit_price: "", discount: "",
       total_amount: "", total_cost: "", paid_amount: "",
-      payment_status: "bekliyor", campaign_id: "", platform: "", notes: "",
+      payment_status: "bekliyor", status: "aktif", campaign_id: "", platform: "", notes: "",
     });
     setCosts(defaultCosts());
     setCommissionPct("");
@@ -851,6 +892,7 @@ function NewSaleDialog({
       total_cost: finalCost,
       paid_amount: paid,
       payment_status: form.payment_status,
+      status: form.status || "aktif",
       campaign_id: form.campaign_id || null,
       platform: form.platform || null,
     };
@@ -869,6 +911,13 @@ function NewSaleDialog({
     console.debug("INSERT payload", JSON.stringify(payload));
     let { error, data: insertedData } = await supabase.from("sales").insert(payload).select("id,total_cost").single();
     console.debug("INSERT result", error, insertedData);
+    if (error) {
+      // Retry without status if column doesn't exist yet
+      if (payload.status && /\bstatus\b/i.test(error.message)) {
+        delete payload.status;
+        ({ error } = await supabase.from("sales").insert(payload).select("id,total_cost").single());
+      }
+    }
     if (error) {
       // Retry without note if column doesn't exist yet
       if (payload.note && /\bnote\b/i.test(error.message)) {
@@ -1164,6 +1213,17 @@ function NewSaleDialog({
             </div>
           </div>
           <div>
+            <Label>Satış Durumu</Label>
+            <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="iptal">İptal Edildi</SelectItem>
+                <SelectItem value="iade_edildi">İade Edildi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>Notlar (opsiyonel)</Label>
             <Textarea
               rows={2}
@@ -1314,9 +1374,14 @@ function EditSaleDialog({
       payment_status: form.payment_status,
       platform: form.platform || null,
       campaign_id: form.campaign_id || null,
+      status: form.status || "aktif",
       note: combinedNote || null,
     };
     let { error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid);
+    if (error && /\bstatus\b/i.test(error.message)) {
+      delete payload.status;
+      ({ error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid));
+    }
     if (error && /\bnote\b/i.test(error.message)) {
       delete payload.note;
       ({ error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid));
@@ -1390,6 +1455,17 @@ function EditSaleDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs">Satış Durumu</Label>
+            <Select value={form.status || "aktif"} onValueChange={(v) => setForm({ ...form, status: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="iptal">İptal Edildi</SelectItem>
+                <SelectItem value="iade_edildi">İade Edildi</SelectItem>
               </SelectContent>
             </Select>
           </div>

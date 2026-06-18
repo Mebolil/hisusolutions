@@ -24,6 +24,7 @@ interface Product { id: string; name: string; quantity: number; low_stock_thresh
 interface Campaign { id: string; name: string; status: string; spend: number; start_date: string; end_date: string | null }
 interface Customer { id: string; name: string }
 interface Purchase { id: string; amount: number; paid_amount: number; payment_status: string }
+interface Return { id: string; return_date: string; return_amount: number }
 
 export const Route = createFileRoute("/app/butcecrm/")({
   component: ButceCrmDashboard,
@@ -38,6 +39,7 @@ function ButceCrmDashboard() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [periodReturns, setPeriodReturns] = useState<Return[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -50,13 +52,14 @@ function ButceCrmDashboard() {
         startOfDay(subMonths(now, 11) < startOfYear(now) ? subMonths(now, 11) : startOfYear(now)),
         "yyyy-MM-dd"
       );
-      const [s, e, p, c, cu, pu] = await Promise.all([
+      const [s, e, p, c, cu, pu, ret] = await Promise.all([
         supabase.from("sales").select("*").eq("user_id", uid).gte("sale_date", fetchFrom),
         supabase.from("expenses").select("*").eq("user_id", uid).gte("expense_date", fetchFrom),
         supabase.from("products").select("*").eq("user_id", uid).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
         supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).limit(2000),
+        supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").gte("return_date", fetchFrom),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -64,6 +67,7 @@ function ButceCrmDashboard() {
       setCampaigns((c.data as Campaign[]) || []);
       setCustomers((cu.data as Customer[]) || []);
       setPurchases((pu.data as Purchase[]) || []);
+      setPeriodReturns((ret.data as Return[]) || []);
       setLoading(false);
     })();
   }, []);
@@ -86,6 +90,9 @@ function ButceCrmDashboard() {
   const periodCampaigns = campaigns.filter((c) => inRange(c.start_date));
 
   const totalIncome = periodSales.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
+  const totalReturnAmount = periodReturns
+    .filter((r) => inRange(r.return_date))
+    .reduce((s, r) => s + Number(r.return_amount || 0), 0);
   const totalCost = periodSales.reduce((s, x) => s + Number(x.total_cost || 0), 0);
   const adsSpend = periodCampaigns.reduce((s, c) => s + Number(c.spend || 0), 0);
   const expensesPaid = periodExpenses.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
@@ -208,7 +215,7 @@ function ButceCrmDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Toplam Gelir" value={formatCurrency(totalIncome)} icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" valueClass="text-emerald-600" />
+        <MetricCard title="Toplam Gelir" value={formatCurrency(totalIncome)} icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" valueClass="text-emerald-600" sub={totalReturnAmount > 0 ? `↳ İade: −${formatCurrency(totalReturnAmount)}` : undefined} />
         <MetricCard title="Toplam Gider" value={formatCurrency(totalExpense)} icon={<TrendingDown className="h-5 w-5 text-red-600" />} bg="bg-red-100" valueClass="text-red-600" sub={`Reklam: ${formatCurrency(adsSpend)}`} />
         <MetricCard title="Net Kâr" value={formatCurrency(netProfit)} icon={<DollarSign className={`h-5 w-5 ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`} />} bg={netProfit >= 0 ? "bg-emerald-100" : "bg-red-100"} valueClass={netProfit >= 0 ? "text-emerald-600" : "text-red-600"} sub={`Maliyet: ${formatCurrency(totalCost)}`} />
         <MetricCard title="Kâr Marjı" value={`%${margin.toFixed(1)}`} icon={<Percent className="h-5 w-5 text-blue-600" />} bg="bg-blue-100" valueClass={margin >= 0 ? "text-emerald-600" : "text-red-600"} />

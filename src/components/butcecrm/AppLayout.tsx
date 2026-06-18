@@ -2,7 +2,7 @@ import { type ReactNode, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingBag, Receipt, ShoppingCart, Package,
-  Megaphone, Users, Bell, BarChart3, Menu, X, LogOut, Settings, Clock,
+  Megaphone, Users, Bell, BarChart3, Menu, X, LogOut, Settings, Clock, RotateCcw,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -16,6 +16,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Ana Sayfa",      path: "/app/butcecrm",                icon: LayoutDashboard, enabled: true  },
   { label: "Satışlar",       path: "/app/butcecrm/satislar",       icon: ShoppingBag,     enabled: true  },
+  { label: "İadeler",        path: "/app/butcecrm/iadeler",        icon: RotateCcw,       enabled: true  },
   { label: "Giderler",       path: "/app/butcecrm/giderler",       icon: Receipt,         enabled: true  },
   { label: "Alışlar",        path: "/app/butcecrm/alislar",        icon: ShoppingCart,    enabled: true  },
   { label: "Stok",           path: "/app/butcecrm/stok",           icon: Package,         enabled: true  },

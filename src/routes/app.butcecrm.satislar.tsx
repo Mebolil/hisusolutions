@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil, ChevronUp, ChevronDown, RotateCcw } from "lucide-react";
 import { useSettings } from "@/lib/butcecrm-settings";
 import { Link } from "@tanstack/react-router";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+import { ReturnDialog } from "@/components/butcecrm/ReturnDialog";
 
 const SALES_CSV_FIELDS: CsvField[] = [
   { key: "sale_date",      label: "Tarih",          required: true, type: "date" },
@@ -106,16 +107,22 @@ function SalesPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
-    const [s, c, ca, p] = await Promise.all([
+    const [s, c, ca, p, ret] = await Promise.all([
       supabase.from("sales").select("*").eq("user_id", uid).order("sale_date", { ascending: false }),
       supabase.from("customers").select("id,name").eq("user_id", uid).order("name"),
       supabase.from("campaigns").select("id,name").eq("user_id", uid).order("name"),
       supabase.from("products").select("id,name,quantity,unit_price").eq("user_id", uid).order("name"),
+      supabase.from("returns").select("sale_id,quantity").eq("user_id", uid).eq("status", "active"),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
     setCampaigns((ca.data as Campaign[]) || []);
     setProducts((p.data as Product[]) || []);
+    const rmap = new Map<string, number>();
+    for (const r of ((ret.data as { sale_id: string; quantity: number }[]) || [])) {
+      rmap.set(r.sale_id, (rmap.get(r.sale_id) ?? 0) + Number(r.quantity));
+    }
+    setReturnMap(rmap);
     setLoading(false);
   }
 
@@ -257,6 +264,8 @@ function SalesPage() {
   }
 
   const [editing, setEditing] = useState<Sale | null>(null);
+  const [returnMap, setReturnMap] = useState<Map<string, number>>(new Map());
+  const [returnDialogSale, setReturnDialogSale] = useState<Sale | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const pagedIds = pagedSales.map((s) => s.id);
@@ -528,7 +537,21 @@ function SalesPage() {
                       })() : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell className="max-w-[180px] truncate">{customerMap[s.customer_id || ""] || "-"}</TableCell>
-                    <TableCell className="max-w-[220px] truncate">{s.product_name}</TableCell>
+                    <TableCell className="max-w-[220px]">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{s.product_name}</span>
+                        {(() => {
+                          const retQty = returnMap.get(s.id) ?? 0;
+                          if (retQty === 0) return null;
+                          const label = retQty >= Number(s.quantity) ? "İade Edildi" : "Kısmi İade";
+                          return (
+                            <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] text-slate-500 border-slate-200 bg-slate-50 whitespace-nowrap">
+                              {label}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {s.platform ? (
                         <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs bg-secondary">
@@ -555,6 +578,15 @@ function SalesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          title="İade Oluştur"
+                          onClick={() => setReturnDialogSale(s)}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(s)} title="Düzenle">
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -597,6 +629,13 @@ function SalesPage() {
           </div>
         )}
       </Card>
+
+      <ReturnDialog
+        sale={returnDialogSale}
+        products={products}
+        onClose={() => setReturnDialogSale(null)}
+        onCreated={() => load()}
+      />
     </div>
   );
 }

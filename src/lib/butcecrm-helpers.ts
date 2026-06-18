@@ -61,3 +61,20 @@ export function friendlyDbError(error: unknown, fallback = "Bir hata oluştu"): 
 
   return fallback;
 }
+
+// Satış notundaki "[Maliyet Kalemleri]" bloğunu parse eder.
+export function parseCostItems(note: string | null | undefined): { label: string; amount: number }[] {
+  if (!note?.trim()) return [];
+  const match = note.match(/\[Maliyet Kalemleri\]([\s\S]*?)(?:\n\n|$)/);
+  if (!match) return [];
+  return match[1].trim().split('\n')
+    .map(line => {
+      const idx = line.lastIndexOf(':');
+      if (idx === -1) return null;
+      const label = line.slice(0, idx).trim();
+      const raw = line.slice(idx + 1).replace(/[₺TL\s]/g, '').replace(',', '.');
+      const amount = parseFloat(raw) || 0;
+      return label && amount > 0 ? { label, amount } : null;
+    })
+    .filter((i): i is { label: string; amount: number } => i !== null);
+}

@@ -13,24 +13,31 @@ import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
 import { Route as UctanUcaYazilimRouteImport } from './routes/uctan-uca-yazilim'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
+import { Route as OdemeRouteImport } from './routes/odeme'
 import { Route as IletisimRouteImport } from './routes/iletisim'
 import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
 import { Route as ButcelemeRouteImport } from './routes/butceleme'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
 import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
 import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
 import { Route as AppButcecrmReklamRouteImport } from './routes/app.butcecrm.reklam'
 import { Route as AppButcecrmRaporlarRouteImport } from './routes/app.butcecrm.raporlar'
+import { Route as AppButcecrmIadelerRouteImport } from './routes/app.butcecrm.iadeler'
 import { Route as AppButcecrmHatirlaticilarRouteImport } from './routes/app.butcecrm.hatirlaticilar'
 import { Route as AppButcecrmGiderlerRouteImport } from './routes/app.butcecrm.giderler'
 import { Route as AppButcecrmCarilerRouteImport } from './routes/app.butcecrm.cariler'
 import { Route as AppButcecrmAyarlarRouteImport } from './routes/app.butcecrm.ayarlar'
 import { Route as AppButcecrmAlislarRouteImport } from './routes/app.butcecrm.alislar'
+import { Route as AppButcecrmReklamIndexRouteImport } from './routes/app.butcecrm.reklam.index'
+import { Route as AppButcecrmReklamIdRouteImport } from './routes/app.butcecrm.reklam.$id'
 
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
@@ -50,6 +57,11 @@ const PanelRoute = PanelRouteImport.update({
 const OtomasyonRoute = OtomasyonRouteImport.update({
   id: '/otomasyon',
   path: '/otomasyon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OdemeRoute = OdemeRouteImport.update({
+  id: '/odeme',
+  path: '/odeme',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IletisimRoute = IletisimRouteImport.update({
@@ -77,10 +89,20 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
 } as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
@@ -91,6 +113,11 @@ const AppButcecrmRoute = AppButcecrmRouteImport.update({
   id: '/app/butcecrm',
   path: '/app/butcecrm',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppButcecrmIndexRoute = AppButcecrmIndexRouteImport.update({
   id: '/',
@@ -115,6 +142,11 @@ const AppButcecrmReklamRoute = AppButcecrmReklamRouteImport.update({
 const AppButcecrmRaporlarRoute = AppButcecrmRaporlarRouteImport.update({
   id: '/raporlar',
   path: '/raporlar',
+  getParentRoute: () => AppButcecrmRoute,
+} as any)
+const AppButcecrmIadelerRoute = AppButcecrmIadelerRouteImport.update({
+  id: '/iadeler',
+  path: '/iadeler',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
 const AppButcecrmHatirlaticilarRoute =
@@ -143,160 +175,210 @@ const AppButcecrmAlislarRoute = AppButcecrmAlislarRouteImport.update({
   path: '/alislar',
   getParentRoute: () => AppButcecrmRoute,
 } as any)
+const AppButcecrmReklamIndexRoute = AppButcecrmReklamIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppButcecrmReklamRoute,
+} as any)
+const AppButcecrmReklamIdRoute = AppButcecrmReklamIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppButcecrmReklamRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
+  '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/admin/users': typeof AdminUsersRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
   '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamRouteWithChildren
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
+  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
+  '/app/butcecrm/reklam/': typeof AppButcecrmReklamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
+  '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/admin/users': typeof AdminUsersRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
   '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm': typeof AppButcecrmIndexRoute
+  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/iletisim': typeof IletisimRoute
+  '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
+  '/admin/users': typeof AdminUsersRoute
   '/app/butcecrm': typeof AppButcecrmRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
   '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
   '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
   '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
   '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
+  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
   '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamRoute
+  '/app/butcecrm/reklam': typeof AppButcecrmReklamRouteWithChildren
   '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
   '/app/butcecrm/stok': typeof AppButcecrmStokRoute
   '/app/butcecrm/': typeof AppButcecrmIndexRoute
+  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
+  '/app/butcecrm/reklam/': typeof AppButcecrmReklamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
+    | '/odeme'
     | '/otomasyon'
     | '/panel'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
+    | '/admin/users'
     | '/app/butcecrm'
     | '/blog/$slug'
+    | '/blog/'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/iadeler'
     | '/app/butcecrm/raporlar'
     | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm/'
+    | '/app/butcecrm/reklam/$id'
+    | '/app/butcecrm/reklam/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/auth'
-    | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
+    | '/odeme'
     | '/otomasyon'
     | '/panel'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
+    | '/admin/users'
     | '/blog/$slug'
+    | '/blog'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/iadeler'
     | '/app/butcecrm/raporlar'
-    | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm'
+    | '/app/butcecrm/reklam/$id'
+    | '/app/butcecrm/reklam'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/auth'
     | '/blog'
     | '/butceleme'
     | '/hakkimizda'
     | '/iletisim'
+    | '/odeme'
     | '/otomasyon'
     | '/panel'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
+    | '/admin/users'
     | '/app/butcecrm'
     | '/blog/$slug'
+    | '/blog/'
     | '/app/butcecrm/alislar'
     | '/app/butcecrm/ayarlar'
     | '/app/butcecrm/cariler'
     | '/app/butcecrm/giderler'
     | '/app/butcecrm/hatirlaticilar'
+    | '/app/butcecrm/iadeler'
     | '/app/butcecrm/raporlar'
     | '/app/butcecrm/reklam'
     | '/app/butcecrm/satislar'
     | '/app/butcecrm/stok'
     | '/app/butcecrm/'
+    | '/app/butcecrm/reklam/$id'
+    | '/app/butcecrm/reklam/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRouteWithChildren
   ButcelemeRoute: typeof ButcelemeRoute
   HakkimizdaRoute: typeof HakkimizdaRoute
   IletisimRoute: typeof IletisimRoute
+  OdemeRoute: typeof OdemeRoute
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
   UctanUcaYazilimRoute: typeof UctanUcaYazilimRoute
@@ -334,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OtomasyonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/odeme': {
+      id: '/odeme'
+      path: '/odeme'
+      fullPath: '/odeme'
+      preLoaderRoute: typeof OdemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/iletisim': {
       id: '/iletisim'
       path: '/iletisim'
@@ -369,12 +458,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/blog/$slug': {
       id: '/blog/$slug'
@@ -389,6 +492,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/butcecrm'
       preLoaderRoute: typeof AppButcecrmRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/app/butcecrm/': {
       id: '/app/butcecrm/'
@@ -423,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/raporlar'
       fullPath: '/app/butcecrm/raporlar'
       preLoaderRoute: typeof AppButcecrmRaporlarRouteImport
+      parentRoute: typeof AppButcecrmRoute
+    }
+    '/app/butcecrm/iadeler': {
+      id: '/app/butcecrm/iadeler'
+      path: '/iadeler'
+      fullPath: '/app/butcecrm/iadeler'
+      preLoaderRoute: typeof AppButcecrmIadelerRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
     '/app/butcecrm/hatirlaticilar': {
@@ -460,18 +577,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppButcecrmAlislarRouteImport
       parentRoute: typeof AppButcecrmRoute
     }
+    '/app/butcecrm/reklam/': {
+      id: '/app/butcecrm/reklam/'
+      path: '/'
+      fullPath: '/app/butcecrm/reklam/'
+      preLoaderRoute: typeof AppButcecrmReklamIndexRouteImport
+      parentRoute: typeof AppButcecrmReklamRoute
+    }
+    '/app/butcecrm/reklam/$id': {
+      id: '/app/butcecrm/reklam/$id'
+      path: '/$id'
+      fullPath: '/app/butcecrm/reklam/$id'
+      preLoaderRoute: typeof AppButcecrmReklamIdRouteImport
+      parentRoute: typeof AppButcecrmReklamRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
+interface AppButcecrmReklamRouteChildren {
+  AppButcecrmReklamIdRoute: typeof AppButcecrmReklamIdRoute
+  AppButcecrmReklamIndexRoute: typeof AppButcecrmReklamIndexRoute
+}
+
+const AppButcecrmReklamRouteChildren: AppButcecrmReklamRouteChildren = {
+  AppButcecrmReklamIdRoute: AppButcecrmReklamIdRoute,
+  AppButcecrmReklamIndexRoute: AppButcecrmReklamIndexRoute,
+}
+
+const AppButcecrmReklamRouteWithChildren =
+  AppButcecrmReklamRoute._addFileChildren(AppButcecrmReklamRouteChildren)
 
 interface AppButcecrmRouteChildren {
   AppButcecrmAlislarRoute: typeof AppButcecrmAlislarRoute
@@ -479,8 +635,9 @@ interface AppButcecrmRouteChildren {
   AppButcecrmCarilerRoute: typeof AppButcecrmCarilerRoute
   AppButcecrmGiderlerRoute: typeof AppButcecrmGiderlerRoute
   AppButcecrmHatirlaticilarRoute: typeof AppButcecrmHatirlaticilarRoute
+  AppButcecrmIadelerRoute: typeof AppButcecrmIadelerRoute
   AppButcecrmRaporlarRoute: typeof AppButcecrmRaporlarRoute
-  AppButcecrmReklamRoute: typeof AppButcecrmReklamRoute
+  AppButcecrmReklamRoute: typeof AppButcecrmReklamRouteWithChildren
   AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
   AppButcecrmStokRoute: typeof AppButcecrmStokRoute
   AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
@@ -492,8 +649,9 @@ const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
   AppButcecrmCarilerRoute: AppButcecrmCarilerRoute,
   AppButcecrmGiderlerRoute: AppButcecrmGiderlerRoute,
   AppButcecrmHatirlaticilarRoute: AppButcecrmHatirlaticilarRoute,
+  AppButcecrmIadelerRoute: AppButcecrmIadelerRoute,
   AppButcecrmRaporlarRoute: AppButcecrmRaporlarRoute,
-  AppButcecrmReklamRoute: AppButcecrmReklamRoute,
+  AppButcecrmReklamRoute: AppButcecrmReklamRouteWithChildren,
   AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
   AppButcecrmStokRoute: AppButcecrmStokRoute,
   AppButcecrmIndexRoute: AppButcecrmIndexRoute,
@@ -505,11 +663,13 @@ const AppButcecrmRouteWithChildren = AppButcecrmRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRouteWithChildren,
   ButcelemeRoute: ButcelemeRoute,
   HakkimizdaRoute: HakkimizdaRoute,
   IletisimRoute: IletisimRoute,
+  OdemeRoute: OdemeRoute,
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,
   UctanUcaYazilimRoute: UctanUcaYazilimRoute,

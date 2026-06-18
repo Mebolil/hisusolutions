@@ -58,11 +58,12 @@ const REASONS = Object.keys(REASON_LABELS) as (keyof typeof REASON_LABELS)[];
 type Props = {
   sale: Sale | null;
   products?: ProductRef[];
+  alreadyReturned?: number;
   onClose: () => void;
   onCreated: (ret: ReturnRecord) => void;
 };
 
-export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props) {
+export function ReturnDialog({ sale, products = [], onClose, onCreated, alreadyReturned = 0 }: Props) {
   const [reason, setReason] = useState("");
   const [reasonDetail, setReasonDetail] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -121,8 +122,9 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props)
   async function handleSave() {
     if (!sale) return;
     if (!reason) return toast.error("İade nedeni seçmelisiniz");
+    const maxReturnable = Number(sale.quantity) - alreadyReturned;
     if (quantity < 1) return toast.error("Miktar en az 1 olmalıdır");
-    if (quantity > Number(sale.quantity)) return toast.error("İade miktarı satış miktarını aşamaz");
+    if (quantity > maxReturnable) return toast.error(`İade edilebilir maksimum miktar: ${maxReturnable} adet`);
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
@@ -143,6 +145,7 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props)
       p_restock: restock,
       p_cost_reversed: costReversed,
       p_note: note || null,
+      p_return_date: returnDate,
     });
 
     setSaving(false);
@@ -196,11 +199,16 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props)
             <Input
               type="number"
               min={1}
-              max={sale.quantity}
+              max={Number(sale.quantity) - alreadyReturned}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
             />
-            <p className="text-xs text-muted-foreground mt-1">Orijinal satış: {sale.quantity} adet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Orijinal satış: {sale.quantity} adet
+              {alreadyReturned > 0 && (
+                <> · Daha önce iade: {alreadyReturned} adet · <span className="font-medium text-foreground">Kalan: {sale.quantity - alreadyReturned} adet</span></>
+              )}
+            </p>
           </div>
 
           {/* İade Nedeni */}
@@ -279,7 +287,7 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated }: Props)
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nakit">Nakit</SelectItem>
-                    <SelectItem value="cari">Cariye Ekle</SelectItem>
+                    <SelectItem value="cari" disabled>Cariye Ekle (Yakında)</SelectItem>
                     <SelectItem value="banka">Banka Transferi</SelectItem>
                   </SelectContent>
                 </Select>

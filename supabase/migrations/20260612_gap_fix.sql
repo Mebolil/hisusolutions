@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_pv_created ON page_views(created_at DESC);
 -- RLS: page_views anonim insert'e açık, okuma sadece service role
 ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "anon_insert_page_views"
+CREATE POLICY "anon_insert_page_views"
   ON page_views FOR INSERT
   TO anon, authenticated
   WITH CHECK (true);

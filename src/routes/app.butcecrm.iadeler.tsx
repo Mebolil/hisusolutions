@@ -76,8 +76,11 @@ function IadelerPage() {
   const [products, setProducts] = useState<ProductRef[]>([]);
   const [q, setQ] = useState("");
   const [returnDialogSale, setReturnDialogSale] = useState<Sale | null>(null);
+  const [currentSaleReturned, setCurrentSaleReturned] = useState(0);
   const [picker, setPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
+  const [showCancelled, setShowCancelled] = useState(false);
+  const [cancelledReturns, setCancelledReturns] = useState<ReturnRecord[]>([]);
 
   async function load() {
     setLoading(true);
@@ -104,19 +107,42 @@ function IadelerPage() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    if (!showCancelled) { setCancelledReturns([]); return; }
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const { data } = await supabase.from("returns")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "cancelled")
+        .order("return_date", { ascending: false });
+      setCancelledReturns((data as ReturnRecord[]) || []);
+    })();
+  }, [showCancelled]);
+
   const filtered = useMemo(() => {
-    if (!q) return returns;
+    const pool = showCancelled ? [...returns, ...cancelledReturns] : returns;
+    if (!q) return pool;
     const lower = q.toLowerCase();
-    return returns.filter((r) =>
+    return pool.filter((r) =>
       r.product_name.toLowerCase().includes(lower) ||
       (REASON_LABELS[r.reason_category] || "").toLowerCase().includes(lower)
     );
-  }, [returns, q]);
+  }, [returns, cancelledReturns, showCancelled, q]);
+
+  const returnMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    returns.forEach((r) => {
+      map[r.sale_id] = (map[r.sale_id] || 0) + r.quantity;
+    });
+    return map;
+  }, [returns]);
 
   const pickerSales = useMemo(() => {
-    if (!pickerQuery) return sales.slice(0, 50);
+    if (!pickerQuery) return sales.slice(0, 100);
     const lower = pickerQuery.toLowerCase();
-    return sales.filter((s) => s.product_name.toLowerCase().includes(lower)).slice(0, 50);
+    return sales.filter((s) => s.product_name.toLowerCase().includes(lower)).slice(0, 100);
   }, [sales, pickerQuery]);
 
   async function cancelReturn(ret: ReturnRecord) {
@@ -157,6 +183,23 @@ function IadelerPage() {
       }
     }
 
+    // O satışa ait kalan aktif iade sayısını kontrol et
+    const { data: remainingReturns } = await supabase
+      .from("returns")
+      .select("id")
+      .eq("sale_id", ret.sale_id)
+      .eq("user_id", uid)
+      .eq("status", "active");
+
+    // Başka aktif iade yoksa satışı 'aktif' statüsüne geri döndür
+    if (!remainingReturns || remainingReturns.length === 0) {
+      await supabase
+        .from("sales")
+        .update({ status: "aktif" })
+        .eq("id", ret.sale_id)
+        .eq("user_id", uid);
+    }
+
     setReturns((prev) => prev.filter((r) => r.id !== ret.id));
     toast.success("İade iptal edildi");
   }
@@ -188,14 +231,24 @@ function IadelerPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">İade Kayıtları</CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Ürün veya neden ara..."
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    className="pl-9 h-9 w-64"
-                  />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={showCancelled ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setShowCancelled(!showCancelled)}
+                    className="text-xs"
+                  >
+                    {showCancelled ? "Sadece Aktif" : "İptal Edilenleri Göster"}
+                  </Button>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Ürün veya neden ara..."
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      className="pl-9 h-9 w-64"
+                    />
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -225,7 +278,7 @@ function IadelerPage() {
                     </TableHeader>
                     <TableBody>
                       {filtered.map((r) => (
-                        <TableRow key={r.id}>
+                        <TableRow key={r.id} className={r.status === "cancelled" ? "opacity-50" : ""}>
                           <TableCell className="whitespace-nowrap">{formatDate(r.return_date)}</TableCell>
                           <TableCell className="max-w-[200px] truncate">{r.product_name}</TableCell>
                           <TableCell className="text-right">{r.quantity}</TableCell>
@@ -236,9 +289,16 @@ function IadelerPage() {
                             {r.cost_reversed > 0 ? formatCurrency(Number(r.cost_reversed)) : "—"}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary" className="text-xs">
-                              {REASON_LABELS[r.reason_category] || r.reason_category}
-                            </Badge>
+                            <div>
+                              <Badge variant="secondary" className="text-xs">
+                                {REASON_LABELS[r.reason_category] || r.reason_category}
+                              </Badge>
+                              {r.reason_detail && (
+                                <p className="text-xs text-muted-foreground mt-1 italic truncate max-w-[160px]" title={r.reason_detail}>
+                                  {r.reason_detail}
+                                </p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm">{REFUND_LABELS[r.refund_method] || r.refund_method}</TableCell>
                           <TableCell>
@@ -300,20 +360,34 @@ function IadelerPage() {
             {pickerSales.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">Satış bulunamadı</p>
             ) : (
-              pickerSales.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => { setPicker(false); setReturnDialogSale(s); }}
-                  className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-muted text-left transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{s.product_name}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(s.sale_date)} · {s.quantity} adet</p>
-                  </div>
-                  <span className="text-sm font-semibold whitespace-nowrap">{formatCurrency(Number(s.total_amount))}</span>
-                </button>
-              ))
+              pickerSales.map((s) => {
+                const remaining = s.quantity - (returnMap[s.id] || 0);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    disabled={remaining <= 0}
+                    onClick={remaining > 0 ? () => { setPicker(false); setReturnDialogSale(s); setCurrentSaleReturned(returnMap[s.id] || 0); } : undefined}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-colors ${
+                      remaining <= 0
+                        ? "opacity-40 cursor-not-allowed bg-muted"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{s.product_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(s.sale_date)} · {s.quantity} adet
+                        {remaining <= 0 && " · Tamamen iade edildi"}
+                        {remaining > 0 && remaining < s.quantity && ` · ${remaining} adet iade edilebilir`}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-semibold whitespace-nowrap ${remaining <= 0 ? "text-muted-foreground" : ""}`}>
+                      {formatCurrency(Number(s.total_amount))}
+                    </span>
+                  </button>
+                );
+              })
             )}
           </div>
         </DialogContent>
@@ -322,7 +396,8 @@ function IadelerPage() {
       <ReturnDialog
         sale={returnDialogSale}
         products={products}
-        onClose={() => setReturnDialogSale(null)}
+        alreadyReturned={currentSaleReturned}
+        onClose={() => { setReturnDialogSale(null); setCurrentSaleReturned(0); }}
         onCreated={(ret) => setReturns((prev) => [ret, ...prev])}
       />
     </div>

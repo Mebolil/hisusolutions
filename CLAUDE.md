@@ -1,7 +1,51 @@
 # CLAUDE.md — Hisu Solutions / BütçeCRM
 
+## BütçeCRM KONUMLANMA YASASI — DEĞİŞTİRİLEMEZ TEMEL
+
+> **BütçeCRM sadece bir gelir-gider takip uygulaması değildir.**
+
+BütçeCRM, e-ticaret işletmesinin mali verilerini platforma, ürüne, reklama, maliyet kalemlerine, harcamalara, iadelere ve iptal sebeplerine göre analiz eden; bu verilerden işletmeye özel netlik çıkaran bir **karar destek sistemidir**.
+
+**Sorumluluk çerçevesi:** Analiz BütçeCRM'den, karar işletme sahibinden. Sorumluluk tamamen kullanıcıya aittir.
+
+### İki Paket
+
+**Başlangıç Paketi** — Excel alternatifi, eksiksiz takip:
+- Çok kanallı gelir-gider takip (Trendyol, kendi site, marketplace)
+- Reklam harcaması analizi (Meta, Google Ads)
+- Maliyet kalemi takibi (COGS — ürün maliyeti, kargo, komisyon)
+- İade modülü (22 Haziran 2026'da ekleniyor)
+- E-fatura entegrasyonu (şirketleşme sonrası)
+- Pazaryeri entegrasyonları (şirketleşme sonrası)
+
+**Ultimate Paket** — Karar destek sistemi (Roadmap):
+- Başlangıç paketinin tümü
+- Platform/ürün/kampanya bazında karar desteği
+- İptal sebebi analizi, LLM entegrasyonu
+- Her 3 günde yeni modül — canlı, büyüyen ekosistem
+
+### Pazarlama Yasaları
+- Site copy'sinde "gelir-gider takip" ve "muhasebe" daraltıcı etiketleri kullanılmaz
+- "Düşük maliyet/ucuz" yasak — yerine "yüksek değer", "yatırım karşılığı"
+- Özellik değil netlik: "X özelliği var" değil "X konusunda artık net cevabın olur"
+
+---
+
 Bu dosya, Claude'un bu repoda çalışırken uyması gereken kuralları ve bilmesi gereken teknik gerçekleri içerir.
 Kodlama yaparken **önce bu dosyayı oku**, sonra değişikliğe başla.
+
+---
+
+## ANAYASA KURALI — DEPLOY ONAY ZORUNLULUĞU
+
+> **Melih'in açık "deploy et" veya "push et" onayı olmadan hiçbir koşulda `git push` yapılmaz.**
+>
+> - Geliştirme akışı: **lokal → test → Melih onayı → push**
+> - "Lokal çalıştır", "lokal'de test et", "önce dene" = push YOK
+> - "Canlıya al", "deploy et", "push et" = push VAR
+> - Bu kural geçerlidir: tamamlanmış özellik olsa bile, tüm ajanlar onay verse bile,
+>   build hatasız geçse bile — Melih onaylamadan push edilmez.
+> - İhlali halinde: commit revert edilir, özür dilenir, kural tekrar okunur.
 
 ---
 
@@ -87,8 +131,20 @@ supabase.from("sales").select("*").eq("id", id).eq("user_id", uid)
 | customer_id | uuid | FK → customers |
 | sale_date | date | |
 | total_amount | numeric | |
+| total_cost | numeric | null olabilir |
+| unit_price | numeric | null olabilir |
 | product_name | text | null olabilir |
 | quantity | int | null olabilir |
+| category | text | null olabilir |
+| platform | text | null olabilir |
+| note | text | null olabilir |
+| payment_status | text | null olabilir |
+| paid_amount | numeric | null olabilir |
+| due_date | date | null olabilir |
+| status | text | DEFAULT 'aktif' — 'aktif' \| 'iptal' \| 'iade_edildi' (eklendi 2026-06-19) |
+| currency | text | DEFAULT 'TRY' (eklendi 2026-06-19) |
+| exchange_rate | numeric | DEFAULT 1.0 (eklendi 2026-06-19) |
+| created_at | timestamptz | |
 
 > ⚠️ `sales` tablosunda `customer_name` kolonu **YOKTUR**. Müşteri adı için join kullan:
 > `select("..., customers(name)")` → `s.customers?.name`
@@ -104,6 +160,29 @@ supabase.from("sales").select("*").eq("id", id).eq("user_id", uid)
 - `name` unique constraint var → `ON CONFLICT (name) DO NOTHING` ile seed yapılır.
 - Varsayılan kategoriler: 20260615_category_seed.sql (Supabase SQL Editor'de çalıştırılacak — pending)
 
+### `returns`
+| Kolon | Tip | Notlar |
+|-------|-----|--------|
+| id | uuid | PK |
+| user_id | uuid | FK → auth.users |
+| sale_id | uuid | FK → sales |
+| product_id | uuid | nullable FK → products |
+| return_date | date | DEFAULT CURRENT_DATE |
+| product_name | text | |
+| quantity | int | |
+| return_amount | numeric | |
+| refund_method | text | "nakit" \| "cari" \| "banka" |
+| reason_category | return_reason_category ENUM | musteri_vazgecti · urun_hasarli · yanlis_urun · beden_renk · gec_teslimat · diger |
+| reason_detail | text | opsiyonel serbest not |
+| restock | boolean | DEFAULT true; hasarlı seçilince false |
+| cost_reversed | numeric | parseCostItems(sale.note) ile hesaplanır |
+| status | text | "active" \| "cancelled" — soft delete |
+| note | text | opsiyonel |
+| created_at | timestamptz | |
+
+> ⚠️ Atomik işlem için `supabase.rpc("process_return", {...})` kullan — INSERT + stok UPDATE tek transaction'da.
+> `cancelReturn`: Supabase `.update({ quantity: (q) => q-n })` callback çalışmaz. Önce mevcut quantity oku, sonra `Math.max(0, current - qty)` ile set et.
+
 ### `leads`, `bookings`, `page_views`
 - Hisusolutions.com sitesi için; BütçeCRM routelarında kullanılmaz.
 
@@ -115,6 +194,7 @@ supabase.from("sales").select("*").eq("id", id).eq("user_id", uid)
 /app/butcecrm/
 ├── index.tsx          → Dashboard
 ├── satislar.tsx       → Satışlar
+├── iadeler.tsx        → İadeler (returns modülü — 2026-06-19)
 ├── alislar.tsx        → Alışlar
 ├── giderler.tsx       → Giderler
 ├── stok.tsx           → Stok
@@ -226,8 +306,6 @@ Dolayısıyla "Mayıs Satış Artırma Kampanyası" için gelir görünmüyorsa:
 | Görev | Durum | Not |
 |-------|-------|-----|
 | `20260615_category_seed.sql` | ❌ Pending | Supabase SQL Editor'de çalıştırılacak |
-| n8n Faz B | ❌ Pending | page_views tablosu hazır, Instantly warm lead trigger yok |
-| Satışlar: edit dialog | ❌ Pending | Satış kaydına kampanya bağlama için şart |
 | Raporlar: DB-level filtreleme | ❌ Pending | Şu an JS'de filter ediliyor |
 
 ---

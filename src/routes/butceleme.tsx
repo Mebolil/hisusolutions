@@ -245,23 +245,23 @@ function ButcelemePage() {
       />
 
       {/* Pricing */}
-      <section id="fiyatlandirma" className="mx-auto max-w-4xl px-4 py-20 lg:px-8">
+      <section id="fiyatlandirma" className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
         <h2 className="text-center text-4xl font-bold">Sade ve şeffaf fiyatlandırma</h2>
         <p className="mx-auto mt-4 max-w-xl text-center text-muted-foreground">Kurucu Beta fırsatını kaçırma — fiyat artık artmaz, bu rakam ömür boyu kilitlenir.</p>
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           {/* Kurucu Beta */}
           <div className="relative rounded-2xl border-2 border-amber-400 bg-amber-50 p-8">
             <div className="flex items-start justify-between">
               <span className="text-sm font-semibold text-amber-700">Kurucu Beta</span>
               <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-white">Sadece 10 Slot</span>
             </div>
-            <p className="mt-4 text-5xl font-bold text-foreground">₺499 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
-            <p className="mt-1 text-sm text-amber-700 font-medium">31 Temmuz 2026'ya kadar · Ömür boyu bu fiyat kilitlenir</p>
+            <p className="mt-4 text-4xl font-bold text-foreground">₺499 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <p className="mt-1 text-sm text-amber-700 font-medium">31 Temmuz 2026'ya kadar · Ömür boyu kilitli</p>
             <p className="mt-1 text-xs text-amber-600">Beta sonrası sabit fiyat: ₺629/ay</p>
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="mt-6 block w-full rounded-full bg-amber-500 py-3.5 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+              className="mt-6 block w-full rounded-full bg-amber-500 py-3 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
             >
               15 Gün Ücretsiz Başla
             </Link>
@@ -272,7 +272,7 @@ function ButcelemePage() {
             >
               Hemen Satın Al
             </Link>
-            <ul className="mt-7 space-y-3">
+            <ul className="mt-6 space-y-2.5">
               {[
                 "Gerçek zamanlı kâr/zarar takibi",
                 "Reklam ROAS takibi (Meta, Google, TikTok)",
@@ -291,16 +291,16 @@ function ButcelemePage() {
             </ul>
           </div>
 
-          {/* Sabit Fiyat */}
+          {/* Sabit Aylık */}
           <div className="relative rounded-2xl border border-border bg-card p-8">
             <div className="flex items-start justify-between">
-              <span className="text-sm font-semibold text-muted-foreground">Sabit Fiyat</span>
+              <span className="text-sm font-semibold text-muted-foreground">Aylık Plan</span>
               <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">Beta Sonrası</span>
             </div>
-            <p className="mt-4 text-5xl font-bold text-foreground">₺629 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <p className="mt-4 text-4xl font-bold text-foreground">₺629 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
             <p className="mt-1 text-sm text-muted-foreground">Kalıcı liste fiyatı · Kurucu beta kapandıktan sonra</p>
             <p className="mt-1 text-xs text-muted-foreground/70">Kurucu Beta alırsan bu fiyatı hiç görmezsin</p>
-            <div className="mt-6 block w-full rounded-full bg-muted py-3.5 text-center text-sm font-semibold text-muted-foreground cursor-not-allowed select-none">
+            <div className="mt-6 block w-full rounded-full bg-muted py-3 text-center text-sm font-semibold text-muted-foreground cursor-not-allowed select-none">
               Kurucu Beta Önce Dolmalı
             </div>
             <Link
@@ -310,7 +310,7 @@ function ButcelemePage() {
             >
               Şimdi Beta Fiyatıyla Başla →
             </Link>
-            <ul className="mt-7 space-y-3">
+            <ul className="mt-6 space-y-2.5">
               {[
                 "Gerçek zamanlı kâr/zarar takibi",
                 "Reklam ROAS takibi (Meta, Google, TikTok)",
@@ -322,6 +322,48 @@ function ButcelemePage() {
               ].map(f => (
                 <li key={f} className="flex gap-2.5 text-sm text-muted-foreground">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Yıllık Plan */}
+          <div className="relative rounded-2xl border-2 border-primary bg-primary-soft p-8">
+            <div className="flex items-start justify-between">
+              <span className="text-sm font-semibold text-primary">Yıllık Plan</span>
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">En Avantajlı</span>
+            </div>
+            <p className="mt-4 text-4xl font-bold text-foreground">₺524 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
+            <p className="mt-1 text-sm text-primary font-medium">₺6.290/yıl · 2 ay bedava · ₺1.258 tasarruf</p>
+            <p className="mt-1 text-xs text-muted-foreground">Yıllık ön ödeme, aylık ₺629'a göre</p>
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="mt-6 block w-full rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            >
+              15 Gün Ücretsiz Başla
+            </Link>
+            <Link
+              to="/odeme"
+              search={{ plan: "yillik" }}
+              className="mt-2 block w-full rounded-full border border-primary py-2.5 text-center text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+            >
+              Hemen Satın Al
+            </Link>
+            <ul className="mt-6 space-y-2.5">
+              {[
+                "Gerçek zamanlı kâr/zarar takibi",
+                "Reklam ROAS takibi (Meta, Google, TikTok)",
+                "Kritik stok uyarısı",
+                "Ay sonu raporu (5 dakika)",
+                "Tahsilat & gider yönetimi",
+                "Excel/PDF export",
+                "İade modülü",
+                "Yıllık önce öde, 2 ay kazan",
+              ].map(f => (
+                <li key={f} className="flex gap-2.5 text-sm text-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   {f}
                 </li>
               ))}

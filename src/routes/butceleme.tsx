@@ -5,7 +5,7 @@ import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { RoiCalculator } from "@/components/site/RoiCalculator";
 import { PersonaSection } from "@/components/site/PersonaSection";
-import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote } from "lucide-react";
+import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote, Gift } from "lucide-react";
 
 export const Route = createFileRoute("/butceleme")({
   head: () => ({
@@ -77,6 +77,7 @@ const faqs: FaqItem[] = [
   { q: "Excel'den geçmek zor olacak mı?", a: "Hayır. Ekibiniz 15 dakikada alışır. Verilerinizi Excel'den import edebilirsiniz. İlk kurulumda biz size rehberlik ediyoruz." },
   { q: "Verilerim güvende mi?", a: "Evet. Supabase altyapısı üzerinde çalışır, SSL şifreleme ile korunur. Verileriniz Türkiye'deki sunucularda tutulur." },
   { q: "İptal edersem verilerimi kaybeder miyim?", a: "Hayır. İptal öncesinde verilerinizi Excel/PDF olarak export edebilirsiniz. Verileriniz size ait, her zaman erişebilirsiniz." },
+  { q: "Referans programı nasıl çalışıyor?", a: "BütçeCRM'i bir arkadaşına önerirsin — o kayıt olunca hem sen hem o 1'er ay ücretsiz kullanım kazanırsınız. Sınır yok, her başarılı referans için ayrı 1 ay kazanırsın. Kampanya 30 Eylül 2026'ya kadar geçerlidir." },
   { q: "Teknik bilgi gerekiyor mu?", a: "Sıfır teknik bilgi. Açıp kullanıyorsunuz. İçinde rehber videolar ve adım adım kurulum sihirbazı var. Takıldığınızda destek hattımız açık." },
   { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
 ];
@@ -371,6 +372,50 @@ function ButcelemePage() {
           </div>
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">Tüm fiyatlara KDV dahil değildir. 15 gün ücretsiz deneme — kart gerekmez, istediğin zaman iptal.</p>
+      </section>
+
+      {/* Referans Programı */}
+      <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
+        <div className="rounded-3xl border-2 border-primary/30 bg-primary-soft p-8 md:p-12">
+          <div className="flex flex-col items-center text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+              <Gift className="h-7 w-7" />
+            </span>
+            <span className="mt-4 rounded-full bg-primary/10 px-4 py-1 text-xs font-bold uppercase tracking-wider text-primary">Eylül 2026 Kampanyası</span>
+            <h2 className="mt-4 text-3xl font-bold md:text-4xl">İkisi de 1 ay ücretsiz kazanır</h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              BütçeCRM'i beğendiysen bir arkadaşına öner — sen de 1 ay ücretsiz al, arkadaşın da. İkisi de kazanır. Sınır yok.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-primary/20 bg-background p-6 text-center">
+              <p className="text-4xl font-bold text-primary">+1 Ay</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Referans veren kazanır</p>
+              <p className="mt-2 text-sm text-muted-foreground">Önerdiğin kişi kayıt olunca bir sonraki ödemen düşmez</p>
+            </div>
+            <div className="rounded-2xl border border-primary/20 bg-background p-6 text-center">
+              <p className="text-4xl font-bold text-primary">+1 Ay</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Referans alan kazanır</p>
+              <p className="mt-2 text-sm text-muted-foreground">Davet linki üzerinden kayıt ol, ilk ayın hediye</p>
+            </div>
+          </div>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Başla ve Referans Linki Al <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a
+              href="https://wa.me/905539003459"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent"
+            >
+              WhatsApp ile Sor
+            </a>
+          </div>
+          <p className="mt-5 text-center text-xs text-muted-foreground">Kampanya 30 Eylül 2026'ya kadar geçerlidir · Her başarılı referans için ayrı 1 ay · Sınır yok</p>
+        </div>
       </section>
 
       {/* Demo Önizleme */}

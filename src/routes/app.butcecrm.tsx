@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ButceCrmLayout } from "@/components/butcecrm/AppLayout";
+import { OnboardingFlow } from "@/components/butcecrm/OnboardingFlow";
+import { isOnboardingComplete } from "@/lib/butcecrm-onboarding";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/app/butcecrm")({
@@ -18,6 +20,7 @@ const ALLOWED_PLANS = ["butcecrm", "butceleme", "pro", "enterprise", "trial"];
 function ButceCrmGuard() {
   const [ready, setReady] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +51,7 @@ function ButceCrmGuard() {
       }
 
       setTrialEndsAt(ends);
+      if (!isOnboardingComplete()) setShowOnboarding(true);
       setReady(true);
     })();
   }, [navigate]);
@@ -55,8 +59,13 @@ function ButceCrmGuard() {
   if (!ready) return null;
 
   return (
-    <ButceCrmLayout trialEndsAt={trialEndsAt}>
-      <Outlet />
-    </ButceCrmLayout>
+    <>
+      <ButceCrmLayout trialEndsAt={trialEndsAt}>
+        <Outlet />
+      </ButceCrmLayout>
+      {showOnboarding && (
+        <OnboardingFlow open={showOnboarding} onComplete={() => setShowOnboarding(false)} />
+      )}
+    </>
   );
 }

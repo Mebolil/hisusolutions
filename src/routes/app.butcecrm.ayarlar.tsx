@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/lib/supabase";
 import { Plus, Trash2, Settings as SettingsIcon, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +21,36 @@ export const Route = createFileRoute("/app/butcecrm/ayarlar")({
 
 function AyarlarPage() {
   const [settings, setSettings] = useSettings();
+  const [weeklyPulse, setWeeklyPulse] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("weekly_pulse_enabled")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setWeeklyPulse((data as any)?.weekly_pulse_enabled ?? true);
+    })();
+  }, []);
+
+  const toggleWeeklyPulse = async (val: boolean) => {
+    setWeeklyPulse(val);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setWeeklyPulse(!val); return; }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ weekly_pulse_enabled: val })
+      .eq("user_id", session.user.id);
+    if (error) {
+      setWeeklyPulse(!val);
+      toast.error("Ayar kaydedilemedi, lütfen tekrar deneyin");
+      return;
+    }
+    toast.success(val ? "Haftalık nabız raporu açıldı" : "Haftalık nabız raporu kapatıldı");
+  };
 
   const update = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) =>
     setSettings({ ...settings, [k]: v });
@@ -56,6 +88,7 @@ function AyarlarPage() {
           <TabsTrigger value="payments">Ödeme Yöntemleri</TabsTrigger>
           <TabsTrigger value="carriers">Kargo Firmaları</TabsTrigger>
           <TabsTrigger value="orderStatuses">Sipariş Durumları</TabsTrigger>
+          <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="costItems">
@@ -118,6 +151,32 @@ function AyarlarPage() {
             onChange={(v) => update("orderStatuses", v)}
             placeholder="Örn: Hazırlanıyor"
           />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bildirim Tercihleri</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                E-posta bildirim ayarlarını buradan yönetin.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">Haftalık Nabız Raporu</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Her Pazartesi sabahı geçen haftanın özeti e-posta ile gelir.
+                  </p>
+                </div>
+                <Switch
+                  checked={weeklyPulse ?? true}
+                  onCheckedChange={toggleWeeklyPulse}
+                  disabled={weeklyPulse === null}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

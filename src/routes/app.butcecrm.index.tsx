@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/butcecrm-helpers";
+import { KayipKarKart } from "@/components/butcecrm/KayipKarKart";
+import { loadOnboarding } from "@/lib/butcecrm-onboarding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Clock, Package,
@@ -59,7 +61,7 @@ function ButceCrmDashboard() {
         supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
         supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
         supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
-        supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
+        supabase.from("campaigns").select("*").eq("user_id", uid).is("deleted_at", null).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
         supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).is("deleted_at", null).limit(2000),
         supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").is("deleted_at", null).gte("return_date", fetchFrom),
@@ -143,6 +145,35 @@ function ButceCrmDashboard() {
       .filter((r) => r > 0);
     return rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
   }, [activeCampaigns, sales]);
+
+  const onboardingProfile = loadOnboarding();
+
+  const kayipKar = useMemo(() => {
+    const bosReklam = periodCampaigns.reduce((sum, c) => {
+      const rev = sales
+        .filter((s) => s.campaign_id === c.id)
+        .reduce((s, x) => s + Number(x.total_amount), 0);
+      const roas = Number(c.spend) > 0 ? rev / Number(c.spend) : 0;
+      return sum + (roas < 1 ? Number(c.spend) : 0);
+    }, 0);
+
+    const iadeMaliyeti = periodReturns
+      .filter((r) => {
+        try { return isWithinInterval(parseISO(r.return_date), range); } catch { return false; }
+      })
+      .reduce((s, r) => s + Number(r.return_amount || 0), 0);
+
+    const negatifMarjin = periodSales
+      .filter((s) => Number(s.total_cost || 0) > Number(s.total_amount || 0))
+      .reduce((sum, s) => sum + (Number(s.total_cost || 0) - Number(s.total_amount || 0)), 0);
+
+    return {
+      bosReklam,
+      iadeMaliyeti,
+      negatifMarjin,
+      total: bosReklam + iadeMaliyeti + negatifMarjin,
+    };
+  }, [periodCampaigns, periodSales, periodReturns, sales, range]);
 
   const trendData = useMemo(() => {
     const arr = [];
@@ -271,7 +302,15 @@ function ButceCrmDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Ana Sayfa</h1>
-          <p className="text-muted-foreground text-sm">BütçeCRM — Tüm modüllerin gerçek zamanlı özeti</p>
+          <p className="text-muted-foreground text-sm">
+            {onboardingProfile?.sector === "eticaret"
+              ? "E-ticaret finans takibi — tüm modüllerin gerçek zamanlı özeti"
+              : onboardingProfile?.sector === "perakende"
+              ? "Perakende finans takibi — tüm modüllerin gerçek zamanlı özeti"
+              : onboardingProfile?.sector === "hizmet"
+              ? "Hizmet işletmesi finans takibi — gerçek zamanlı özet"
+              : "BütçeCRM — Tüm modüllerin gerçek zamanlı özeti"}
+          </p>
         </div>
         <div className="flex gap-1 bg-secondary rounded-lg p-1">
           {(["week", "month", "year"] as Period[]).map((p) => (
@@ -301,6 +340,16 @@ function ButceCrmDashboard() {
         <MetricCard title="Aktif Reklam Harcaması" value={formatCurrency(activeAdsSpend)} icon={<Megaphone className="h-5 w-5 text-fuchsia-600" />} bg="bg-fuchsia-100" valueClass="text-foreground" sub={`${activeCampaigns.length} aktif kampanya`} />
         <MetricCard title="Ortalama ROAS" value={`${activeRoas.toFixed(2)}x`} icon={<Target className="h-5 w-5 text-cyan-600" />} bg="bg-cyan-100" valueClass="text-foreground" />
       </div>
+
+      {kayipKar.total > 0 && (
+        <KayipKarKart
+          bosReklam={kayipKar.bosReklam}
+          iadeMaliyeti={kayipKar.iadeMaliyeti}
+          negatifMarjin={kayipKar.negatifMarjin}
+          total={kayipKar.total}
+          formatCurrency={formatCurrency}
+        />
+      )}
 
       <Card className={`border-2 ${upcomingBorder}`}>
         <CardHeader className="pb-3">
@@ -379,7 +428,7 @@ function ButceCrmDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={onboardingProfile?.focus === "stok" ? "ring-2 ring-primary" : undefined}>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-orange-600" /> Kritik Stok</CardTitle></CardHeader>
           <CardContent>
             {criticalStock.length === 0 ? <p className="text-sm text-muted-foreground">Tüm stoklar normal seviyede ✓</p> : (
@@ -398,7 +447,7 @@ function ButceCrmDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={onboardingProfile?.focus === "reklam" ? "ring-2 ring-primary" : undefined}>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Megaphone className="h-4 w-4 text-fuchsia-600" /> Reklam Performansı</CardTitle></CardHeader>
           <CardContent>
             {activeCampaignList.length === 0 ? <p className="text-sm text-muted-foreground">Aktif kampanya yok</p> : (

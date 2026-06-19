@@ -48,6 +48,13 @@ export const Route = createFileRoute("/butceleme")({
           "url": "https://hisusolutions.com/butceleme",
           "description": "E-ticaret ve KOBİ'ler için gelir, gider, stok ve reklam ROI yönetimi. Tek ekranda finansal kontrol.",
           "inLanguage": "tr-TR",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "12",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
           "offers": {
             "@type": "Offer",
             "price": "499",

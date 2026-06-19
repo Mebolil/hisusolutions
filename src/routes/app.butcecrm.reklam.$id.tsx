@@ -78,9 +78,9 @@ function CampaignDetail() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [c, s] = await Promise.all([
-      supabase.from("campaigns").select("*").eq("id", id).eq("user_id", uid).single(),
+      supabase.from("campaigns").select("*").eq("id", id).eq("user_id", uid).is("deleted_at", null).single(),
       supabase.from("sales").select("id,sale_date,total_amount,product_name,quantity,customers(name)")
-        .eq("campaign_id", id).eq("user_id", uid).order("sale_date", { ascending: false }).limit(500),
+        .eq("campaign_id", id).eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }).limit(500),
     ]);
     if (c.error || !c.data) {
       toast.error("Kampanya bulunamadı");
@@ -153,7 +153,7 @@ function CampaignDetail() {
     if (!campaign) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
-    const { error } = await supabase.from("campaigns").delete().eq("id", campaign.id).eq("user_id", session.user.id);
+    const { error } = await supabase.from("campaigns").update({ deleted_at: new Date().toISOString() }).eq("id", campaign.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Kampanya silindi");
     navigate({ to: "/app/butcecrm/reklam" });

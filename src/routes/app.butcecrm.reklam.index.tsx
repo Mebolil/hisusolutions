@@ -78,8 +78,8 @@ function AdsPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [c, s] = await Promise.all([
-      supabase.from("campaigns").select("*").eq("user_id", uid).order("start_date", { ascending: false }),
-      supabase.from("sales").select("campaign_id,total_amount,sale_date").eq("user_id", uid).not("campaign_id", "is", null).limit(2000),
+      supabase.from("campaigns").select("*").eq("user_id", uid).is("deleted_at", null).order("start_date", { ascending: false }),
+      supabase.from("sales").select("campaign_id,total_amount,sale_date").eq("user_id", uid).is("deleted_at", null).not("campaign_id", "is", null).limit(2000),
     ]);
     setCampaigns((c.data as Campaign[]) || []);
     setSales((s.data as Sale[]) || []);
@@ -205,7 +205,7 @@ function AdsPage() {
     if (!deletingCampaign) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
-    const { error } = await supabase.from("campaigns").delete().eq("id", deletingCampaign.id).eq("user_id", session.user.id);
+    const { error } = await supabase.from("campaigns").update({ deleted_at: new Date().toISOString() }).eq("id", deletingCampaign.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Kampanya silindi");
     setDeletingCampaign(null);

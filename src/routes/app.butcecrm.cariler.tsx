@@ -156,7 +156,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
-    const { data } = await supabase.from(kind).select("*").eq("user_id", uid).order("name");
+    const { data } = await supabase.from(kind).select("*").eq("user_id", uid).is("deleted_at", null).order("name");
     const parties = (data as Party[]) || [];
     setItems(parties);
 
@@ -238,7 +238,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     if (!deleting) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
-    const { error } = await supabase.from(kind).delete()
+    const { error } = await supabase.from(kind).update({ deleted_at: new Date().toISOString() })
       .eq("id", deleting.id)
       .eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
@@ -251,7 +251,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
     const ids = Array.from(selected);
-    const { error } = await supabase.from(kind).delete()
+    const { error } = await supabase.from(kind).update({ deleted_at: new Date().toISOString() })
       .in("id", ids)
       .eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));

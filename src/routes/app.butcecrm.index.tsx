@@ -21,7 +21,7 @@ import { tr } from "date-fns/locale";
 
 type Period = "week" | "month" | "year";
 
-interface Sale { id: string; sale_date: string; customer_id: string; product_name: string; quantity: number; total_amount: number; total_cost: number; paid_amount: number; payment_status: string; campaign_id: string | null }
+interface Sale { id: string; sale_date: string; customer_id: string; product_name: string; quantity: number; total_amount: number; total_cost: number; paid_amount: number; payment_status: string; campaign_id: string | null; status?: string | null }
 interface Expense { id: string; expense_date: string; amount: number; paid_amount: number; category: string; campaign_id: string | null; payment_status: string }
 interface Product { id: string; name: string; quantity: number; low_stock_threshold: number; unit_price?: number }
 interface Campaign { id: string; name: string; status: string; spend: number; start_date: string; end_date: string | null }
@@ -62,7 +62,7 @@ function ButceCrmDashboard() {
         supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
         supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).is("deleted_at", null).limit(500),
-        supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
+        supabase.from("customers").select("id,name").eq("user_id", uid).is("deleted_at", null).limit(2000),
         supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).is("deleted_at", null).limit(2000),
         supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").is("deleted_at", null).gte("return_date", fetchFrom),
       ]);
@@ -242,6 +242,36 @@ function ButceCrmDashboard() {
 
   const supplierDebt = purchases.reduce((s, p) => s + Math.max(0, Number(p.amount) - Number(p.paid_amount || 0)), 0);
 
+  const debtRatio = useMemo(() => {
+    const totalReceivable = sales
+      .filter((s) => s.payment_status !== "ödendi" && (!s.status || s.status === "aktif"))
+      .reduce((sum, s) => sum + Math.max(0, Number(s.total_amount || 0) - Number(s.paid_amount || 0)), 0);
+    const expenseDebt = expenses
+      .filter((e) => e.payment_status !== "ödendi")
+      .reduce((sum, e) => sum + Math.max(0, Number(e.amount || 0) - Number(e.paid_amount || 0)), 0);
+    const totalPayable = expenseDebt + supplierDebt;
+    const ratio = totalPayable > 0 ? totalReceivable / totalPayable : null;
+    return { totalReceivable, totalPayable, ratio };
+  }, [sales, expenses, supplierDebt]);
+
+  const ghostCustomerCount = useMemo(() => {
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000);
+    const lastSaleByCustomer: Record<string, Date> = {};
+    sales.forEach((s) => {
+      if (!s.customer_id) return;
+      try {
+        const d = parseISO(s.sale_date);
+        if (!lastSaleByCustomer[s.customer_id] || d > lastSaleByCustomer[s.customer_id]) {
+          lastSaleByCustomer[s.customer_id] = d;
+        }
+      } catch { /* */ }
+    });
+    return customers.filter((c) => {
+      const last = lastSaleByCustomer[c.id];
+      return !last || last < sixtyDaysAgo;
+    }).length;
+  }, [sales, customers]);
+
   // "Bu Hafta Ne Ödeyeceğim?" — önümüzdeki 7 gün, bekleyen giderler + ödeme hatırlatıcıları
   const upcomingWeek = useMemo(() => {
     const today = startOfDay(now);
@@ -339,6 +369,49 @@ function ButceCrmDashboard() {
         <MetricCard title="Toplam Stok Değeri" value={formatCurrency(stockValue)} icon={<Package className="h-5 w-5 text-indigo-600" />} bg="bg-indigo-100" valueClass="text-foreground" />
         <MetricCard title="Aktif Reklam Harcaması" value={formatCurrency(activeAdsSpend)} icon={<Megaphone className="h-5 w-5 text-fuchsia-600" />} bg="bg-fuchsia-100" valueClass="text-foreground" sub={`${activeCampaigns.length} aktif kampanya`} />
         <MetricCard title="Ortalama ROAS" value={`${activeRoas.toFixed(2)}x`} icon={<Target className="h-5 w-5 text-cyan-600" />} bg="bg-cyan-100" valueClass="text-foreground" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Nakit Dengesi (Alacak/Borç Oranı) */}
+        <div className={`rounded-xl border-2 p-4 ${debtRatio.ratio === null ? "border-border bg-card" : debtRatio.ratio >= 1 ? "border-emerald-200 bg-emerald-50/40" : "border-red-300 bg-red-50/40"}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${debtRatio.ratio === null ? "bg-muted" : debtRatio.ratio >= 1 ? "bg-emerald-100" : "bg-red-100"}`}>
+              <Building2 className={`h-4 w-4 ${debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`} />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Nakit Dengesi</p>
+          </div>
+          {debtRatio.ratio === null ? (
+            <p className="text-lg font-bold text-muted-foreground">Borç kaydı yok</p>
+          ) : (
+            <>
+              <p className={`text-2xl font-bold ${debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`}>
+                {debtRatio.ratio.toFixed(2)}x
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {debtRatio.ratio >= 1 ? "Alacak borçtan fazla — sağlıklı" : "⚠ Borç alacağı geçti"}
+              </p>
+              <div className="mt-2 flex justify-between text-xs gap-4">
+                <span className="text-emerald-600">Alacak: {formatCurrency(debtRatio.totalReceivable)}</span>
+                <span className="text-red-500">Borç: {formatCurrency(debtRatio.totalPayable)}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Sessiz Müşteriler (Hayalet) */}
+        {ghostCustomerCount > 0 && (
+          <div className="rounded-xl border-2 border-purple-200 bg-purple-50/40 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                <Users className="h-4 w-4 text-purple-600" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Sessiz Müşteriler</p>
+            </div>
+            <p className="text-2xl font-bold text-purple-600">{ghostCustomerCount}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">60+ gündür alışveriş yapmadı</p>
+            <a href="/app/butcecrm/cariler" className="text-xs text-purple-600 hover:underline mt-2 inline-block">→ Cariler'e git</a>
+          </div>
+        )}
       </div>
 
       {kayipKar.total > 0 && (

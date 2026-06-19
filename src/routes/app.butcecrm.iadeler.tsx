@@ -104,7 +104,7 @@ function IadelerPage() {
         .is("deleted_at", null)
         .order("return_date", { ascending: false }),
       supabase.from("sales")
-        .select("id, sale_date, product_name, quantity, total_amount, total_cost, note")
+        .select("id, sale_date, product_name, product_id, quantity, total_amount, total_cost, note")
         .eq("user_id", uid)
         .is("deleted_at", null)
         .order("sale_date", { ascending: false }),
@@ -380,6 +380,9 @@ function IadelerPage() {
                             )}
                           </TableCell>
                           <TableCell>
+                            {r.status === "cancelled" ? (
+                              <span className="text-xs text-muted-foreground italic">İptal edildi</span>
+                            ) : (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600 text-xs">
@@ -400,6 +403,7 @@ function IadelerPage() {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -455,8 +459,8 @@ function IadelerPage() {
                               align="right"
                               verticalAlign="middle"
                               iconSize={8}
-                              formatter={(value, entry: any) => (
-                                <span className="text-[11px]">{value} <span className="text-muted-foreground">({entry.payload.value})</span></span>
+                              formatter={(value, entry) => (
+                                <span className="text-[11px]">{value} <span className="text-muted-foreground">({(entry as { payload?: { value?: number } })?.payload?.value ?? 0})</span></span>
                               )}
                             />
                             <RechartTooltip formatter={(v: number) => `${v} adet`} />

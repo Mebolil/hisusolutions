@@ -206,7 +206,7 @@ export function ReturnKpiCards({ returns, sales }: Props) {
               <BarChart data={reasonTrendData}>
                 <XAxis dataKey="ay" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                <Tooltip />
+                <Tooltip formatter={(value, name) => [value, REASON_LABELS[name as string] || name]} />
                 <Legend formatter={(value) => REASON_LABELS[value] || value} />
                 {Object.keys(REASON_LABELS).map((key) => (
                   <Bar key={key} dataKey={key} stackId="a" fill={REASON_COLORS[key]} name={key} radius={key === "diger" ? [4, 4, 0, 0] : [0, 0, 0, 0]} />

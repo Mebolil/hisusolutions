@@ -14,6 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown, ShoppingCart } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -529,6 +533,15 @@ function StockPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {(st === "out" || st === "low") && (
+                            <Button size="sm" variant="outline"
+                              className="h-7 gap-1 shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+                              onClick={() => setReorderProduct(p)}
+                              title="Sipariş önerisi oluştur"
+                            >
+                              <ShoppingCart className="h-3.5 w-3.5" /> Sipariş
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => setEditing(p)} className="gap-1">
                             <Pencil className="h-3.5 w-3.5" /> Düzenle
                           </Button>
@@ -628,10 +641,13 @@ function ReorderSuggestionDialog({
   useEffect(() => {
     (async () => {
       setLotLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
       const { data } = await supabase
         .from("stock_lots")
         .select("*")
         .eq("product_id", product.id)
+        .eq("user_id", uid ?? "")
         .gt("quantity", 0)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -855,6 +871,7 @@ function EditProductDialog({
     category: "", newCategory: "", quantity: "0", low_stock_threshold: "0", unit_price: "",
   });
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -933,7 +950,6 @@ function EditProductDialog({
 
   async function handleDelete() {
     if (!product) return;
-    if (!confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return; }
@@ -945,6 +961,7 @@ function EditProductDialog({
   }
 
   return (
+    <>
     <Dialog open={!!product} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>Ürünü Düzenle</DialogTitle></DialogHeader>
@@ -1006,7 +1023,7 @@ function EditProductDialog({
               placeholder="Opsiyonel" />
           </div>
           <DialogFooter className="flex sm:justify-between gap-2">
-            <Button type="button" variant="destructive" onClick={handleDelete} disabled={saving}>
+            <Button type="button" variant="destructive" onClick={() => setConfirmDelete(true)} disabled={saving}>
               Sil
             </Button>
             <div className="flex gap-2">
@@ -1017,5 +1034,23 @@ function EditProductDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Ürünü sil</AlertDialogTitle>
+          <AlertDialogDescription>
+            "{product.name}" ürününü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>İptal</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Sil
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

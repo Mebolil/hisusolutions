@@ -354,6 +354,9 @@ function ExpensesPage() {
     const { error } = await supabase.from("expenses").insert(payloads);
     setCopying(false);
     if (error) return toast.error("Kopyalanamadı: " + friendlyDbError(error));
+    const currentRange = getMonthRange(0);
+    setFrom(currentRange.from);
+    setTo(currentRange.to);
     toast.success(`${payloads.length} gider kopyalandı`);
     setCopyMonthDialogOpen(false);
     load();

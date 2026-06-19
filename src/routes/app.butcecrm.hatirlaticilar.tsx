@@ -349,6 +349,12 @@ function QuickExpenseFromReminderDialog({
     payment_status: "ödendi",
   });
   const [saving, setSaving] = useState(false);
+  const [cats, setCats] = useState<string[]>(EXPENSE_CATEGORIES);
+
+  useEffect(() => {
+    supabase.from("expense_categories").select("name").order("name")
+      .then(({ data }) => { if (data?.length) setCats(data.map((c) => c.name)); });
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -409,7 +415,7 @@ function QuickExpenseFromReminderDialog({
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {cats.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -467,6 +473,8 @@ function EditReminderDialog({
     const parsed = reminderSchema.safeParse(form);
     if (!parsed.success) return toast.error(parsed.error.issues[0]?.message || "Form geçersiz");
     setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
     const { error } = await supabase.from("reminders").update({
       title: parsed.data.title,
       type: parsed.data.type,
@@ -476,7 +484,7 @@ function EditReminderDialog({
       note: parsed.data.note || null,
       is_recurring: form.is_recurring,
       recurrence_interval: form.is_recurring ? form.recurrence_interval : null,
-    }).eq("id", reminder.id);
+    }).eq("id", reminder.id).eq("user_id", session.user.id);
     setSaving(false);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Hatırlatıcı güncellendi");

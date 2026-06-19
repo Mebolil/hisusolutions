@@ -82,7 +82,7 @@ function ButceCrmDashboard() {
       if (!session?.user) return;
       const uid = session.user.id;
       const todayStr = format(startOfDay(new Date()), "yyyy-MM-dd");
-      const next7Str = format(addDays(startOfDay(new Date()), 7), "yyyy-MM-dd");
+      const next7Str = format(addDays(startOfDay(new Date()), 6), "yyyy-MM-dd");
       const { data } = await supabase
         .from("reminders")
         .select("id,title,due_date,type,status")
@@ -214,7 +214,7 @@ function ButceCrmDashboard() {
   // "Bu Hafta Ne Ödeyeceğim?" — önümüzdeki 7 gün, bekleyen giderler + ödeme hatırlatıcıları
   const upcomingWeek = useMemo(() => {
     const today = startOfDay(now);
-    const next7 = endOfDay(addDays(today, 7));
+    const next7 = endOfDay(addDays(today, 6));
     type DueItem = { date: Date; amount: number };
     const items: DueItem[] = [];
 
@@ -256,7 +256,7 @@ function ButceCrmDashboard() {
     return format(d, "EEEE", { locale: tr });
   }
 
-  const upcomingBorder = upcomingWeek.total === 0
+  const upcomingBorder = upcomingWeek.totalCount === 0
     ? "border-emerald-300 bg-emerald-50/40"
     : upcomingWeek.total < 5000
       ? "border-amber-300 bg-amber-50/40"

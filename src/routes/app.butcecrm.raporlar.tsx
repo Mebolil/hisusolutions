@@ -74,10 +74,10 @@ function ReportsPage() {
       // 13 aylık lookback: tüm built-in period'ları (hafta/ay/3ay/6ay/yıl) kapsar
       const fetchFrom = format(subMonths(new Date(), 13), "yyyy-MM-dd");
       const [s, e, pu, p, c, cu] = await Promise.all([
-        supabase.from("sales").select("*").eq("user_id", uid).gte("sale_date", fetchFrom),
-        supabase.from("expenses").select("*").eq("user_id", uid).gte("expense_date", fetchFrom),
-        supabase.from("purchases").select("*").eq("user_id", uid).gte("purchase_date", fetchFrom),
-        supabase.from("products").select("*").eq("user_id", uid).limit(1000),
+        supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
+        supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
+        supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).gte("purchase_date", fetchFrom),
+        supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
       ]);

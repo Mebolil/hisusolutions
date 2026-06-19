@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Bell, Trash2, AlertCircle, RefreshCw, Pencil } from "lucide-react";
+import { Plus, Search, Bell, Trash2, AlertCircle, RefreshCw, Pencil, Receipt } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -84,6 +84,7 @@ function RemindersPage() {
   const [deleting, setDeleting] = useState<Reminder | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [quickExpenseReminder, setQuickExpenseReminder] = useState<Reminder | null>(null);
 
   async function load() {
     setLoading(true);
@@ -272,6 +273,13 @@ function RemindersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {r.type === "ödeme" && r.status === "bekliyor" && (
+                            <Button size="icon" variant="outline" className="h-8 w-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => setQuickExpenseReminder(r)}
+                              title="Ödemeyi gider olarak kaydet">
+                              <Receipt className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button size="icon" variant="ghost" className="h-8 w-8"
                             onClick={() => { setEditingReminder(r); setEditOpen(true); }}>
                             <Pencil className="h-3.5 w-3.5" />
@@ -290,6 +298,14 @@ function RemindersPage() {
           )}
         </CardContent>
       </Card>
+
+      {quickExpenseReminder && (
+        <QuickExpenseFromReminderDialog
+          reminder={quickExpenseReminder}
+          onClose={() => setQuickExpenseReminder(null)}
+          onSaved={() => { setQuickExpenseReminder(null); load(); }}
+        />
+      )}
 
       <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
         <AlertDialogContent>
@@ -317,6 +333,104 @@ function StatCard({ label, value, valueClass }: { label: string; value: string; 
         <p className={`text-2xl font-bold ${valueClass || ""}`}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+const EXPENSE_CATEGORIES = ["Kira","Elektrik","Su","İnternet","Personel","Muhasebe","Reklam","Vergi","Kargo","Diğer"];
+
+function QuickExpenseFromReminderDialog({
+  reminder, onClose, onSaved,
+}: { reminder: Reminder; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    note: reminder.title,
+    amount: "",
+    expense_date: reminder.due_date,
+    category: "Diğer",
+    payment_status: "ödendi",
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.amount) return toast.error("Tutar zorunludur");
+    setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
+    const uid = session.user.id;
+    const amount = Number(form.amount);
+    const { error } = await supabase.from("expenses").insert({
+      user_id: uid,
+      expense_date: form.expense_date,
+      category: form.category,
+      amount,
+      paid_amount: form.payment_status === "ödendi" ? amount : 0,
+      payment_status: form.payment_status,
+      note: form.note,
+      sale_id: null,
+      is_recurring: false,
+      recurrence_interval: null,
+    });
+    if (error) { setSaving(false); return toast.error("Gider eklenemedi: " + friendlyDbError(error)); }
+
+    const { error: updErr } = await supabase.from("reminders")
+      .update({ status: "tamamlandı" })
+      .eq("id", reminder.id)
+      .eq("user_id", uid);
+    setSaving(false);
+    if (updErr) return toast.error("Hatırlatıcı güncellenemedi: " + friendlyDbError(updErr));
+    toast.success("Gider kaydedildi ve hatırlatıcı tamamlandı işaretlendi");
+    onSaved();
+  }
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Ödemeyi Gider Olarak Kaydet</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Açıklama</Label>
+            <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tutar (₺)</Label>
+              <Input type="number" step="0.01" value={form.amount} autoFocus
+                onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+            </div>
+            <div>
+              <Label>Tarih</Label>
+              <Input type="date" value={form.expense_date}
+                onChange={(e) => setForm({ ...form, expense_date: e.target.value })} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Kategori</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Ödeme Durumu</Label>
+              <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ödendi">ödendi</SelectItem>
+                  <SelectItem value="bekliyor">bekliyor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>İptal</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Kaydediliyor..." : "Kaydet"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

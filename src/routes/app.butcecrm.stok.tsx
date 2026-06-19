@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown, ShoppingCart } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
@@ -110,6 +111,7 @@ function buildQuery(
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase.from("products").select("*") as any);
+  query = query.is("deleted_at", null);
   if (catFilter !== "all") query = query.eq("category", catFilter);
   if (stateFilter === "out") query = query.lte("quantity", 0);
   // "low" / "ok" need column-to-column comparison — handled client-side
@@ -145,6 +147,7 @@ function StockPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const [stats, setStats] = useState({ total: 0, low: 0, out: 0 });
+  const [reorderProduct, setReorderProduct] = useState<Product | null>(null);
 
   // Whether we're in client-side filter mode (stateFilter low/ok)
   const clientMode = stateFilter === "low" || stateFilter === "ok";
@@ -164,8 +167,8 @@ function StockPage() {
     if (!session?.user) return;
     const uid = session.user.id;
     const [total, outRes] = await Promise.all([
-      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid),
-      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid).lte("quantity", 0),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid).is("deleted_at", null),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", uid).is("deleted_at", null).lte("quantity", 0),
     ]);
     const totalVal = total.count ?? 0;
     const outVal = outRes.count ?? 0;
@@ -309,7 +312,7 @@ function StockPage() {
     if (!session?.user) return toast.error("Oturum bulunamadı");
     for (let i = 0; i < ids.length; i += 20) {
       const chunk = ids.slice(i, i + 20);
-      const { error } = await supabase.from("products").delete().in("id", chunk).eq("user_id", session.user.id);
+      const { error } = await supabase.from("products").update({ deleted_at: new Date().toISOString() }).in("id", chunk).eq("user_id", session.user.id);
       if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
     }
     toast.success(`${ids.length} ürün silindi`);
@@ -379,23 +382,45 @@ function StockPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {lowStockProducts.slice(0, 9).map((p) => {
                 const st = stockState(p);
+                const qty = Number(p.quantity);
+                const threshold = Number(p.low_stock_threshold);
                 return (
-                  <button
+                  <div
                     key={p.id}
-                    onClick={() => openHistory(p)}
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-white border text-left hover:border-primary transition-colors"
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border"
                   >
-                    <div className="min-w-0">
+                    <button
+                      onClick={() => openHistory(p)}
+                      className="min-w-0 text-left flex-1 hover:text-primary transition-colors"
+                    >
                       <p className="text-sm font-medium truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">eşik: {Number(p.low_stock_threshold)}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded border ${STATE_BADGE[st]}`}>
-                      {Number(p.quantity)} {STATE_LABEL[st]}
-                    </span>
-                  </button>
+                      {st === "out" ? (
+                        <span className="inline-flex text-[10px] mt-0.5 px-1.5 py-0.5 rounded border bg-red-100 text-red-700 border-red-200 font-medium">
+                          Tükendi
+                        </span>
+                      ) : (
+                        <span className="inline-flex text-[10px] mt-0.5 px-1.5 py-0.5 rounded border bg-amber-100 text-amber-700 border-amber-200 font-medium">
+                          Düşük · {qty}/{threshold} eşik
+                        </span>
+                      )}
+                    </button>
+                    <Button
+                      size="sm" variant="outline"
+                      className="h-7 gap-1 shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+                      onClick={() => setReorderProduct(p)}
+                      title="Sipariş önerisi oluştur"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" /> Sipariş
+                    </Button>
+                  </div>
                 );
               })}
             </div>
+            {lowStockProducts.some((p) => stockState(p) === "out") && (
+              <p className="text-xs text-red-600 mt-3 font-medium flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" /> Stoğu biten ürünler satışa kapandı
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -483,7 +508,11 @@ function StockPage() {
                 {displayRows.map((p) => {
                   const st = stockState(p);
                   return (
-                    <TableRow key={p.id} className={selectedIds.has(p.id) ? "bg-muted/50" : ""}>
+                    <TableRow key={p.id} className={`${selectedIds.has(p.id) ? "bg-muted/50" : ""} border-l-4 ${
+                      st === "out" ? "border-l-red-500" :
+                      st === "low" ? "border-l-amber-400" :
+                      "border-l-transparent"
+                    }`}>
                       <TableCell>
                         <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleOne(p.id)} />
                       </TableCell>
@@ -574,7 +603,109 @@ function StockPage() {
         onClose={() => setEditing(null)}
         onSaved={() => { setEditing(null); loadStats(); if (clientMode) loadAllForClientFilter(); else loadPage(); }}
       />
+      {reorderProduct && (
+        <ReorderSuggestionDialog
+          product={reorderProduct}
+          onClose={() => setReorderProduct(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function ReorderSuggestionDialog({
+  product, onClose,
+}: { product: Product; onClose: () => void }) {
+  const [lastLot, setLastLot] = useState<Lot | null>(null);
+  const [lotLoading, setLotLoading] = useState(true);
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const threshold = Number(product.low_stock_threshold);
+  const qty = Number(product.quantity);
+  const suggestedQty = Math.max(1, threshold * 3 - qty);
+
+  useEffect(() => {
+    (async () => {
+      setLotLoading(true);
+      const { data } = await supabase
+        .from("stock_lots")
+        .select("*")
+        .eq("product_id", product.id)
+        .gt("quantity", 0)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      setLastLot(((data as Lot[]) || [])[0] || null);
+      setLotLoading(false);
+    })();
+  }, [product.id]);
+
+  const lastCost = lastLot?.unit_cost != null ? Number(lastLot.unit_cost) : null;
+
+  async function createReminder() {
+    setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setSaving(false); return toast.error("Oturum bulunamadı"); }
+    const uid = session.user.id;
+    const due = new Date();
+    due.setDate(due.getDate() + 3);
+    const dueDate = due.toISOString().slice(0, 10);
+    const costText = lastCost != null ? `, son maliyet: ${formatCurrency(lastCost)}` : "";
+    const fullNote = `Sipariş önerisi: ~${suggestedQty} adet${costText}${note.trim() ? ` — ${note.trim()}` : ""}`;
+    const { error } = await supabase.from("reminders").insert({
+      user_id: uid,
+      type: "stok",
+      title: `${product.name} için sipariş ver`,
+      due_date: dueDate,
+      note: fullNote,
+      status: "bekliyor",
+      related_record: null,
+      is_recurring: false,
+      recurrence_interval: null,
+    });
+    setSaving(false);
+    if (error) return toast.error("Hatırlatıcı oluşturulamadı: " + friendlyDbError(error));
+    toast.success("Sipariş hatırlatıcısı oluşturuldu");
+    onClose();
+  }
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Sipariş Önerisi — {product.name}</DialogTitle></DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="rounded-md border bg-muted/30 p-3 space-y-1.5">
+            <p>Mevcut stok: <strong>{qty}</strong> · Eşik: <strong>{threshold}</strong></p>
+            {lotLoading ? (
+              <p className="text-muted-foreground text-xs">Son stok hareketi yükleniyor...</p>
+            ) : lastLot ? (
+              <>
+                <p className="text-muted-foreground text-xs">
+                  Son stok hareketi: {formatDate(lastLot.created_at)} · +{Number(lastLot.quantity)} adet
+                </p>
+                {lastCost != null && (
+                  <p>Son birim maliyet: <strong>{formatCurrency(lastCost)}</strong></p>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground text-xs">Geçmiş stok girişi bulunamadı.</p>
+            )}
+            <p className="pt-1">Önerilen sipariş miktarı: <strong className="text-primary">{suggestedQty} adet</strong></p>
+          </div>
+          <div>
+            <Label>Not (opsiyonel)</Label>
+            <Textarea value={note} rows={2} onChange={(e) => setNote(e.target.value)}
+              placeholder="Tedarikçi, sipariş detayı vs." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>İptal</Button>
+          <Button onClick={createReminder} disabled={saving} className="gap-1.5">
+            <ShoppingCart className="h-4 w-4" /> {saving ? "Oluşturuluyor..." : "Hatırlatıcı Oluştur"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -762,6 +893,7 @@ function EditProductDialog({
         .from("products")
         .select("id")
         .eq("user_id", uid)
+        .is("deleted_at", null)
         .eq("name", newName)
         .eq("category", cat)
         .neq("id", product.id)
@@ -805,7 +937,7 @@ function EditProductDialog({
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setSaving(false); return; }
-    const { error } = await supabase.from("products").delete().eq("id", product.id).eq("user_id", session.user.id);
+    const { error } = await supabase.from("products").update({ deleted_at: new Date().toISOString() }).eq("id", product.id).eq("user_id", session.user.id);
     setSaving(false);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Ürün silindi");

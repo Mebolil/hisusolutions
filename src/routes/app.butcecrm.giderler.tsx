@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Plus, Search, Receipt, RefreshCw, Trash2, ArrowUpDown, ArrowUp, ArrowDown,
-  CheckCircle, Pencil, TrendingDown,
+  CheckCircle, Pencil, TrendingDown, Copy,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -107,6 +107,8 @@ function ExpensesPage() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [copyMonthDialogOpen, setCopyMonthDialogOpen] = useState(false);
+  const [copying, setCopying] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -114,9 +116,9 @@ function ExpensesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [e, c, s] = await Promise.all([
-      supabase.from("expenses").select("*").eq("user_id", uid).order("expense_date", { ascending: false }),
+      supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).order("expense_date", { ascending: false }),
       supabase.from("expense_categories").select("id,name").order("name"),
-      supabase.from("sales").select("id,product_name,sale_date").eq("user_id", uid).order("sale_date", { ascending: false }).limit(200),
+      supabase.from("sales").select("id,product_name,sale_date").eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }).limit(200),
     ]);
     setExpenses((e.data as Expense[]) || []);
     setSales((s.data as SaleRef[]) || []);
@@ -247,7 +249,7 @@ function ExpensesPage() {
     if (!session?.user) return toast.error("Oturum bulunamadı");
     for (let i = 0; i < ids.length; i += 20) {
       const chunk = ids.slice(i, i + 20);
-      const { error } = await supabase.from("expenses").delete().in("id", chunk).eq("user_id", session.user.id);
+      const { error } = await supabase.from("expenses").update({ deleted_at: new Date().toISOString() }).in("id", chunk).eq("user_id", session.user.id);
       if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
     }
     toast.success(`${ids.length} gider silindi`);
@@ -279,7 +281,9 @@ function ExpensesPage() {
     const patch: Partial<Expense> = { payment_status: newStatus };
     if (newStatus === "ödendi") patch.paid_amount = Number(exp.amount);
     if (newStatus === "bekliyor") patch.paid_amount = 0;
-    const { error } = await supabase.from("expenses").update(patch).eq("id", exp.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from("expenses").update(patch).eq("id", exp.id).eq("user_id", session.user.id);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setExpenses((prev) => prev.map((x) => (x.id === exp.id ? { ...x, ...patch } as Expense : x)));
@@ -303,6 +307,58 @@ function ExpensesPage() {
     }
   }
 
+  // Geçen ayın giderleri (kopyalama için)
+  const lastMonthRange = useMemo(() => getMonthRange(-1), []);
+  const lastMonthExpenses = useMemo(
+    () => expenses.filter(
+      (e) => e.expense_date >= lastMonthRange.from && e.expense_date <= lastMonthRange.to,
+    ),
+    [expenses, lastMonthRange],
+  );
+  const lastMonthTotal = useMemo(
+    () => lastMonthExpenses.reduce((s, e) => s + Number(e.amount || 0), 0),
+    [lastMonthExpenses],
+  );
+
+  async function handleCopyLastMonth() {
+    if (lastMonthExpenses.length === 0) return;
+    setCopying(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setCopying(false); return toast.error("Oturum bulunamadı"); }
+    const uid = session.user.id;
+
+    // Bu ayın yıl/ay bilgisi ve son günü
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed
+    const daysInThisMonth = new Date(year, month + 1, 0).getDate();
+
+    const payloads = lastMonthExpenses.map((e) => {
+      const srcDay = Number(e.expense_date.slice(8, 10)) || 1;
+      const targetDay = Math.min(srcDay, daysInThisMonth);
+      const newDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(targetDay).padStart(2, "0")}`;
+      return {
+        user_id: uid,
+        expense_date: newDate,
+        category: e.category,
+        amount: Number(e.amount || 0),
+        paid_amount: 0,
+        payment_status: "bekliyor",
+        note: e.note || "",
+        sale_id: null,
+        is_recurring: e.is_recurring,
+        recurrence_interval: e.recurrence_interval,
+      };
+    });
+
+    const { error } = await supabase.from("expenses").insert(payloads);
+    setCopying(false);
+    if (error) return toast.error("Kopyalanamadı: " + friendlyDbError(error));
+    toast.success(`${payloads.length} gider kopyalandı`);
+    setCopyMonthDialogOpen(false);
+    load();
+  }
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -313,20 +369,50 @@ function ExpensesPage() {
             </h1>
             <p className="text-muted-foreground text-sm">Tüm giderler, kategoriler ve ödeme durumları</p>
           </div>
-          <ExpenseDialog
-            open={open || editExpense !== null}
-            setOpen={(v) => { setOpen(v); if (!v) setEditExpense(null); }}
-            categories={categoryNames}
-            sales={sales}
-            onCreated={load}
-            expense={editExpense}
-            trigger={
-              <Button className="gap-2" onClick={() => { setEditExpense(null); setOpen(true); }}>
-                <Plus className="h-4 w-4" /> Yeni Gider
-              </Button>
-            }
-          />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setCopyMonthDialogOpen(true)}>
+              <Copy className="h-4 w-4" /> Geçen Ayı Kopyala
+            </Button>
+            <ExpenseDialog
+              open={open || editExpense !== null}
+              setOpen={(v) => { setOpen(v); if (!v) setEditExpense(null); }}
+              categories={categoryNames}
+              sales={sales}
+              onCreated={load}
+              expense={editExpense}
+              trigger={
+                <Button className="gap-2" onClick={() => { setEditExpense(null); setOpen(true); }}>
+                  <Plus className="h-4 w-4" /> Yeni Gider
+                </Button>
+              }
+            />
+          </div>
         </div>
+
+        <Dialog open={copyMonthDialogOpen} onOpenChange={setCopyMonthDialogOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Geçen Ayı Kopyala</DialogTitle></DialogHeader>
+            {lastMonthExpenses.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geçen ay gider kaydı bulunamadı.</p>
+            ) : (
+              <>
+                <p className="text-sm">
+                  Geçen aydan <strong>{lastMonthExpenses.length} gider</strong> kopyalanacak.
+                  Toplam tutar: <strong>{formatCurrency(lastMonthTotal)}</strong>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Tüm giderler bu ayın karşılık gelen tarihlerine kopyalanacak. Ödeme durumu "bekliyor" olarak ayarlanacak.
+                </p>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setCopyMonthDialogOpen(false)}>İptal</Button>
+                  <Button onClick={handleCopyLastMonth} disabled={copying}>
+                    {copying ? "Kopyalanıyor..." : `${lastMonthExpenses.length} Gideri Kopyala`}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <CsvToolbar
           slug="giderler"

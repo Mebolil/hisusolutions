@@ -17,8 +17,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ReturnKpiCards } from "@/components/butcecrm/ReturnKpiCards";
 import { ReturnDialog } from "@/components/butcecrm/ReturnDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Search, RotateCcw, Plus } from "lucide-react";
+import {
+  PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartTooltip, ResponsiveContainer,
+} from "recharts";
+import { parseISO, format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 type ReturnRecord = {
   id: string;
@@ -64,6 +71,8 @@ const REFUND_LABELS: Record<string, string> = {
   banka: "Banka Transferi",
 };
 
+const ANALYSIS_PIE_COLORS = ["#ef4444","#f59e0b","#6366f1","#3b82f6","#8b5cf6","#ec4899","#14b8a6","#64748b"];
+
 export const Route = createFileRoute("/app/butcecrm/iadeler")({
   head: () => ({ meta: [{ title: "BütçeCRM — İadeler" }] }),
   component: IadelerPage,
@@ -92,12 +101,14 @@ function IadelerPage() {
         .select("*")
         .eq("user_id", uid)
         .eq("status", "active")
+        .is("deleted_at", null)
         .order("return_date", { ascending: false }),
       supabase.from("sales")
         .select("id, sale_date, product_name, quantity, total_amount, total_cost, note")
         .eq("user_id", uid)
+        .is("deleted_at", null)
         .order("sale_date", { ascending: false }),
-      supabase.from("products").select("id,name").eq("user_id", uid),
+      supabase.from("products").select("id,name").eq("user_id", uid).is("deleted_at", null),
     ]);
     setReturns((ret.data as ReturnRecord[]) || []);
     setSales((sal.data as Sale[]) || []);
@@ -116,6 +127,7 @@ function IadelerPage() {
         .select("*")
         .eq("user_id", session.user.id)
         .eq("status", "cancelled")
+        .is("deleted_at", null)
         .order("return_date", { ascending: false });
       setCancelledReturns((data as ReturnRecord[]) || []);
     })();
@@ -137,6 +149,57 @@ function IadelerPage() {
       map[r.sale_id] = (map[r.sale_id] || 0) + r.quantity;
     });
     return map;
+  }, [returns]);
+
+  // Analiz: neden dağılımı (adet)
+  const reasonData = useMemo(() => (
+    Object.entries(
+      returns.reduce((acc, r) => {
+        const label = REASON_LABELS[r.reason_category] || r.reason_category;
+        acc[label] = (acc[label] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    ).map(([name, value]) => ({ name, value }))
+  ), [returns]);
+
+  // Analiz: toplam kayıp
+  const totalLoss = useMemo(
+    () => returns.reduce((s, r) => s + Number(r.return_amount || 0), 0),
+    [returns],
+  );
+
+  // Analiz: neden bazlı tablo (kayba göre azalan)
+  const reasonTable = useMemo(() => {
+    const acc: Record<string, { count: number; loss: number }> = {};
+    returns.forEach((r) => {
+      const label = REASON_LABELS[r.reason_category] || r.reason_category;
+      if (!acc[label]) acc[label] = { count: 0, loss: 0 };
+      acc[label].count += 1;
+      acc[label].loss += Number(r.return_amount || 0);
+    });
+    return Object.entries(acc)
+      .map(([name, v]) => ({ name, count: v.count, loss: v.loss }))
+      .sort((a, b) => b.loss - a.loss);
+  }, [returns]);
+
+  // Analiz: son 3 ay trend
+  const trendData = useMemo(() => {
+    const months: { label: string; key: string }[] = [];
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months.push({ label: format(d, "MMM yy", { locale: tr }), key });
+    }
+    return months.map(({ label, key }) => ({
+      label,
+      tutar: returns
+        .filter((r) => {
+          try { return format(parseISO(r.return_date), "yyyy-MM") === key; }
+          catch { return false; }
+        })
+        .reduce((s, r) => s + Number(r.return_amount || 0), 0),
+    }));
   }, [returns]);
 
   const pickerSales = useMemo(() => {
@@ -189,7 +252,8 @@ function IadelerPage() {
       .select("id")
       .eq("sale_id", ret.sale_id)
       .eq("user_id", uid)
-      .eq("status", "active");
+      .eq("status", "active")
+      .is("deleted_at", null);
 
     // Başka aktif iade yoksa satışı 'aktif' statüsüne geri döndür
     if (!remainingReturns || remainingReturns.length === 0) {
@@ -227,6 +291,13 @@ function IadelerPage() {
         <>
           <ReturnKpiCards returns={returns} sales={sales} />
 
+          <Tabs defaultValue="liste">
+            <TabsList>
+              <TabsTrigger value="liste">İade Listesi</TabsTrigger>
+              <TabsTrigger value="analiz">Analiz</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="liste" className="mt-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -338,6 +409,111 @@ function IadelerPage() {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="analiz" className="mt-4 space-y-4">
+              {returns.length === 0 ? (
+                <Card>
+                  <CardContent className="py-16 text-center text-muted-foreground">
+                    <RotateCcw className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <p className="font-medium">Analiz için iade kaydı bulunmuyor</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <Card className="border-red-200 bg-red-50/50">
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-muted-foreground">Bu dönemde toplam iade kaybı</p>
+                      <p className="text-3xl font-bold text-red-600 mt-1">{formatCurrency(totalLoss)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{returns.length} iade kaydı üzerinden</p>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Neden Dağılımı (adet)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <PieChart>
+                            <Pie
+                              data={reasonData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="40%"
+                              cy="50%"
+                              outerRadius={75}
+                              label={false}
+                            >
+                              {reasonData.map((_, i) => (
+                                <Cell key={i} fill={ANALYSIS_PIE_COLORS[i % ANALYSIS_PIE_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Legend
+                              layout="vertical"
+                              align="right"
+                              verticalAlign="middle"
+                              iconSize={8}
+                              formatter={(value, entry: any) => (
+                                <span className="text-[11px]">{value} <span className="text-muted-foreground">({entry.payload.value})</span></span>
+                              )}
+                            />
+                            <RechartTooltip formatter={(v: number) => `${v} adet`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Son 3 Ay İade Trendi</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <BarChart data={trendData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₺${(v/1000).toFixed(0)}K`} width={48} />
+                            <RechartTooltip formatter={(v: number) => formatCurrency(v)} />
+                            <Bar dataKey="tutar" fill="#ef4444" radius={[3, 3, 0, 0]} name="İade" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Neden Bazlı Kayıp</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Neden</TableHead>
+                            <TableHead className="text-right">Adet</TableHead>
+                            <TableHead className="text-right">Toplam Kayıp</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {reasonTable.map((row) => (
+                            <TableRow key={row.name}>
+                              <TableCell>
+                                <Badge variant="secondary" className="text-xs">{row.name}</Badge>
+                              </TableCell>
+                              <TableCell className="text-right">{row.count}</TableCell>
+                              <TableCell className="text-right text-red-600 font-medium">{formatCurrency(row.loss)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </>
       )}
 

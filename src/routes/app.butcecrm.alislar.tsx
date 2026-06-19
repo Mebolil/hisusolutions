@@ -90,9 +90,9 @@ function PurchasesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [p, s, pr] = await Promise.all([
-      supabase.from("purchases").select("*").eq("user_id", uid).order("purchase_date", { ascending: false }),
+      supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).order("purchase_date", { ascending: false }),
       supabase.from("suppliers").select("id,name").eq("user_id", uid).order("name"),
-      supabase.from("products").select("id,name,unit_price,quantity").eq("user_id", uid).order("name"),
+      supabase.from("products").select("id,name,unit_price,quantity").eq("user_id", uid).is("deleted_at", null).order("name"),
     ]);
     setPurchases((p.data as Purchase[]) || []);
     setSuppliers((s.data as Supplier[]) || []);
@@ -185,6 +185,7 @@ function PurchasesPage() {
       .from("products")
       .select("id,name,quantity")
       .eq("user_id", session.user.id)
+      .is("deleted_at", null)
       .ilike("name", purchase.product_name.trim());
     const matched = rows?.[0];
     if (matched && matched.quantity != null) {
@@ -202,7 +203,7 @@ function PurchasesPage() {
     for (const p of toDelete) await reversePurchaseStock(p);
     for (let i = 0; i < ids.length; i += 20) {
       const chunk = ids.slice(i, i + 20);
-      const { error } = await supabase.from("purchases").delete().in("id", chunk).eq("user_id", session.user.id);
+      const { error } = await supabase.from("purchases").update({ deleted_at: new Date().toISOString() }).in("id", chunk).eq("user_id", session.user.id);
       if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
     }
     toast.success(`${ids.length} alış silindi`);
@@ -214,7 +215,7 @@ function PurchasesPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
     await reversePurchaseStock(p);
-    const { error } = await supabase.from("purchases").delete().eq("id", p.id).eq("user_id", session.user.id);
+    const { error } = await supabase.from("purchases").update({ deleted_at: new Date().toISOString() }).eq("id", p.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Alış silindi");
     setDeletingPurchase(null);
@@ -771,7 +772,7 @@ function EditPurchaseDialog({
     if (productNameChanged) {
       // Eski ürünün stoğunu geri al
       const { data: oldRows } = await supabase.from("products").select("id,quantity")
-        .eq("user_id", session.user.id).ilike("name", purchase.product_name.trim());
+        .eq("user_id", session.user.id).is("deleted_at", null).ilike("name", purchase.product_name.trim());
       if (oldRows?.[0] && oldRows[0].quantity != null) {
         await supabase.from("products").update({
           quantity: Math.max(0, (oldRows[0].quantity ?? 0) - purchase.quantity),
@@ -779,7 +780,7 @@ function EditPurchaseDialog({
       }
       // Yeni ürünün stoğunu artır
       const { data: newRows } = await supabase.from("products").select("id,quantity")
-        .eq("user_id", session.user.id).ilike("name", form.product_name.trim());
+        .eq("user_id", session.user.id).is("deleted_at", null).ilike("name", form.product_name.trim());
       if (newRows?.[0] && newRows[0].quantity != null) {
         await supabase.from("products").update({
           quantity: (newRows[0].quantity ?? 0) + newQty,
@@ -788,7 +789,7 @@ function EditPurchaseDialog({
     } else if (delta !== 0) {
       // Sadece miktar değişti
       const { data: rows } = await supabase.from("products").select("id,quantity")
-        .eq("user_id", session.user.id).ilike("name", form.product_name.trim());
+        .eq("user_id", session.user.id).is("deleted_at", null).ilike("name", form.product_name.trim());
       if (rows?.[0] && rows[0].quantity != null) {
         await supabase.from("products").update({
           quantity: Math.max(0, (rows[0].quantity ?? 0) + delta),

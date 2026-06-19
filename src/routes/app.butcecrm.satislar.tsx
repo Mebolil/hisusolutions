@@ -112,11 +112,11 @@ function SalesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [s, c, ca, p, ret] = await Promise.all([
-      supabase.from("sales").select("*").eq("user_id", uid).order("sale_date", { ascending: false }),
+      supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }),
       supabase.from("customers").select("id,name").eq("user_id", uid).order("name"),
       supabase.from("campaigns").select("id,name").eq("user_id", uid).order("name"),
-      supabase.from("products").select("id,name,quantity,unit_price").eq("user_id", uid).order("name"),
-      supabase.from("returns").select("sale_id,quantity").eq("user_id", uid).eq("status", "active"),
+      supabase.from("products").select("id,name,quantity,unit_price").eq("user_id", uid).is("deleted_at", null).order("name"),
+      supabase.from("returns").select("sale_id,quantity").eq("user_id", uid).eq("status", "active").is("deleted_at", null),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
@@ -247,7 +247,7 @@ function SalesPage() {
   async function deleteSale(sale: Sale) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
-    const { error } = await supabase.from("sales").delete().eq("id", sale.id).eq("user_id", session.user.id);
+    const { error } = await supabase.from("sales").update({ deleted_at: new Date().toISOString() }).eq("id", sale.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     setSales((prev) => prev.filter((s) => s.id !== sale.id));
 
@@ -301,7 +301,7 @@ function SalesPage() {
     if (!session?.user) return toast.error("Oturum bulunamadı");
     for (let i = 0; i < ids.length; i += 20) {
       const chunk = ids.slice(i, i + 20);
-      const { error } = await supabase.from("sales").delete().in("id", chunk).eq("user_id", session.user.id);
+      const { error } = await supabase.from("sales").update({ deleted_at: new Date().toISOString() }).in("id", chunk).eq("user_id", session.user.id);
       if (error) { console.error("bulk delete error", error); return toast.error("Silinemedi: " + friendlyDbError(error)); }
     }
     toast.success(`${ids.length} satış silindi`);

@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/butcecrm-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Clock, Package,
-  Megaphone, Target, AlertTriangle, Trophy, Users, Tag, Building2,
+  Megaphone, Target, AlertTriangle, Trophy, Users, Tag, Building2, CalendarClock,
 } from "lucide-react";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -13,18 +13,20 @@ import {
 import {
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear,
   parseISO, isWithinInterval, subMonths, format, differenceInDays, startOfDay,
+  addDays, endOfDay, isSameDay,
 } from "date-fns";
 import { tr } from "date-fns/locale";
 
 type Period = "week" | "month" | "year";
 
 interface Sale { id: string; sale_date: string; customer_id: string; product_name: string; quantity: number; total_amount: number; total_cost: number; paid_amount: number; payment_status: string; campaign_id: string | null }
-interface Expense { id: string; expense_date: string; amount: number; paid_amount: number; category: string; campaign_id: string | null }
+interface Expense { id: string; expense_date: string; amount: number; paid_amount: number; category: string; campaign_id: string | null; payment_status: string }
 interface Product { id: string; name: string; quantity: number; low_stock_threshold: number; unit_price?: number }
 interface Campaign { id: string; name: string; status: string; spend: number; start_date: string; end_date: string | null }
 interface Customer { id: string; name: string }
 interface Purchase { id: string; amount: number; paid_amount: number; payment_status: string }
 interface Return { id: string; return_date: string; return_amount: number }
+interface PaymentReminder { id: string; title: string; due_date: string; type: string; status: string }
 
 export const Route = createFileRoute("/app/butcecrm/")({
   component: ButceCrmDashboard,
@@ -40,6 +42,7 @@ function ButceCrmDashboard() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [periodReturns, setPeriodReturns] = useState<Return[]>([]);
+  const [paymentReminders, setPaymentReminders] = useState<PaymentReminder[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -53,13 +56,13 @@ function ButceCrmDashboard() {
         "yyyy-MM-dd"
       );
       const [s, e, p, c, cu, pu, ret] = await Promise.all([
-        supabase.from("sales").select("*").eq("user_id", uid).gte("sale_date", fetchFrom),
-        supabase.from("expenses").select("*").eq("user_id", uid).gte("expense_date", fetchFrom),
-        supabase.from("products").select("*").eq("user_id", uid).limit(1000),
+        supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
+        supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
+        supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
-        supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).limit(2000),
-        supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").gte("return_date", fetchFrom),
+        supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).is("deleted_at", null).limit(2000),
+        supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").is("deleted_at", null).gte("return_date", fetchFrom),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -69,6 +72,26 @@ function ButceCrmDashboard() {
       setPurchases((pu.data as Purchase[]) || []);
       setPeriodReturns((ret.data as Return[]) || []);
       setLoading(false);
+    })();
+  }, []);
+
+  // "Bu Hafta Ne Ödeyeceğim?" kartı için bekleyen ödeme hatırlatıcıları (ayrı fetch)
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const uid = session.user.id;
+      const todayStr = format(startOfDay(new Date()), "yyyy-MM-dd");
+      const next7Str = format(addDays(startOfDay(new Date()), 7), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("reminders")
+        .select("id,title,due_date,type,status")
+        .eq("user_id", uid)
+        .eq("type", "ödeme")
+        .eq("status", "bekliyor")
+        .gte("due_date", todayStr)
+        .lte("due_date", next7Str);
+      setPaymentReminders((data as PaymentReminder[]) || []);
     })();
   }, []);
 
@@ -188,6 +211,57 @@ function ButceCrmDashboard() {
 
   const supplierDebt = purchases.reduce((s, p) => s + Math.max(0, Number(p.amount) - Number(p.paid_amount || 0)), 0);
 
+  // "Bu Hafta Ne Ödeyeceğim?" — önümüzdeki 7 gün, bekleyen giderler + ödeme hatırlatıcıları
+  const upcomingWeek = useMemo(() => {
+    const today = startOfDay(now);
+    const next7 = endOfDay(addDays(today, 7));
+    type DueItem = { date: Date; amount: number };
+    const items: DueItem[] = [];
+
+    expenses.forEach((e) => {
+      if (e.payment_status === "ödendi") return;
+      let d: Date;
+      try { d = parseISO(e.expense_date); } catch { return; }
+      if (d < today || d > next7) return;
+      const remaining = Math.max(0, Number(e.amount || 0) - Number(e.paid_amount || 0));
+      items.push({ date: d, amount: remaining });
+    });
+
+    paymentReminders.forEach((r) => {
+      let d: Date;
+      try { d = parseISO(r.due_date); } catch { return; }
+      if (d < today || d > next7) return;
+      // Hatırlatıcının tutarı yok; ödeme adedi olarak sayılır
+      items.push({ date: d, amount: 0 });
+    });
+
+    // Güne göre grupla
+    const groups: { date: Date; total: number; count: number }[] = [];
+    items.forEach((it) => {
+      const g = groups.find((x) => isSameDay(x.date, it.date));
+      if (g) { g.total += it.amount; g.count += 1; }
+      else groups.push({ date: it.date, total: it.amount, count: 1 });
+    });
+    groups.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const total = groups.reduce((s, g) => s + g.total, 0);
+    const totalCount = groups.reduce((s, g) => s + g.count, 0);
+    return { groups, total, totalCount, days: groups.length };
+  }, [expenses, paymentReminders, now]);
+
+  function dayLabel(d: Date) {
+    const today = startOfDay(now);
+    if (isSameDay(d, today)) return "Bugün";
+    if (isSameDay(d, addDays(today, 1))) return "Yarın";
+    return format(d, "EEEE", { locale: tr });
+  }
+
+  const upcomingBorder = upcomingWeek.total === 0
+    ? "border-emerald-300 bg-emerald-50/40"
+    : upcomingWeek.total < 5000
+      ? "border-amber-300 bg-amber-50/40"
+      : "border-red-300 bg-red-50/40";
+
   const periodLabels: Record<Period, string> = { week: "Bu Hafta", month: "Bu Ay", year: "Bu Yıl" };
 
   if (loading) return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Yükleniyor...</p></div>;
@@ -227,6 +301,43 @@ function ButceCrmDashboard() {
         <MetricCard title="Aktif Reklam Harcaması" value={formatCurrency(activeAdsSpend)} icon={<Megaphone className="h-5 w-5 text-fuchsia-600" />} bg="bg-fuchsia-100" valueClass="text-foreground" sub={`${activeCampaigns.length} aktif kampanya`} />
         <MetricCard title="Ortalama ROAS" value={`${activeRoas.toFixed(2)}x`} icon={<Target className="h-5 w-5 text-cyan-600" />} bg="bg-cyan-100" valueClass="text-foreground" />
       </div>
+
+      <Card className={`border-2 ${upcomingBorder}`}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarClock className="h-4 w-4 text-primary" /> Bu Hafta Ne Ödeyeceğim?
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Önümüzdeki 7 gün</p>
+        </CardHeader>
+        <CardContent>
+          {upcomingWeek.total === 0 && upcomingWeek.totalCount === 0 ? (
+            <p className="text-sm text-emerald-700 font-medium">Bu hafta ödemeniz yok 🎉</p>
+          ) : (
+            <div className="space-y-2">
+              {upcomingWeek.groups.slice(0, 5).map((g, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded bg-secondary capitalize">{dayLabel(g.date)}</span>
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(g.total)}
+                    <span className="text-xs text-muted-foreground ml-1.5">· {g.count} ödeme</span>
+                  </span>
+                </div>
+              ))}
+              {upcomingWeek.groups.length > 5 && (
+                <p className="text-xs text-muted-foreground">+{upcomingWeek.groups.length - 5} gün daha</p>
+              )}
+              <div className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
+                <span>Toplam: {formatCurrency(upcomingWeek.total)}</span>
+                <span className="text-muted-foreground font-normal text-xs">
+                  {upcomingWeek.days} gün · {upcomingWeek.totalCount} ödeme
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Gelir vs Gider Trendi (Son 6 Ay)</CardTitle></CardHeader>

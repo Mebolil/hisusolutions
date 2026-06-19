@@ -104,6 +104,7 @@ function SalesPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [agingFilter, setAgingFilter] = useState<"0-30" | "30-60" | "60+" | null>(null);
   const PAGE_SIZE = 50;
 
   async function load() {
@@ -137,6 +138,28 @@ function SalesPage() {
     [customers],
   );
 
+  const today = useMemo(() => new Date(), []);
+
+  const agingStats = useMemo(() => {
+    const buckets = { "0-30": { count: 0, amount: 0 }, "30-60": { count: 0, amount: 0 }, "60+": { count: 0, amount: 0 } };
+    const todayTime = today.getTime();
+    sales.forEach((s) => {
+      if (s.payment_status === "ödendi") return;
+      if (s.status && s.status !== "aktif") return;
+      if (!s.due_date) return;
+      const outstanding = Math.max(0, Number(s.total_amount || 0) - Number(s.paid_amount || 0));
+      if (outstanding <= 0) return;
+      let dueTime: number;
+      try { dueTime = new Date(s.due_date).getTime(); } catch { return; }
+      if (dueTime >= todayTime) return;
+      const diffDays = Math.floor((todayTime - dueTime) / 86400000);
+      if (diffDays <= 30) { buckets["0-30"].count++; buckets["0-30"].amount += outstanding; }
+      else if (diffDays <= 60) { buckets["30-60"].count++; buckets["30-60"].amount += outstanding; }
+      else { buckets["60+"].count++; buckets["60+"].amount += outstanding; }
+    });
+    return buckets;
+  }, [sales, today]);
+
   const platformList = useMemo(() => {
     const set = new Set<string>();
     sales.forEach((s) => s.platform && set.add(s.platform));
@@ -154,12 +177,27 @@ function SalesPage() {
         const text = `${s.product_name} ${customerMap[s.customer_id || ""] || ""} ${s.note || ""}`.toLowerCase();
         if (!text.includes(q.toLowerCase())) return false;
       }
+      if (agingFilter) {
+        if (s.payment_status === "ödendi") return false;
+        if (s.status && s.status !== "aktif") return false;
+        if (!s.due_date) return false;
+        const outstanding = Math.max(0, Number(s.total_amount || 0) - Number(s.paid_amount || 0));
+        if (outstanding <= 0) return false;
+        const tTime = new Date().getTime();
+        let dueTime: number;
+        try { dueTime = new Date(s.due_date).getTime(); } catch { return false; }
+        if (dueTime >= tTime) return false;
+        const diffDays = Math.floor((tTime - dueTime) / 86400000);
+        if (agingFilter === "0-30" && (diffDays < 1 || diffDays > 30)) return false;
+        if (agingFilter === "30-60" && (diffDays <= 30 || diffDays > 60)) return false;
+        if (agingFilter === "60+" && diffDays <= 60) return false;
+      }
       return true;
     });
-  }, [sales, statusFilter, saleStatusFilter, platformFilter, from, to, q, customerMap]);
+  }, [sales, statusFilter, saleStatusFilter, platformFilter, from, to, q, customerMap, agingFilter]);
 
   // Filter değişince sayfayı sıfırla
-  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q, saleStatusFilter]);
+  useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q, saleStatusFilter, agingFilter]);
 
   const [sortKey, setSortKey] = useState<keyof Sale>("sale_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -311,6 +349,34 @@ function SalesPage() {
 
   return (
     <div className="space-y-6">
+      {(agingStats["0-30"].count > 0 || agingStats["30-60"].count > 0 || agingStats["60+"].count > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {(["0-30", "30-60", "60+"] as const).map((bucket) => {
+            const cfg = {
+              "0-30": { label: "0–30 Gün", color: "border-amber-300 bg-amber-50", textColor: "text-amber-700", badge: "bg-amber-100 text-amber-700" },
+              "30-60": { label: "30–60 Gün", color: "border-orange-300 bg-orange-50", textColor: "text-orange-700", badge: "bg-orange-100 text-orange-700" },
+              "60+": { label: "60+ Gün", color: "border-red-400 bg-red-50", textColor: "text-red-700", badge: "bg-red-100 text-red-700" },
+            }[bucket];
+            const isActive = agingFilter === bucket;
+            return (
+              <button
+                key={bucket}
+                onClick={() => setAgingFilter(isActive ? null : bucket)}
+                className={`text-left p-4 rounded-lg border-2 transition-all ${cfg.color} ${isActive ? "ring-2 ring-offset-1 ring-current" : "hover:opacity-80"}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-xs font-semibold ${cfg.textColor}`}>Gecikmiş · {cfg.label}</span>
+                  {agingStats[bucket].count > 0 && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>{agingStats[bucket].count} fatura</span>
+                  )}
+                </div>
+                <p className={`text-xl font-bold ${cfg.textColor}`}>{formatCurrency(agingStats[bucket].amount)}</p>
+                {isActive && <p className="text-xs mt-1 opacity-70">Filtrelendi — temizlemek için tekrar tıkla</p>}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <EditSaleDialog
         sale={editing}
         onClose={() => setEditing(null)}

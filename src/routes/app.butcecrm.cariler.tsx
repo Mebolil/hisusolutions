@@ -111,9 +111,26 @@ function SortIcon({ col, active, dir }: { col: string; active: SortKey; dir: Sor
 
 function PartiesPage() {
   const [tab, setTab] = useState<Kind>("customers");
+  const [ghostCustomers, setGhostCustomers] = useState<{
+    customer_id: string; customer_name: string; last_sale_date: string | null;
+    days_since: number | null; lifetime_revenue: number;
+  }[]>([]);
+  const [showGhostList, setShowGhostList] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const { data } = await supabase.rpc("get_ghost_customers", {
+        p_user_id: session.user.id,
+        p_days_threshold: 60,
+      });
+      setGhostCustomers((data || []) as typeof ghostCustomers);
+    })();
+  }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" /> Cariler
@@ -121,16 +138,75 @@ function PartiesPage() {
         <p className="text-muted-foreground text-sm">Müşteri ve tedarikçi yönetimi</p>
       </div>
 
+      {ghostCustomers.length > 0 && (
+        <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <Users className="h-4 w-4 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-purple-800">{ghostCustomers.length} müşteri 60+ gündür sessiz</p>
+              <p className="text-xs text-purple-600">Bu müşteriler daha önce sizden alışveriş yaptı — geri kazanmak ister misiniz?</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" className="border-purple-300 text-purple-700 hover:bg-purple-100 flex-shrink-0"
+            onClick={() => setShowGhostList((v) => !v)}>
+            {showGhostList ? "Gizle" : "Listeyi Gör"}
+          </Button>
+        </div>
+      )}
+
+      {showGhostList && ghostCustomers.length > 0 && (
+        <div className="rounded-lg border bg-card">
+          <div className="p-4 border-b">
+            <h3 className="font-semibold text-sm">Sessiz Müşteriler</h3>
+            <p className="text-xs text-muted-foreground">Son 60 günde alışveriş yapmayan müşteriler (en uzun süreden kısaya)</p>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Müşteri</TableHead>
+                <TableHead className="text-center">Son Alışveriş</TableHead>
+                <TableHead className="text-center">Sessiz</TableHead>
+                <TableHead className="text-right">Toplam Alışveriş</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ghostCustomers.slice(0, 10).map((g) => (
+                <TableRow key={g.customer_id}>
+                  <TableCell className="font-medium">{g.customer_name}</TableCell>
+                  <TableCell className="text-center text-sm text-muted-foreground">{g.last_sale_date ?? "Hiç alışveriş yok"}</TableCell>
+                  <TableCell className="text-center">
+                    {g.days_since !== null ? (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${g.days_since > 90 ? "bg-red-100 text-red-700" : "bg-purple-100 text-purple-700"}`}>
+                        {g.days_since} gün
+                      </span>
+                    ) : <span className="text-xs text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium">
+                    {g.lifetime_revenue > 0 ? formatCurrency(g.lifetime_revenue) : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as Kind)}>
         <TabsList>
           <TabsTrigger value="customers">Müşteriler</TabsTrigger>
           <TabsTrigger value="suppliers">Tedarikçiler</TabsTrigger>
+          <TabsTrigger value="profitability">Müşteri Karlılığı</TabsTrigger>
         </TabsList>
         <TabsContent value="customers" className="mt-4">
           <PartyList kind="customers" title="Müşteri" />
         </TabsContent>
         <TabsContent value="suppliers" className="mt-4">
           <PartyList kind="suppliers" title="Tedarikçi" />
+        </TabsContent>
+        <TabsContent value="profitability" className="mt-4">
+          <CustomerProfitabilityTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -167,6 +243,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
           .from("sales")
           .select("customer_id, total_amount, paid_amount, payment_status")
           .eq("user_id", uid)
+          .is("deleted_at", null)
           .in("customer_id", ids);
         const map: Record<string, PartyStats> = {};
         for (const s of sales || []) {
@@ -185,6 +262,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
           .from("purchases")
           .select("supplier_id, amount, paid_amount, payment_status")
           .eq("user_id", uid)
+          .is("deleted_at", null)
           .in("supplier_id", ids);
         const map: Record<string, PartyStats> = {};
         for (const p of purchases || []) {
@@ -869,5 +947,131 @@ function PartyDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CustomerProfitabilityTab() {
+  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<{
+    customerId: string; customerName: string; grossRevenue: number;
+    totalCost: number; returnAmount: number; netProfit: number; profitMargin: number;
+  }[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const uid = session.user.id;
+
+      const [salesRes, returnsRes, customersRes] = await Promise.all([
+        supabase.from("sales")
+          .select("id, customer_id, total_amount, total_cost")
+          .eq("user_id", uid)
+          .is("deleted_at", null)
+          .eq("status", "aktif")
+          .not("customer_id", "is", null),
+        supabase.from("returns")
+          .select("sale_id, return_amount")
+          .eq("user_id", uid)
+          .is("deleted_at", null)
+          .eq("status", "active"),
+        supabase.from("customers")
+          .select("id, name")
+          .eq("user_id", uid)
+          .is("deleted_at", null),
+      ]);
+
+      const returnsBySale: Record<string, number> = {};
+      ((returnsRes.data || []) as { sale_id: string; return_amount: number }[]).forEach((r) => {
+        returnsBySale[r.sale_id] = (returnsBySale[r.sale_id] || 0) + Number(r.return_amount || 0);
+      });
+
+      const customerNameMap: Record<string, string> = Object.fromEntries(
+        ((customersRes.data || []) as { id: string; name: string }[]).map((c) => [c.id, c.name])
+      );
+
+      const profMap: Record<string, { revenue: number; cost: number; returns: number }> = {};
+      ((salesRes.data || []) as { id: string; customer_id: string; total_amount: number; total_cost: number }[]).forEach((s) => {
+        if (!s.customer_id) return;
+        if (!profMap[s.customer_id]) profMap[s.customer_id] = { revenue: 0, cost: 0, returns: 0 };
+        profMap[s.customer_id].revenue += Number(s.total_amount || 0);
+        profMap[s.customer_id].cost += Number(s.total_cost || 0);
+        profMap[s.customer_id].returns += returnsBySale[s.id] || 0;
+      });
+
+      const result = Object.entries(profMap).map(([cid, m]) => ({
+        customerId: cid,
+        customerName: customerNameMap[cid] || "Bilinmiyor",
+        grossRevenue: m.revenue,
+        totalCost: m.cost,
+        returnAmount: m.returns,
+        netProfit: m.revenue - m.cost - m.returns,
+        profitMargin: m.revenue > 0 ? ((m.revenue - m.cost - m.returns) / m.revenue) * 100 : 0,
+      })).sort((a, b) => b.netProfit - a.netProfit);
+
+      setRows(result);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <div className="py-8 text-center text-muted-foreground">Hesaplanıyor...</div>;
+  if (rows.length === 0) return <div className="py-8 text-center text-muted-foreground">Henüz yeterli satış verisi yok</div>;
+
+  return (
+    <div className="space-y-4">
+      {rows[0] && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-xs text-emerald-600 font-medium mb-1">🏆 En Karlı Müşteri</p>
+            <p className="font-bold text-emerald-800 truncate">{rows[0].customerName}</p>
+            <p className="text-lg font-bold text-emerald-600">{formatCurrency(rows[0].netProfit)}</p>
+          </div>
+          {rows[rows.length - 1]?.netProfit < 0 && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-xs text-red-600 font-medium mb-1">⚠ Zarar Eden Müşteri</p>
+              <p className="font-bold text-red-800 truncate">{rows[rows.length - 1].customerName}</p>
+              <p className="text-lg font-bold text-red-600">{formatCurrency(rows[rows.length - 1].netProfit)}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>#</TableHead>
+            <TableHead>Müşteri</TableHead>
+            <TableHead className="text-right">Ciro</TableHead>
+            <TableHead className="text-right">Maliyet</TableHead>
+            <TableHead className="text-right">İade</TableHead>
+            <TableHead className="text-right">Net Kâr</TableHead>
+            <TableHead className="text-center">Marj</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((r, i) => (
+            <TableRow key={r.customerId}>
+              <TableCell className="text-muted-foreground text-sm">{i + 1}</TableCell>
+              <TableCell className="font-medium">{r.customerName}</TableCell>
+              <TableCell className="text-right text-sm">{formatCurrency(r.grossRevenue)}</TableCell>
+              <TableCell className="text-right text-sm text-muted-foreground">{formatCurrency(r.totalCost)}</TableCell>
+              <TableCell className="text-right text-sm text-muted-foreground">{r.returnAmount > 0 ? `-${formatCurrency(r.returnAmount)}` : "—"}</TableCell>
+              <TableCell className={`text-right font-bold ${r.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                {formatCurrency(r.netProfit)}
+              </TableCell>
+              <TableCell className="text-center">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  r.profitMargin >= 20 ? "bg-emerald-100 text-emerald-700" :
+                  r.profitMargin >= 0 ? "bg-amber-100 text-amber-700" :
+                  "bg-red-100 text-red-700"
+                }`}>
+                  %{r.profitMargin.toFixed(1)}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

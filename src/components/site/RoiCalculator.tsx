@@ -1,8 +1,17 @@
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 export function RoiCalculator() {
   const [hours, setHours] = useState(10);
   const [rate, setRate] = useState(300);
+  const [interacted, setInteracted] = useState(false);
+
+  function onInteract() {
+    if (!interacted) {
+      trackEvent("roi_calculator_interact");
+      setInteracted(true);
+    }
+  }
 
   const annualSavings = hours * 12 * rate * 0.8;
   const butceCRMCost = 8900;
@@ -32,7 +41,7 @@ export function RoiCalculator() {
                   min={1}
                   max={40}
                   value={hours}
-                  onChange={e => setHours(Number(e.target.value))}
+                  onChange={e => { onInteract(); setHours(Number(e.target.value)); }}
                   className="w-full accent-primary"
                 />
                 <div className="mt-1 flex justify-between text-xs text-muted-foreground">
@@ -51,7 +60,7 @@ export function RoiCalculator() {
                   max={2000}
                   step={50}
                   value={rate}
-                  onChange={e => setRate(Number(e.target.value))}
+                  onChange={e => { onInteract(); setRate(Number(e.target.value)); }}
                   className="w-full accent-primary"
                 />
                 <div className="mt-1 flex justify-between text-xs text-muted-foreground">

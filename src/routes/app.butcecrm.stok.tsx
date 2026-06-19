@@ -152,6 +152,7 @@ function StockPage() {
   const [page, setPage] = useState(1);
   const [stats, setStats] = useState({ total: 0, low: 0, out: 0 });
   const [reorderProduct, setReorderProduct] = useState<Product | null>(null);
+  const [recentSales, setRecentSales] = useState<{ product_name: string; quantity: number }[]>([]);
 
   // Whether we're in client-side filter mode (stateFilter low/ok)
   const clientMode = stateFilter === "low" || stateFilter === "ok";
@@ -235,7 +236,22 @@ function StockPage() {
     setLoading(false);
   }
 
-  useEffect(() => { loadStats(); loadCategories(); }, []);
+  async function loadRecentSales() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const uid = session.user.id;
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+    const { data: recentSalesData } = await supabase
+      .from("sales")
+      .select("product_name, quantity")
+      .eq("user_id", uid)
+      .is("deleted_at", null)
+      .eq("status", "aktif")
+      .gte("sale_date", thirtyDaysAgo);
+    setRecentSales((recentSalesData as { product_name: string; quantity: number }[]) || []);
+  }
+
+  useEffect(() => { loadStats(); loadCategories(); loadRecentSales(); }, []);
 
   useEffect(() => {
     setPage(1);
@@ -273,6 +289,26 @@ function StockPage() {
     : rows;
   const displayTotal = clientMode && clientSorted ? clientSorted.length : totalCount;
   const totalPages = Math.max(1, Math.ceil(displayTotal / PAGE_SIZE));
+
+  const stockForecast = useMemo(() => {
+    const salesByName: Record<string, number> = {};
+    recentSales.forEach((s) => {
+      const key = (s.product_name || "").trim().toLowerCase();
+      if (key) salesByName[key] = (salesByName[key] || 0) + Number(s.quantity || 0);
+    });
+    return displayRows.map((p) => {
+      const key = (p.name || "").trim().toLowerCase();
+      const totalSold = salesByName[key] || 0;
+      const avgDaily = totalSold / 30;
+      const daysLeft = avgDaily > 0 ? Math.floor(Number(p.quantity || 0) / avgDaily) : null;
+      return { productId: p.id, avgDaily: +avgDaily.toFixed(1), daysLeft };
+    });
+  }, [displayRows, recentSales]);
+
+  const forecastMap = useMemo(
+    () => Object.fromEntries(stockForecast.map((f) => [f.productId, f])),
+    [stockForecast]
+  );
 
   const categoryNames = useMemo(() => {
     const set = new Set<string>(categories.map((c) => c.name));
@@ -504,6 +540,8 @@ function StockPage() {
                       </span>
                     </TableHead>
                   ))}
+                  <TableHead className="text-right">Günlük Ort.</TableHead>
+                  <TableHead className="text-center">Tahmini Bitiş</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead className="text-right">Hareketler</TableHead>
                 </TableRow>
@@ -528,6 +566,19 @@ function StockPage() {
                       <TableCell className="text-right font-medium">{Number(p.quantity)}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{Number(p.low_stock_threshold)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(Number(p.unit_price || 0))}</TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {forecastMap[p.id]?.avgDaily > 0 ? `${forecastMap[p.id]!.avgDaily}/gün` : "—"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {(() => {
+                          const d = forecastMap[p.id]?.daysLeft;
+                          if (d === null || d === undefined) return <span className="text-xs text-muted-foreground">—</span>;
+                          if (d <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Tükendi</span>;
+                          if (d <= 7) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">{d} gün</span>;
+                          if (d <= 30) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">{d} gün</span>;
+                          return <span className="text-xs text-muted-foreground">{d} gün</span>;
+                        })()}
+                      </TableCell>
                       <TableCell>
                         <span className={`text-xs px-2 py-0.5 rounded border ${STATE_BADGE[st]}`}>{STATE_LABEL[st]}</span>
                       </TableCell>

@@ -17,14 +17,17 @@ function getSessionId(): string {
 }
 
 export function trackPageView(path: string) {
-  // GTM dataLayer push
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push({ event: "page_view", page_path: path });
 
-  // Supabase page_views tablosuna yaz — fire-and-forget
   supabase.from("page_views").insert({
     session_id: getSessionId(),
     page_path: path,
     referrer: document.referrer || null,
   }).then(() => {});
+}
+
+export function trackEvent(event: string, properties?: Record<string, unknown>) {
+  window.dataLayer = window.dataLayer ?? [];
+  window.dataLayer.push({ event, ...properties });
 }

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DemoQualificationStep } from "./DemoQualificationStep";
+import { trackEvent } from "@/lib/analytics";
 
 interface Field {
   name: string;
@@ -70,6 +71,7 @@ export function BookingForm({
   const goToStep2 = () => {
     if (!selectedDate) { toast.error("Lütfen bir tarih seçin."); return; }
     if (!selectedTime) { toast.error("Lütfen bir saat seçin."); return; }
+    trackEvent("booking_step_complete", { step: 1, source });
     setStep(2);
   };
 
@@ -78,6 +80,7 @@ export function BookingForm({
 
     // Step 2 → Step 3 (qualification) sadece butcecrm-demo için
     if (step === 2 && withQual) {
+      trackEvent("booking_step_complete", { step: 2, source });
       setStep(3);
       return;
     }
@@ -128,6 +131,7 @@ export function BookingForm({
     setSelectedTime("");
     setValues({});
     setQualification({});
+    trackEvent("booking_step_complete", { step: withQual ? 3 : 2, source, completed: true });
     toast.success("Randevunuz alındı! 24 saat içinde onay maili gönderilecek.");
   };
 

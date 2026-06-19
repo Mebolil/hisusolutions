@@ -40,7 +40,7 @@ type Campaign = {
   start_date: string;
   end_date: string | null;
 };
-type Sale = { campaign_id: string | null; total_amount: number; sale_date: string };
+type Sale = { campaign_id: string | null; total_amount: number; paid_amount: number | null; sale_date: string };
 
 const STATUSES = ["aktif", "pasif"] as const;
 type Status = (typeof STATUSES)[number];
@@ -79,7 +79,7 @@ function AdsPage() {
     const uid = session.user.id;
     const [c, s] = await Promise.all([
       supabase.from("campaigns").select("*").eq("user_id", uid).is("deleted_at", null).order("start_date", { ascending: false }),
-      supabase.from("sales").select("campaign_id,total_amount,sale_date").eq("user_id", uid).is("deleted_at", null).not("campaign_id", "is", null).limit(2000),
+      supabase.from("sales").select("campaign_id,total_amount,paid_amount,sale_date").eq("user_id", uid).is("deleted_at", null).eq("status", "aktif").not("campaign_id", "is", null).limit(2000),
     ]);
     setCampaigns((c.data as Campaign[]) || []);
     setSales((s.data as Sale[]) || []);
@@ -100,6 +100,17 @@ function AdsPage() {
       m[s.campaign_id] = (m[s.campaign_id] || 0) + Number(s.total_amount || 0);
     });
     return m;
+  }, [sales]);
+
+  const campaignCollectionMap = useMemo(() => {
+    const map: Record<string, { totalSales: number; totalCollected: number }> = {};
+    sales.forEach((s) => {
+      if (!s.campaign_id) return;
+      if (!map[s.campaign_id]) map[s.campaign_id] = { totalSales: 0, totalCollected: 0 };
+      map[s.campaign_id].totalSales += Number(s.total_amount || 0);
+      map[s.campaign_id].totalCollected += Number(s.paid_amount || 0);
+    });
+    return map;
   }, [sales]);
 
   const enriched = useMemo(() => {
@@ -380,6 +391,7 @@ function AdsPage() {
                   <TableHead className="text-right">Harcama / Bütçe</TableHead>
                   <TableHead className="text-right">Gelir</TableHead>
                   <TableHead className="text-right">ROAS</TableHead>
+                  <TableHead className="text-right">Tahsilat</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead className="w-24"></TableHead>
                 </TableRow>
@@ -426,6 +438,15 @@ function AdsPage() {
                       <TableCell className="text-right">{formatCurrency(c.revenue)}</TableCell>
                       <TableCell className={`text-right font-semibold ${c.roas >= 1 ? "text-emerald-600" : c.roas > 0 ? "text-red-600" : "text-muted-foreground"}`}>
                         {c.roas > 0 ? `${c.roas.toFixed(2)}x` : "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {(() => {
+                          const col = campaignCollectionMap[c.id];
+                          if (!col || col.totalSales === 0) return <span className="text-xs text-muted-foreground">—</span>;
+                          const rate = (col.totalCollected / col.totalSales) * 100;
+                          const cls = rate >= 80 ? "text-emerald-600" : rate >= 50 ? "text-amber-600" : "text-red-600";
+                          return <span className={`text-sm font-medium ${cls}`}>%{rate.toFixed(0)}</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         <button

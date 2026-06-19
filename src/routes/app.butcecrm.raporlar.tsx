@@ -40,6 +40,7 @@ type Purchase = { id: string; purchase_date: string; amount: number; paid_amount
 type Product = { id: string; name: string; quantity: number; low_stock_threshold: number; unit_price: number | null; category: string | null };
 type Campaign = { id: string; name: string; platform: string | null; status: string; spend: number; start_date: string };
 type Customer = { id: string; name: string };
+type ReturnData = { product_name: string; return_amount: number; return_date: string };
 
 type PeriodKey = "week" | "month" | "3m" | "6m" | "year" | "custom";
 
@@ -65,6 +66,7 @@ function ReportsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [returns, setReturns] = useState<ReturnData[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -73,13 +75,19 @@ function ReportsPage() {
       const uid = session.user.id;
       // 13 aylık lookback: tüm built-in period'ları (hafta/ay/3ay/6ay/yıl) kapsar
       const fetchFrom = format(subMonths(new Date(), 13), "yyyy-MM-dd");
-      const [s, e, pu, p, c, cu] = await Promise.all([
+      const [s, e, pu, p, c, cu, ret] = await Promise.all([
         supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
         supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
         supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).gte("purchase_date", fetchFrom),
         supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
+        supabase.from("returns")
+          .select("product_name,return_amount,return_date")
+          .eq("user_id", uid)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .gte("return_date", fetchFrom),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -87,6 +95,7 @@ function ReportsPage() {
       setProducts((p.data as Product[]) || []);
       setCampaigns((c.data as Campaign[]) || []);
       setCustomers((cu.data as Customer[]) || []);
+      setReturns((ret.data as ReturnData[]) || []);
       setLoading(false);
     })();
   }, []);
@@ -294,6 +303,41 @@ function ReportsPage() {
       .slice(0, 15);
   }, [products, periodSales]);
 
+  // --- ÜRÜN KARLILIĞI ---
+  const periodReturnsByProduct = useMemo(() => {
+    const map: Record<string, number> = {};
+    returns
+      .filter((r) => { try { return isWithinInterval(parseISO(r.return_date), range); } catch { return false; } })
+      .forEach((r) => {
+        const key = r.product_name || "Belirtilmemiş";
+        map[key] = (map[key] || 0) + Number(r.return_amount || 0);
+      });
+    return map;
+  }, [returns, range]);
+
+  const productProfitability = useMemo(() => {
+    const map: Record<string, { revenue: number; cost: number; quantity: number; orders: number }> = {};
+    periodSales.forEach((s) => {
+      const k = s.product_name || "Belirtilmemiş";
+      if (!map[k]) map[k] = { revenue: 0, cost: 0, quantity: 0, orders: 0 };
+      map[k].revenue += Number(s.total_amount || 0);
+      map[k].cost += Number(s.total_cost || 0);
+      map[k].quantity += Number(s.quantity || 0);
+      map[k].orders += 1;
+    });
+    return Object.entries(map)
+      .map(([name, v]) => {
+        const iadeAmount = periodReturnsByProduct[name] || 0;
+        const netRevenue = v.revenue - iadeAmount;
+        const netProfit = netRevenue - v.cost;
+        const grossMargin = v.revenue > 0 ? ((v.revenue - v.cost) / v.revenue) * 100 : 0;
+        const netMargin = v.revenue > 0 ? (netProfit / v.revenue) * 100 : 0;
+        const iadeOran = v.revenue > 0 ? (iadeAmount / v.revenue) * 100 : 0;
+        return { name, ...v, iadeAmount, netRevenue, netProfit, grossMargin, netMargin, iadeOran };
+      })
+      .sort((a, b) => b.netProfit - a.netProfit);
+  }, [periodSales, periodReturnsByProduct]);
+
   // --- NAKİT AKIŞI ---
   const cashFlowData = useMemo(() => {
     const months = eachMonthOfInterval({ start: range.start, end: range.end });
@@ -420,6 +464,19 @@ function ReportsPage() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(slowMovers.map((p) => ({
       Ürün: p.name, Kategori: p.category, Stok: p.quantity, "Stok Değeri": p.value,
     }))), "Yavaş Stok");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(productProfitability.map((p) => ({
+      Ürün: p.name,
+      Adet: p.quantity,
+      Sipariş: p.orders,
+      Gelir: p.revenue.toFixed(2),
+      Maliyet: p.cost.toFixed(2),
+      İade: p.iadeAmount.toFixed(2),
+      "Net Gelir": p.netRevenue.toFixed(2),
+      "Net Kâr": p.netProfit.toFixed(2),
+      "Brüt Marj %": p.grossMargin.toFixed(1),
+      "Net Marj %": p.netMargin.toFixed(1),
+      "İade Oranı %": p.iadeOran.toFixed(1),
+    }))), "Ürün Karlılığı");
     XLSX.writeFile(wb, `butcecrm-rapor-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("Excel dosyası indirildi");
   }
@@ -547,6 +604,7 @@ function ReportsPage() {
           <TabsTrigger value="stock">Stok</TabsTrigger>
           <TabsTrigger value="cashflow">Nakit Akışı</TabsTrigger>
           <TabsTrigger value="aging">Alacak Yaşlandırma</TabsTrigger>
+          <TabsTrigger value="products">Ürün Karlılığı</TabsTrigger>
           <TabsTrigger value="breakeven">Başa Baş</TabsTrigger>
         </TabsList>
 
@@ -1008,6 +1066,20 @@ function ReportsPage() {
 
         {/* ALACAK YAŞLANDıRMA */}
         <TabsContent value="aging" className="space-y-4 mt-4">
+          {agingRows.length > 0 && (
+            <div className="flex items-start justify-between p-4 rounded-lg bg-red-50 border-2 border-red-200">
+              <div>
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide">Bugün tahsil edilebilecek ama bekleyen tutar</p>
+                <p className="text-3xl font-bold text-red-700 mt-1">
+                  {formatCurrency(agingRows.reduce((s, r) => s + r.remaining, 0))}
+                </p>
+                <p className="text-xs text-red-500 mt-1">
+                  Her geçen gün tahsilat olasılığı düşüyor — önce en eski alacakları takip edin.
+                </p>
+              </div>
+              <AlertTriangle className="h-12 w-12 text-red-300 shrink-0" />
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">Vadesi geçmiş ve henüz tahsil edilmemiş alacaklar. Renk dilimleri riski gösterir: sarı dikkat, turuncu riskli, kırmızı kritik.</p>
           {agingRows.length === 0 && (
             <InsightBanner type="success" message="Vadesi geçmiş alacak yok. Tahsilat durumu iyi görünüyor." />
@@ -1101,6 +1173,169 @@ function ReportsPage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ÜRÜN KARLILIĞI */}
+        <TabsContent value="products" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">
+            Seçilen dönemde ürün başına brüt ve net kâr analizi. İade etkisi düşüldükten sonraki gerçek karlılık gösterilir.
+          </p>
+
+          {productProfitability.filter((p) => p.netProfit < 0).length > 0 && (
+            <InsightBanner
+              type="danger"
+              message={`Bu dönemde ${productProfitability.filter((p) => p.netProfit < 0).length} ürününüz zararda (iade sonrası net kâr negatif). İlgili ürünler tabloda kırmızıyla işaretlendi.`}
+            />
+          )}
+
+          {productProfitability.length === 0 ? (
+            <InsightBanner type="info" message="Bu dönem için satış verisi bulunamadı." />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Toplam Ürün Çeşidi</p>
+                    <p className="text-xl font-bold">{productProfitability.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">dönemde satılan</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">En Kârlı Ürün</p>
+                    <p className="text-base font-bold text-emerald-600 truncate" title={productProfitability[0]?.name}>
+                      {productProfitability[0]?.name || "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCurrency(productProfitability[0]?.netProfit || 0)} · %{(productProfitability[0]?.netMargin || 0).toFixed(1)} marjin
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">En Zararlı Ürün</p>
+                    {(() => {
+                      const worst = [...productProfitability].sort((a, b) => a.netProfit - b.netProfit)[0];
+                      return worst && worst.netProfit < 0 ? (
+                        <>
+                          <p className="text-base font-bold text-red-600 truncate" title={worst.name}>{worst.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatCurrency(worst.netProfit)} · %{worst.netMargin.toFixed(1)} marjin
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-base font-bold text-emerald-600">Tümü kârlı</p>
+                          <p className="text-xs text-muted-foreground mt-1">Negatif marjinli ürün yok</p>
+                        </>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Ortalama Net Marjin</p>
+                    {(() => {
+                      const avg = productProfitability.length > 0
+                        ? productProfitability.reduce((s, p) => s + p.netMargin, 0) / productProfitability.length
+                        : 0;
+                      return (
+                        <>
+                          <p className={`text-xl font-bold ${avg >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            %{avg.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">İade sonrası net</p>
+                        </>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">En Kârlı 10 Ürün (Net Kâr)</CardTitle>
+                  <p className="text-xs text-muted-foreground">İade tutarı düşüldükten sonraki net kâr · Kırmızı bar = zararlı ürün</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={productProfitability.slice(0, 10)} layout="vertical" margin={{ left: 120 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          type="number"
+                          tickFormatter={(v) => `₺${(Number(v) / 1000).toFixed(0)}k`}
+                          className="text-xs"
+                        />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={150}
+                          className="text-xs"
+                          tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + "…" : v}
+                        />
+                        <Tooltip
+                          formatter={(v, name) => [formatCurrency(Number(v)), name === "netProfit" ? "Net Kâr" : String(name)]}
+                          labelFormatter={(l) => String(l)}
+                        />
+                        <Bar dataKey="netProfit" name="Net Kâr" radius={[0, 4, 4, 0]}>
+                          {productProfitability.slice(0, 10).map((entry, i) => (
+                            <Cell key={i} fill={entry.netProfit >= 0 ? "#10b981" : "#ef4444"} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Tüm Ürünler — Karlılık Detayı</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ürün</TableHead>
+                        <TableHead className="text-right">Adet</TableHead>
+                        <TableHead className="text-right">Gelir</TableHead>
+                        <TableHead className="text-right">Maliyet</TableHead>
+                        <TableHead className="text-right">İade</TableHead>
+                        <TableHead className="text-right">Net Kâr</TableHead>
+                        <TableHead className="text-right">Brüt Marj</TableHead>
+                        <TableHead className="text-right">Net Marj</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {productProfitability.map((p) => (
+                        <TableRow key={p.name} className={p.netProfit < 0 ? "bg-red-50/60" : undefined}>
+                          <TableCell className="font-medium max-w-[220px] truncate" title={p.name}>
+                            {p.name}
+                          </TableCell>
+                          <TableCell className="text-right">{p.quantity}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(p.revenue)}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{formatCurrency(p.cost)}</TableCell>
+                          <TableCell className="text-right text-red-500">
+                            {p.iadeAmount > 0 ? `−${formatCurrency(p.iadeAmount)}` : "—"}
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${p.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatCurrency(p.netProfit)}
+                          </TableCell>
+                          <TableCell className={`text-right ${p.grossMargin >= 0 ? "text-muted-foreground" : "text-red-500"}`}>
+                            %{p.grossMargin.toFixed(1)}
+                          </TableCell>
+                          <TableCell className={`text-right font-medium ${p.netMargin >= 20 ? "text-emerald-600" : p.netMargin >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                            %{p.netMargin.toFixed(1)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         {/* BAŞA BAŞ ANALİZİ */}

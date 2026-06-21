@@ -11,7 +11,7 @@ const PLANS = [
   {
     key: "kurucu-beta",
     label: "Kurucu Beta",
-    price: "₺519",
+    price: "₺499",
     period: "/ ay + KDV",
     desc: "31 Temmuz'a kadar · Ömür boyu bu fiyat kilitlenir",
     badge: "Sadece 10 Slot",
@@ -21,7 +21,7 @@ const PLANS = [
   {
     key: "aylik",
     label: "Aylık Plan",
-    price: "₺719",
+    price: "₺629",
     period: "/ ay + KDV",
     desc: "İstediğin zaman iptal",
     badge: null,
@@ -31,9 +31,9 @@ const PLANS = [
   {
     key: "yillik",
     label: "Yıllık Plan",
-    price: "₺7.190",
+    price: "₺6.290",
     period: "/ yıl + KDV",
-    desc: "2 ay bedava · Yılda ₺1.438 tasarruf",
+    desc: "2 ay bedava · Yılda ₺1.258 tasarruf",
     badge: "En Popüler",
     isAmber: false,
     features: ["Tüm özellikler dahil", "2 ay bedava", "Öncelikli destek"],

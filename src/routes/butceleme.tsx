@@ -113,6 +113,7 @@ function ButcelemePage() {
               { Icon: Megaphone, text: "Reklam ROAS takibi · Paraşüt, Uyumsoft'ta yok" },
               { Icon: Package, text: "Stok + Gelir + Gider · Tek ekran" },
               { Icon: Check, text: "15 gün ücretsiz · Kart gerekmez · İstediğin zaman iptal" },
+              { Icon: Gift, text: "Referans kampanyası: İkiniz de 1 ay ücretsiz · Eylül'e kadar" },
             ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-2 text-muted-foreground">
                 <Icon className="h-4 w-4 text-primary" />
@@ -396,46 +397,53 @@ function ButcelemePage() {
       </section>
 
       {/* Referans Programı */}
-      <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
-        <div className="rounded-3xl border-2 border-primary/30 bg-primary-soft p-8 md:p-12">
-          <div className="flex flex-col items-center text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-              <Gift className="h-7 w-7" />
+      <section className="relative overflow-hidden bg-primary text-primary-foreground">
+        <div className="absolute inset-0 -z-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 0%, transparent 50%), radial-gradient(circle at 80% 20%, white 0%, transparent 40%)" }} />
+        <div className="relative mx-auto max-w-6xl px-4 py-20 lg:px-8">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-5 py-2 text-sm font-bold">
+              <Gift className="h-4 w-4" /> Eylül 2026 Kampanyası · 30 Eylül'e kadar
             </span>
-            <span className="mt-4 rounded-full bg-primary/10 px-4 py-1 text-xs font-bold uppercase tracking-wider text-primary">Eylül 2026 Kampanyası</span>
-            <h2 className="mt-4 text-3xl font-bold md:text-4xl">İkisi de 1 ay ücretsiz kazanır</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+            <h2 className="mt-6 text-4xl font-bold md:text-5xl lg:text-6xl">İkisi de 1 ay<br />ücretsiz kazanır</h2>
+            <p className="mx-auto mt-5 max-w-xl text-lg text-primary-foreground/80">
               BütçeCRM'i beğendiysen bir arkadaşına öner — sen de 1 ay ücretsiz al, arkadaşın da. İkisi de kazanır. Sınır yok.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-primary/20 bg-background p-6 text-center">
-              <p className="text-4xl font-bold text-primary">+1 Ay</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">Referans veren kazanır</p>
-              <p className="mt-2 text-sm text-muted-foreground">Önerdiğin kişi kayıt olunca bir sonraki ödemen düşmez</p>
+
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-white/10 p-8 text-center backdrop-blur-sm">
+              <p className="text-5xl font-bold">1</p>
+              <p className="mt-3 text-lg font-semibold">Arkadaşını öner</p>
+              <p className="mt-2 text-sm text-primary-foreground/70">Profilinden referans linkini kopyala ve paylaş</p>
             </div>
-            <div className="rounded-2xl border border-primary/20 bg-background p-6 text-center">
-              <p className="text-4xl font-bold text-primary">+1 Ay</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">Referans alan kazanır</p>
-              <p className="mt-2 text-sm text-muted-foreground">Davet linki üzerinden kayıt ol, ilk ayın hediye</p>
+            <div className="rounded-2xl bg-white/10 p-8 text-center backdrop-blur-sm">
+              <p className="text-5xl font-bold">2</p>
+              <p className="mt-3 text-lg font-semibold">O kayıt olsun</p>
+              <p className="mt-2 text-sm text-primary-foreground/70">Arkadaşın linki kullanarak BütçeCRM'e üye olur</p>
+            </div>
+            <div className="rounded-2xl bg-white/15 p-8 text-center ring-2 ring-white/30 backdrop-blur-sm">
+              <p className="text-5xl font-bold">+1 Ay</p>
+              <p className="mt-3 text-lg font-semibold">İkiniz de kazanır</p>
+              <p className="mt-2 text-sm text-primary-foreground/70">Hem sen hem arkadaşın bir ay ücretsiz kullanım kazanır</p>
             </div>
           </div>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+
+          <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-primary shadow-lg hover:bg-white/90 transition-colors"
             >
               Başla ve Referans Linki Al <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="https://wa.me/905539003459"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-8 py-4 text-sm font-semibold hover:bg-white/10 transition-colors"
             >
               WhatsApp ile Sor
             </a>
           </div>
-          <p className="mt-5 text-center text-xs text-muted-foreground">Kampanya 30 Eylül 2026'ya kadar geçerlidir · Her başarılı referans için ayrı 1 ay · Sınır yok</p>
+          <p className="mt-6 text-center text-xs text-primary-foreground/50">Kampanya 30 Eylül 2026'ya kadar geçerlidir · Her başarılı referans için ayrı 1 ay · Sınır yok</p>
         </div>
       </section>
 

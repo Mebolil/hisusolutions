@@ -6,7 +6,7 @@ import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { RoiCalculator } from "@/components/site/RoiCalculator";
 import { PersonaSection } from "@/components/site/PersonaSection";
-import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote, Gift } from "lucide-react";
+import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote, Gift, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/butceleme")({
   head: () => ({
@@ -119,7 +119,7 @@ function ButcelemePage() {
         <div className="mx-auto max-w-5xl px-4 py-5 lg:px-8">
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm">
             {[
-              { Icon: Shield, text: "Beta sürecindeyiz · İlk kullanıcılar şekillendiriyor" },
+              { Icon: Zap, text: "İlk kullanıcılar ürünü şekillendiriyor · Beta fırsatı açık" },
               { Icon: Megaphone, text: "Reklam ROAS takibi · Paraşüt, Uyumsoft'ta yok" },
               { Icon: Package, text: "Stok + Gelir + Gider · Tek ekran" },
               { Icon: Check, text: "15 gün ücretsiz · Kart gerekmez · İstediğin zaman iptal" },

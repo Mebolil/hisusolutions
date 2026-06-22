@@ -271,7 +271,7 @@ function HomePage() {
           {/* Kurucu kartı */}
           <div className="mt-12 flex justify-center">
             <div className="flex items-center gap-6 rounded-3xl border border-border bg-card px-8 py-6">
-              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-primary-soft text-4xl font-bold text-primary">M</div>
+              <img src="/images/melih-hata.png" alt="Melih Hata" className="h-20 w-20 shrink-0 rounded-full object-cover object-top" />
               <div>
                 <p className="text-xl font-bold">Melih Hata</p>
                 <p className="text-sm text-muted-foreground">Kurucu &amp; BütçeCRM Yapımcısı</p>

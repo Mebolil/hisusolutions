@@ -1479,20 +1479,20 @@ function EditSaleDialog({
           </div>
           <div>
             <Label className="text-xs">Platform</Label>
-            <Select value={form.platform || ""} onValueChange={(v) => setForm({ ...form, platform: v })}>
+            <Select value={form.platform || "__none__"} onValueChange={(v) => setForm({ ...form, platform: v === "__none__" ? null : v })}>
               <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">—</SelectItem>
+                <SelectItem value="__none__">—</SelectItem>
                 {platforms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label className="text-xs">Kampanya (opsiyonel)</Label>
-            <Select value={form.campaign_id || ""} onValueChange={(v) => setForm({ ...form, campaign_id: v || null })}>
+            <Select value={form.campaign_id || "__none__"} onValueChange={(v) => setForm({ ...form, campaign_id: v === "__none__" ? null : v })}>
               <SelectTrigger><SelectValue placeholder="Seçin" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">—</SelectItem>
+                <SelectItem value="__none__">—</SelectItem>
                 {campaigns.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>

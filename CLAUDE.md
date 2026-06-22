@@ -160,6 +160,22 @@ supabase.from("sales").select("*").eq("id", id).eq("user_id", uid)
 - `name` unique constraint var → `ON CONFLICT (name) DO NOTHING` ile seed yapılır.
 - Varsayılan kategoriler: 20260615_category_seed.sql (Supabase SQL Editor'de çalıştırılacak — pending)
 
+### `import_sessions`
+| Kolon | Tip | Notlar |
+|-------|-----|--------|
+| id | uuid | PK |
+| user_id | uuid | FK → auth.users |
+| module | text | 'sales' \| 'expenses' \| 'customers' \| 'products' |
+| source | text | 'trendyol' \| 'hepsiburada' \| 'amazon' \| 'banka' \| 'custom' |
+| row_count | integer | |
+| status | text | 'committed' \| 'rolled_back' |
+| created_at | timestamptz | |
+
+> Import wizard'dan gelen tüm kayıtlara `import_session_id` damgalanır.
+> Geri alma: `supabase.rpc("rollback_import", { p_session_id, p_user_id })` — soft-delete yapar.
+> `sales`, `expenses`, `customers`, `products` tablolarının hepsinde `import_session_id uuid` kolonu vardır (nullable).
+> Feature flag: `CsvImportWizard.tsx`'te `const LLM_MAPPING_ENABLED = true` — false yapılırsa AI önerisi tamamen kapanır.
+
 ### `returns`
 | Kolon | Tip | Notlar |
 |-------|-----|--------|

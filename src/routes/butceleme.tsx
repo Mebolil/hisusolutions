@@ -1,9 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { useBetaSlots } from "@/lib/useBetaSlots";
-import { trackEvent } from "@/lib/analytics";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { RoiCalculator } from "@/components/site/RoiCalculator";
 import { PersonaSection } from "@/components/site/PersonaSection";
@@ -88,17 +85,8 @@ const faqs: FaqItem[] = [
 ];
 
 function ButcelemePage() {
-  const [demoSource, setDemoSource] = useState("butcecrm-demo");
   const { data: slots } = useBetaSlots();
   const remaining = slots ? slots.total_slots - slots.used_slots : null;
-
-  function scrollToDemo(source: string) {
-    setDemoSource(source);
-    trackEvent("demo_cta_click", { source });
-    setTimeout(() => {
-      document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
-    }, 0);
-  }
 
   return (
     <SiteLayout>
@@ -111,7 +99,6 @@ function ButcelemePage() {
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — BütçeCRM'de var.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></Link>
-            <a href="#demo" onClick={() => trackEvent("demo_cta_click", { source: "hero" })} className="rounded-full border border-border px-7 py-3.5 text-sm font-semibold hover:bg-accent">Demo Ayarla</a>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
         </div>
@@ -189,9 +176,6 @@ function ButcelemePage() {
             <div className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl bg-gradient-to-t from-background/80 to-transparent" />
           </div>
           <div className="absolute -inset-px -z-10 rounded-2xl bg-gradient-to-br from-primary/20 via-transparent to-emerald-400/10 blur-xl" />
-        </div>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a href="#demo" onClick={() => trackEvent("demo_cta_click", { source: "product-preview" })} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Canlı Demo Ayarla <ArrowRight className="h-4 w-4" /></a>
         </div>
       </section>
 
@@ -541,29 +525,6 @@ function ButcelemePage() {
         </blockquote>
       </div>
 
-      {/* Demo form */}
-      <section id="demo" className="mx-auto max-w-3xl px-4 py-20 lg:px-8">
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
-          <h2 className="text-3xl font-bold">Canlı Demo Ayarla</h2>
-          <p className="mt-2 text-muted-foreground">30 dakikada BütçeCRM'i birlikte keşfedelim. Kredi kartı gerekmez.</p>
-          <div className="mt-8">
-            <BookingForm
-              source={demoSource}
-              submitLabel="Görüşme Zamanı Seç"
-              fields={[
-                { name: "name", label: "Ad Soyad", required: true },
-                { name: "company", label: "Firma Adı" },
-                { name: "email", label: "E-posta", type: "email", required: true },
-                { name: "phone", label: "Telefon", type: "tel" },
-                { name: "type", label: "İşletme türünüz nedir?", type: "select", options: ["E-ticaret", "Perakende", "Hizmet", "Diğer"] },
-              ]}
-            />
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              <a href="https://wa.me/905539003459" className="text-primary hover:underline">Hızlı iletişim için WhatsApp'tan yazın</a>
-            </p>
-          </div>
-        </div>
-      </section>
     </SiteLayout>
   );
 }

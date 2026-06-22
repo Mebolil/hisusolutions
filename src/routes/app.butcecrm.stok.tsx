@@ -400,6 +400,7 @@ function StockPage() {
               unit_price: p.unit_price,
             }))}
             onImported={() => { loadStats(); if (clientMode) loadAllForClientFilter(); else loadPage(); }}
+            wizardModule="products"
           />
         </div>
       </div>

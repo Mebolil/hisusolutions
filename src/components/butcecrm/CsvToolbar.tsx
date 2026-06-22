@@ -7,6 +7,8 @@ import { Download, Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase";
+import { CsvImportWizard } from "./CsvImportWizard";
+import type { CsvImportWizardProps } from "./CsvImportWizard";
 
 export type CsvField = {
   /** DB column name */
@@ -36,6 +38,12 @@ export type CsvToolbarProps = {
   onImported?: () => void;
   /** If set, use upsert instead of insert. Comma-separated conflict columns, e.g. "name,user_id" */
   upsertOn?: string;
+  /** Wizard modu: 'sales'|'expenses'|'customers'|'products' verilirse wizard açılır */
+  wizardModule?: CsvImportWizardProps["module"];
+  /** Wizard'da gösterilecek platform şablon ID'leri */
+  wizardTemplates?: string[];
+  /** Wizard transform (uid parametreli) */
+  wizardTransformRow?: CsvImportWizardProps["transformRow"];
 };
 
 function csvEscape(v: unknown): string {
@@ -94,11 +102,13 @@ export function parseCsv(text: string): string[][] {
 
 export function CsvToolbar({
   slug, table, fields, sampleRow, exportRows, transformRow, onImported, upsertOn,
+  wizardModule, wizardTemplates, wizardTransformRow,
 }: CsvToolbarProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const xlsxRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [errorReport, setErrorReport] = useState<string[] | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const headers = fields.map((f) => f.label);
   const keys = fields.map((f) => f.key);
@@ -310,26 +320,40 @@ export function CsvToolbar({
         <Button type="button" variant="outline" size="sm" onClick={handleTemplate} className="gap-2">
           <FileText className="h-4 w-4" /> Şablon İndir
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileRef.current?.click()}
-          disabled={importing}
-          className="gap-2"
-        >
-          <Upload className="h-4 w-4" /> {importing ? "Yükleniyor..." : "CSV İçe Aktar"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => xlsxRef.current?.click()}
-          disabled={importing}
-          className="gap-2"
-        >
-          <FileSpreadsheet className="h-4 w-4" /> {importing ? "Yükleniyor..." : "Excel İçe Aktar"}
-        </Button>
+        {wizardModule ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setWizardOpen(true)}
+            className="gap-2"
+          >
+            <Upload className="h-4 w-4" /> CSV / Excel İçe Aktar
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={importing}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" /> {importing ? "Yükleniyor..." : "CSV İçe Aktar"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => xlsxRef.current?.click()}
+              disabled={importing}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" /> {importing ? "Yükleniyor..." : "Excel İçe Aktar"}
+            </Button>
+          </>
+        )}
         <Button type="button" variant="outline" size="sm" onClick={handleExport} className="gap-2">
           <Download className="h-4 w-4" /> CSV Dışa Aktar
         </Button>
@@ -351,6 +375,22 @@ export function CsvToolbar({
           onChange={handleImport}
         />
       </div>
+
+      {wizardModule && (
+        <CsvImportWizard
+          open={wizardOpen}
+          onClose={() => setWizardOpen(false)}
+          module={wizardModule}
+          table={table}
+          fields={fields}
+          transformRow={wizardTransformRow}
+          platformTemplates={wizardTemplates}
+          onImported={(_sessionId, _count) => {
+            setWizardOpen(false);
+            onImported?.();
+          }}
+        />
+      )}
 
       <Dialog open={!!errorReport} onOpenChange={(v) => !v && setErrorReport(null)}>
         <DialogContent className="max-w-xl">

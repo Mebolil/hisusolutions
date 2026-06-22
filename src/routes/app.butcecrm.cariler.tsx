@@ -1,4 +1,6 @@
 import { friendlyDbError, formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { CsvToolbar } from "@/components/butcecrm/CsvToolbar";
+import type { CsvField } from "@/components/butcecrm/CsvToolbar";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
@@ -377,6 +379,31 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
 
   const deletingStats = deleting ? statsMap[deleting.id] : null;
 
+  const CUSTOMERS_CSV_FIELDS: CsvField[] = [
+    { key: "name", label: "İsim / Firma Adı", required: true, type: "string", aliases: ["ad soyad", "müşteri adı", "isim", "firma", "ad"] },
+    { key: "phone", label: "Telefon", type: "string", aliases: ["tel", "gsm", "cep"] },
+    { key: "email", label: "E-posta", type: "string", aliases: ["mail", "eposta"] },
+    { key: "address", label: "Adres", type: "string", aliases: ["adres", "konum"] },
+    { key: "contact_person", label: "İlgili Kişi", type: "string", aliases: ["yetkili", "ilgili", "muhatap"] },
+    { key: "note", label: "Not", type: "string", aliases: ["açıklama", "notlar"] },
+  ];
+
+  const SUPPLIERS_CSV_FIELDS: CsvField[] = [
+    { key: "name", label: "Firma Adı", required: true, type: "string", aliases: ["tedarikçi", "firma", "ad"] },
+    { key: "phone", label: "Telefon", type: "string", aliases: ["tel", "gsm"] },
+    { key: "email", label: "E-posta", type: "string", aliases: ["mail", "eposta"] },
+    { key: "address", label: "Adres", type: "string", aliases: ["adres"] },
+    { key: "tax_no", label: "Vergi No", type: "string", aliases: ["vkn", "tc no", "vergi numarası"] },
+    { key: "tax_office", label: "Vergi Dairesi", type: "string", aliases: ["vd", "vergi dairesi"] },
+    { key: "contact_person", label: "İlgili Kişi", type: "string", aliases: ["yetkili", "ilgili"] },
+    { key: "note", label: "Not", type: "string", aliases: ["açıklama", "notlar"] },
+  ];
+
+  const csvFields = kind === "customers" ? CUSTOMERS_CSV_FIELDS : SUPPLIERS_CSV_FIELDS;
+  const csvSample = kind === "customers"
+    ? ["Ahmet Yılmaz", "0532 000 00 00", "ahmet@email.com", "İstanbul", "", ""]
+    : ["ABC Tekstil Ltd.", "0212 000 00 00", "info@abc.com", "İstanbul", "1234567890", "Bağcılar VD", "", ""];
+
   return (
     <div className="space-y-4">
       {/* Summary cards */}
@@ -428,6 +455,16 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
         )}
         <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Yeni {title}</Button>
       </div>
+
+      <CsvToolbar
+        slug={kind}
+        table={kind}
+        fields={csvFields}
+        sampleRow={csvSample}
+        exportRows={filtered}
+        onImported={load}
+        wizardModule={kind === "customers" ? "customers" : undefined}
+      />
 
       {q && (
         <div className="text-xs text-muted-foreground">

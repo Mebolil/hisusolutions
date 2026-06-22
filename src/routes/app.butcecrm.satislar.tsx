@@ -417,6 +417,8 @@ function SalesPage() {
           payment_status: s.payment_status,
         }))}
         onImported={load}
+        wizardModule="sales"
+        wizardTemplates={["trendyol", "hepsiburada", "amazon"]}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

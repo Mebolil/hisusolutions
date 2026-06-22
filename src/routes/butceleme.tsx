@@ -500,14 +500,9 @@ function ButcelemePage() {
             { quote: "Stok bitti uyarısı benim yerime düşünüyor. Sipariş iptali kalmadı.", sector: "Perakende", city: "Ankara", metric: "0 sipariş iptali" },
           ].map((t) => (
             <div key={t.metric} className="rounded-2xl border border-border bg-card p-7">
-              <Quote className="mb-3 h-6 w-6 text-primary/40" />
-              <p className="italic leading-relaxed text-muted-foreground">"{t.quote}"</p>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{t.sector} · {t.city}</span>
-                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-                  {t.metric}
-                </span>
-              </div>
+              <p className="text-3xl font-bold text-primary mb-1">{t.metric}</p>
+              <p className="italic text-sm text-muted-foreground">"{t.quote}"</p>
+              <span className="mt-4 block text-xs text-muted-foreground">{t.sector} · Beta Kullanıcısı</span>
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { getPost, formatDate, categoryLabels, categoryColors } from "@/lib/blog";
+import { allPosts, getPost, formatDate, categoryLabels, categoryColors } from "@/lib/blog";
 import { Clock, ArrowLeft, User, Calendar, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/blog/$slug")({
@@ -90,6 +90,10 @@ function BlogPostPage() {
   const post = Route.useLoaderData();
   const { frontmatter: fm, slug } = post;
 
+  const related = allPosts
+    .filter(p => p.slug !== slug && p.frontmatter.category === fm.category)
+    .slice(0, 3);
+
   const modulePath = Object.keys(mdxModules).find((p) =>
     p.endsWith(`/${slug}.mdx`)
   );
@@ -167,6 +171,22 @@ function BlogPostPage() {
             )}
           </div>
         </article>
+
+        {/* İlgili Yazılar */}
+        {related.length > 0 && (
+          <section className="border-t border-neutral-100 mx-auto max-w-3xl px-6 py-10">
+            <h3 className="text-lg font-bold text-neutral-900 mb-5">İlgili Yazılar</h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {related.map(r => (
+                <Link key={r.slug} to="/blog/$slug" params={{ slug: r.slug }}
+                  className="rounded-xl border border-neutral-100 p-4 text-sm hover:border-neutral-300 transition-colors">
+                  <span className="text-xs text-neutral-400 block mb-1">{r.frontmatter.readingTime} dk okuma</span>
+                  <span className="font-medium text-neutral-900 line-clamp-2">{r.frontmatter.title}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* CTA */}
         <aside className="border-t border-neutral-100 bg-gradient-to-br from-orange-50 to-white py-12">

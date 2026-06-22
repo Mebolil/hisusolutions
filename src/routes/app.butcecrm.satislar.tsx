@@ -271,6 +271,11 @@ function SalesPage() {
   }, [filtered]);
 
   async function updateStatus(sale: Sale, newStatus: Status) {
+    if (newStatus === "kısmi") {
+      setPartialAmount(sale.paid_amount != null ? String(sale.paid_amount) : "");
+      setPartialDialog({ open: true, sale });
+      return;
+    }
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
     const patch: Partial<Sale> = { payment_status: newStatus };
@@ -280,6 +285,22 @@ function SalesPage() {
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
     toast.success("Ödeme durumu güncellendi");
     setSales((prev) => prev.map((s) => (s.id === sale.id ? { ...s, ...patch } as Sale : s)));
+  }
+
+  async function savePartialPayment() {
+    const sale = partialDialog.sale;
+    if (!sale) return;
+    const amt = Number(partialAmount);
+    if (amt <= 0) { toast.error("Tutarı girin"); return; }
+    if (amt >= Number(sale.total_amount)) { toast.error("Kısmi ödeme toplam tutardan küçük olmalı"); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return toast.error("Oturum bulunamadı");
+    const { error } = await supabase.from("sales").update({ payment_status: "kısmi", paid_amount: amt }).eq("id", sale.id).eq("user_id", session.user.id);
+    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
+    toast.success("Kısmi ödeme kaydedildi");
+    setSales((prev) => prev.map((s) => s.id === sale.id ? { ...s, payment_status: "kısmi", paid_amount: amt } : s));
+    setPartialDialog({ open: false, sale: null });
+    setPartialAmount("");
   }
 
   async function deleteSale(sale: Sale) {
@@ -296,7 +317,7 @@ function SalesPage() {
     if (matched) {
       const newQty = (matched.quantity ?? 0) + (Number(sale.quantity) || 0);
       const { error: stockErr } = await supabase
-        .from("products").update({ quantity: newQty }).eq("id", matched.id);
+        .from("products").update({ quantity: newQty }).eq("id", matched.id).eq("user_id", session.user.id);
       if (stockErr) {
         toast.warning("Satış silindi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
       } else {
@@ -312,6 +333,8 @@ function SalesPage() {
   const [returnMap, setReturnMap] = useState<Map<string, number>>(new Map());
   const [returnDialogSale, setReturnDialogSale] = useState<Sale | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [partialDialog, setPartialDialog] = useState<{ open: boolean; sale: Sale | null }>({ open: false, sale: null });
+  const [partialAmount, setPartialAmount] = useState("");
 
   const pagedIds = pagedSales.map((s) => s.id);
   const allPageSelected = pagedIds.length > 0 && pagedIds.every((id) => selectedIds.has(id));
@@ -613,6 +636,7 @@ function SalesPage() {
               <TableBody>
                 {pagedSales.map((s) => {
                   const profit = Number(s.total_amount || 0) - Number(s.total_cost || 0);
+                  const remaining = Number(s.total_amount || 0) - Number(s.paid_amount || 0);
                   return (
                   <TableRow key={s.id} className={selectedIds.has(s.id) ? "bg-muted/50" : ""}>
                     <TableCell>
@@ -658,7 +682,20 @@ function SalesPage() {
                     <TableCell className={`text-right font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                       {formatCurrency(profit)}
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(Number(s.paid_amount || 0))}</TableCell>
+                    <TableCell className="text-right">
+                      <div>{formatCurrency(Number(s.paid_amount || 0))}</div>
+                      {s.payment_status !== "ödendi" && remaining > 0 && (
+                        <div className="text-xs text-red-500 mt-0.5">Kalan: {formatCurrency(remaining)}</div>
+                      )}
+                      {s.payment_status !== "ödendi" && Number(s.total_amount) > 0 && (
+                        <div className="h-1 bg-muted rounded-full mt-1 w-16 ml-auto">
+                          <div
+                            className="h-1 bg-amber-400 rounded-full"
+                            style={{ width: `${Math.min(100, Math.round((Number(s.paid_amount || 0) / Number(s.total_amount)) * 100))}%` }}
+                          />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Select value={s.payment_status} onValueChange={(v) => updateStatus(s, v as Status)}>
                         <SelectTrigger className={`h-8 w-[130px] border ${statusBadge(s.payment_status)}`}>
@@ -737,6 +774,39 @@ function SalesPage() {
           </div>
         )}
       </Card>
+
+      <AlertDialog open={partialDialog.open} onOpenChange={(o) => !o && setPartialDialog({ open: false, sale: null })}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kısmi Ödeme Tutarı</AlertDialogTitle>
+            <AlertDialogDescription>
+              {partialDialog.sale && (
+                <>Toplam tutar: {formatCurrency(Number(partialDialog.sale.total_amount))}. Tahsil edilen tutarı girin.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Input
+              type="number"
+              step="0.01"
+              autoFocus
+              value={partialAmount}
+              onChange={(e) => setPartialAmount(e.target.value)}
+              placeholder="₺ Tahsil edilen"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  savePartialPayment();
+                }
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPartialDialog({ open: false, sale: null })}>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={() => savePartialPayment()}>Kaydet</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ReturnDialog
         sale={returnDialogSale}
@@ -934,6 +1004,12 @@ function NewSaleDialog({
     e.preventDefault();
     if (!form.product_name || !form.total_amount) {
       return toast.error("Ürün ve tutar zorunludur");
+    }
+    if (form.payment_status === "kısmi") {
+      if (!form.paid_amount || Number(form.paid_amount) <= 0)
+        return toast.error("Kısmi ödeme için tahsil edilen tutarı girin");
+      if (Number(form.paid_amount) >= Number(form.total_amount))
+        return toast.error("Kısmi ödeme toplam tutardan küçük olmalıdır");
     }
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
@@ -1519,7 +1595,12 @@ function EditSaleDialog({
           </div>
           <div className="col-span-2">
             <Label className="text-xs">Ödeme Durumu</Label>
-            <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v })}>
+            <Select value={form.payment_status} onValueChange={(v) => {
+              const total = Number(form.total_amount || 0);
+              if (v === "ödendi") setForm({ ...form, payment_status: v, paid_amount: total });
+              else if (v === "bekliyor") setForm({ ...form, payment_status: v, paid_amount: 0 });
+              else setForm({ ...form, payment_status: v });
+            }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}

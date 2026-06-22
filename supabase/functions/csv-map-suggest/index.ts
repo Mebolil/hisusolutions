@@ -10,6 +10,15 @@ const CORS = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
+  // JWT doğrulama — anonim erişimi engelle, API key tüketimini koru
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
   if (!ANTHROPIC_API_KEY) {
     return new Response(JSON.stringify({ error: "LLM not configured" }), {
       status: 503,

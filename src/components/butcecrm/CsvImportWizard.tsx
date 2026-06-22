@@ -92,8 +92,6 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
       "Açıklama": "note",
       "Tutar": "amount",
       "İşlem Tipi": "category",
-      "Alacak": "amount",
-      "Borç": "amount",
     },
   },
 ];
@@ -168,7 +166,7 @@ function applyPlatformTemplate(
   }
   for (const [csvCol, fieldKey] of Object.entries(template.columnMap)) {
     const colIdx = csvHeaders.findIndex((h) => norm(h) === norm(csvCol));
-    if (colIdx >= 0 && fieldKey in result) {
+    if (colIdx >= 0) {
       result[fieldKey] = colIdx;
     }
   }
@@ -267,6 +265,7 @@ export function CsvImportWizard({
   const [progress, setProgress] = useState(0);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [rollingBack, setRollingBack] = useState(false);
+  const [rolledBackCount, setRolledBackCount] = useState<number | null>(null);
 
   const visibleTemplates = platformTemplates
     ? PLATFORM_TEMPLATES.filter((t) => platformTemplates.includes(t.id))
@@ -285,6 +284,7 @@ export function CsvImportWizard({
     setProgress(0);
     setLastSessionId(null);
     setRollingBack(false);
+    setRolledBackCount(null);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -384,9 +384,11 @@ export function CsvImportWizard({
 
     for (let r = 1; r < rows.length; r++) {
       const raw: Record<string, string> = {};
-      for (const f of fields) {
-        const idx = fieldToColIdx[f.key];
-        raw[f.key] = idx >= 0 ? (rows[r][idx] ?? "").trim() : "";
+      // fields'daki key'lere ek olarak platform şablonundan gelen _prefix key'leri de yakala
+      const allMappedKeys = new Set([...fields.map((f) => f.key), ...Object.keys(fieldToColIdx)]);
+      for (const key of allMappedKeys) {
+        const idx = fieldToColIdx[key];
+        raw[key] = idx >= 0 ? (rows[r][idx] ?? "").trim() : "";
       }
 
       const rowErrors: string[] = [];
@@ -428,6 +430,7 @@ export function CsvImportWizard({
 
     setCommitting(true);
     setProgress(0);
+    setStep("commit"); // progress bar'ı göster — başarı beklenmeden adıma geç
 
     // 1. Import session oluştur
     const { data: sessionRow, error: sessErr } = await supabase
@@ -461,8 +464,15 @@ export function CsvImportWizard({
       const chunk = payloadsWithSession.slice(i, i + CHUNK);
       const { error } = await supabase.from(table).insert(chunk);
       if (error) {
-        // Session'ı işaretsiz bırakma — rollback çalışabilsin
+        // Gerçekte kaç satır girdiğini session'a yaz — rollback doğru çalışsın
+        if (inserted > 0) {
+          await supabase
+            .from("import_sessions")
+            .update({ row_count: inserted })
+            .eq("id", sessionId);
+        }
         toast.error(`Kayıt hatası (${inserted}/${allPayloads.length} eklendi): ${error.message}`);
+        setLastSessionId(inserted > 0 ? sessionId : null);
         setCommitting(false);
         return;
       }
@@ -471,7 +481,6 @@ export function CsvImportWizard({
     }
 
     setLastSessionId(sessionId);
-    setStep("commit");
     setCommitting(false);
     onImported?.(sessionId, inserted);
     toast.success(`${inserted} kayıt başarıyla eklendi`);
@@ -493,7 +502,7 @@ export function CsvImportWizard({
       }
       toast.success(`${data.rolled_back} kayıt geri alındı`);
       setLastSessionId(null);
-      handleClose();
+      setRolledBackCount(data.rolled_back as number);
     } finally {
       setRollingBack(false);
     }
@@ -755,6 +764,18 @@ export function CsvImportWizard({
                   <p className="text-base font-medium">Aktarılıyor...</p>
                   <Progress value={progress} className="w-64" />
                   <p className="text-sm text-muted-foreground">%{progress}</p>
+                </>
+              ) : rolledBackCount !== null ? (
+                <>
+                  <div className="h-14 w-14 rounded-full bg-orange-100 flex items-center justify-center">
+                    <RotateCcw className="h-7 w-7 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold">{rolledBackCount} kayıt geri alındı</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Veriler silinmedi — arşivlendi. İstersen tekrar içe aktarabilirsin.
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>

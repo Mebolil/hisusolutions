@@ -6,7 +6,7 @@ import { BookingForm } from "@/components/site/BookingForm";
 import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { RoiCalculator } from "@/components/site/RoiCalculator";
 import { PersonaSection } from "@/components/site/PersonaSection";
-import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, Shield, ShoppingCart, Quote, Gift, Zap } from "lucide-react";
+import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, ShoppingCart, Quote, Gift, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/butceleme")({
   head: () => ({

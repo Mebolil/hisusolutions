@@ -1,4 +1,5 @@
 @import "tailwindcss" source(none);
+@plugin "@tailwindcss/typography";
 @source "../src";
 @import "tw-animate-css";
 
@@ -94,5 +95,9 @@
   h1, h2, h3, h4, h5 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+  }
+  .prose {
+    --tw-prose-headings: oklch(0.18 0.02 160);
+    --tw-prose-code: oklch(0.58 0.14 162);
   }
 }

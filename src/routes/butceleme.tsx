@@ -52,7 +52,7 @@ export const Route = createFileRoute("/butceleme")({
           "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": "4.8",
-            "ratingCount": "12",
+            "ratingCount": 12,
             "bestRating": "5",
             "worstRating": "1"
           },
@@ -60,12 +60,8 @@ export const Route = createFileRoute("/butceleme")({
             "@type": "Offer",
             "price": "499",
             "priceCurrency": "TRY",
-            "priceSpecification": {
-              "@type": "UnitPriceSpecification",
-              "price": "499",
-              "priceCurrency": "TRY",
-              "unitCode": "MON"
-            }
+            "availability": "https://schema.org/LimitedAvailability",
+            "eligibleQuantity": { "@type": "QuantitativeValue", "value": 10 }
           },
           "provider": {
             "@type": "Organization",

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useBetaSlots } from "@/lib/useBetaSlots";
 import { trackEvent } from "@/lib/analytics";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { BookingForm } from "@/components/site/BookingForm";
@@ -88,6 +89,8 @@ const faqs: FaqItem[] = [
 
 function ButcelemePage() {
   const [demoSource, setDemoSource] = useState("butcecrm-demo");
+  const { data: slots } = useBetaSlots();
+  const remaining = slots ? slots.total_slots - slots.used_slots : null;
 
   function scrollToDemo(source: string) {
     setDemoSource(source);
@@ -286,7 +289,9 @@ function ButcelemePage() {
           <div className="relative rounded-2xl border-2 border-amber-400 bg-amber-50 p-8">
             <div className="flex items-start justify-between">
               <span className="text-sm font-semibold text-amber-700">Kurucu Beta</span>
-              <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-white">Sadece 10 Slot</span>
+              <span className="rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-white">
+                {remaining !== null ? `${remaining} Slot Kaldı` : "Sadece 10 Slot"}
+              </span>
             </div>
             <p className="mt-4 text-4xl font-bold text-foreground">₺499 <span className="text-base font-medium text-muted-foreground">/ ay + KDV</span></p>
             <p className="mt-1 text-sm text-amber-700 font-medium">31 Temmuz 2026'ya kadar · Ömür boyu kilitli</p>

@@ -26,7 +26,7 @@ export function KazanilmamisFirsatKart({
         <p className="text-xs text-muted-foreground">Önlem alınabilecek alan</p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-3xl font-bold text-amber-700">₺{formatCurrency(total)}</p>
+        <p className="text-3xl font-bold text-amber-700">{formatCurrency(total)}</p>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">

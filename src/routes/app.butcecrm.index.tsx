@@ -546,7 +546,7 @@ function ButceCrmDashboard() {
                       <p className="text-xs text-muted-foreground">
                         {formatCurrency(Number(c.spend))}
                         <span className={`ml-1.5 ${c.netKar >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          {c.netKar >= 0 ? "+" : "−"}₺{formatCurrency(Math.abs(c.netKar))}
+                          {c.netKar >= 0 ? "+" : "−"}{formatCurrency(Math.abs(c.netKar))}
                         </span>
                       </p>
                     </div>

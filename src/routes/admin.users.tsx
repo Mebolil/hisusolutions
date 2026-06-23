@@ -25,6 +25,7 @@ function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
   const [planSelections, setPlanSelections] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -70,6 +71,16 @@ function AdminUsers() {
     setUpdating(null);
   }
 
+  async function handleResetPassword(email: string, userId: string) {
+    setResetting(userId);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/sifre-sifirla`,
+    });
+    if (error) toast.error("E-posta gönderilemedi, lütfen tekrar deneyin");
+    else toast.success("Şifre sıfırlama e-postası gönderildi");
+    setResetting(null);
+  }
+
   if (loading) return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
       Yükleniyor…
@@ -88,6 +99,7 @@ function AdminUsers() {
               <th className="px-4 py-3">Trial Bitiş</th>
               <th className="px-4 py-3">Kayıt</th>
               <th className="px-4 py-3">Güncelle</th>
+              <th className="px-4 py-3">Şifre</th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +132,15 @@ function AdminUsers() {
                       {updating === u.user_id ? "…" : "Kaydet"}
                     </button>
                   </div>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleResetPassword(u.email, u.user_id)}
+                    disabled={resetting === u.user_id}
+                    className="rounded-lg bg-blue-700 px-3 py-1 text-xs font-semibold hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {resetting === u.user_id ? "…" : "Şifre Sıfırla"}
+                  </button>
                 </td>
               </tr>
             ))}

@@ -89,6 +89,7 @@ function AyarlarPage() {
           <TabsTrigger value="carriers">Kargo Firmaları</TabsTrigger>
           <TabsTrigger value="orderStatuses">Sipariş Durumları</TabsTrigger>
           <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
+          <TabsTrigger value="account">Hesap</TabsTrigger>
         </TabsList>
 
         <TabsContent value="costItems">
@@ -178,8 +179,78 @@ function AyarlarPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="account">
+          <PasswordChangeCard />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function PasswordChangeCard() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirm) { toast.error("Şifreler eşleşmiyor."); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Şifreniz güncellendi.");
+      setPassword("");
+      setConfirm("");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Güvenliğinizi Güncelleyin</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Yeni şifreniz hemen geçerli olur. Oturumunuz açık kalmaya devam eder.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-sm">
+          <div className="space-y-1.5">
+            <Label htmlFor="new-password">Yeni Şifre</Label>
+            <Input
+              id="new-password"
+              type="password"
+              placeholder="En az 6 karakter"
+              minLength={6}
+              required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-password">Şifre Tekrar</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              placeholder="Şifrenizi tekrar girin"
+              minLength={6}
+              required
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={loading || password.length < 6 || password !== confirm || !confirm}
+          >
+            {loading ? "Kaydediliyor..." : "Şifremi Güncelle"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

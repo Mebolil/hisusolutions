@@ -22,28 +22,31 @@ function SifreSifirlaPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase event'in render öncesi tetiklenme ihtimaline karşı anlık session kontrolü
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // Eğer user zaten bir recovery session içindeyse
-      // (event zaten tetiklenmiş ve session kurulmuşsa)
-      if (session?.user) {
-        // Kontrol: URL'de recovery parametresi var mı?
-        // Supabase hash #access_token kullanır — sadece onAuthStateChange güvenilir
-        // Bu satır ek güvenlik için session varlığını not eder ama setRecoveryReady yapmaz
-      }
-    });
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    const timeout = setTimeout(() => setTimedOut(true), 3000);
+    // Race condition fix: recovery token URL'deyse ve Supabase zaten işlediyse
+    const hash = window.location.hash;
+    if (hash.includes('access_token')) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setRecoveryReady(true);
+          return;
+        }
+        timeoutId = setTimeout(() => setTimedOut(true), 8000);
+      });
+    } else {
+      timeoutId = setTimeout(() => setTimedOut(true), 8000);
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryReady(true);
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
       }
     });
 
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -94,7 +97,7 @@ function SifreSifirlaPage() {
                 onClick={() => navigate({ to: "/auth" })}
                 className="mt-6 w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90"
               >
-                Yeni Bağlantı İste
+                Giriş sayfasına dön
               </Button>
             </div>
           )}

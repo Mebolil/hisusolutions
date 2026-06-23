@@ -199,21 +199,28 @@ function SalesPage() {
   // Filter değişince sayfayı sıfırla
   useEffect(() => { setPage(1); setSelectedIds(new Set()); }, [statusFilter, platformFilter, from, to, q, saleStatusFilter, agingFilter]);
 
-  const [sortKey, setSortKey] = useState<keyof Sale>("sale_date");
+  type SortKey = keyof Sale | "profit";
+  const [sortKey, setSortKey] = useState<SortKey>("sale_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  function handleSort(col: keyof Sale) {
+  function handleSort(col: SortKey) {
     if (sortKey === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(col); setSortDir("asc"); }
   }
 
-  function SortIcon({ col }: { col: keyof Sale }) {
+  function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <ChevronUp className="h-3 w-3 opacity-25" />;
     return sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />;
   }
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
+      if (sortKey === "profit") {
+        const ap = Number(a.total_amount || 0) - Number(a.total_cost || 0);
+        const bp = Number(b.total_amount || 0) - Number(b.total_cost || 0);
+        const cmp = ap - bp;
+        return sortDir === "asc" ? cmp : -cmp;
+      }
       const av = a[sortKey] ?? "";
       const bv = b[sortKey] ?? "";
       const cmp = String(av).localeCompare(String(bv), "tr", { numeric: true });
@@ -622,8 +629,8 @@ function SalesPage() {
                       <span className="inline-flex items-center justify-end gap-1">{label}<SortIcon col={col} /></span>
                     </TableHead>
                   ))}
-                  <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("total_amount")}>
-                    <span className="inline-flex items-center justify-end gap-1">Kâr</span>
+                  <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("profit")}>
+                    <span className="inline-flex items-center justify-end gap-1">Kâr<SortIcon col="profit" /></span>
                   </TableHead>
                   <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort("paid_amount")}>
                     <span className="inline-flex items-center justify-end gap-1">Tahsil<SortIcon col="paid_amount" /></span>
@@ -637,8 +644,15 @@ function SalesPage() {
                 {pagedSales.map((s) => {
                   const profit = Number(s.total_amount || 0) - Number(s.total_cost || 0);
                   const remaining = Number(s.total_amount || 0) - Number(s.paid_amount || 0);
+                  const isOverdue = (() => {
+                    if (s.payment_status === "ödendi") return false;
+                    if (s.status && s.status !== "aktif") return false;
+                    if (!s.due_date) return false;
+                    if (remaining <= 0) return false;
+                    try { return differenceInDays(new Date(), parseISO(s.due_date)) > 0; } catch { return false; }
+                  })();
                   return (
-                  <TableRow key={s.id} className={selectedIds.has(s.id) ? "bg-muted/50" : ""}>
+                  <TableRow key={s.id} className={`${selectedIds.has(s.id) ? "bg-muted/50" : ""} border-l-4 ${isOverdue ? "border-l-red-500" : "border-l-transparent"}`}>
                     <TableCell>
                       <Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleOne(s.id)} />
                     </TableCell>

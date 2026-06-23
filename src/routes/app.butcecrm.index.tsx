@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/butcecrm-helpers";
-import { KayipKarKart } from "@/components/butcecrm/KayipKarKart";
+import { KazanilmamisFirsatKart } from "@/components/butcecrm/KayipKarKart";
 import { loadOnboarding } from "@/lib/butcecrm-onboarding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  TrendingUp, TrendingDown, DollarSign, Percent, Clock, Package,
+  TrendingDown, DollarSign, Percent, Clock,
   Megaphone, Target, AlertTriangle, Trophy, Users, Tag, Building2, CalendarClock,
 } from "lucide-react";
 import {
@@ -112,7 +112,7 @@ function ButceCrmDashboard() {
 
   const periodSales = sales.filter((s) => inRange(s.sale_date));
   const periodExpenses = expenses.filter((e) => inRange(e.expense_date));
-  const periodCampaigns = campaigns.filter((c) => inRange(c.start_date));
+  const periodCampaigns = campaigns.filter((c) => c.status === "aktif" || inRange(c.start_date));
 
   const totalIncome = periodSales.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
   const totalReturnAmount = periodReturns
@@ -122,28 +122,24 @@ function ButceCrmDashboard() {
   const adsSpend = periodCampaigns.reduce((s, c) => s + Number(c.spend || 0), 0);
   const expensesPaid = periodExpenses.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
   const totalExpense = expensesPaid + adsSpend;
-  const netProfit = totalIncome - totalExpense - totalCost;
+  const netProfit = totalIncome - totalExpense - totalCost - totalReturnAmount;
   const margin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
 
   const potentialIncome = periodSales
-    .filter((s) => s.payment_status !== "ödendi")
+    .filter((s) => s.payment_status !== "ödendi" && s.status !== "iptal")
     .reduce((sum, x) => sum + Math.max(0, Number(x.total_amount) - Number(x.paid_amount || 0)), 0);
-
-  const stockValue = useMemo(
-    () => products.reduce((s, p) => s + Number(p.quantity || 0) * Number(p.unit_price || 0), 0),
-    [products],
-  );
 
   const activeCampaigns = campaigns.filter((c) => c.status === "aktif");
   const activeAdsSpend = activeCampaigns.reduce((s, c) => s + Number(c.spend || 0), 0);
   const activeRoas = useMemo(() => {
-    const rates = activeCampaigns
-      .map((c) => {
-        const rev = sales.filter((s) => s.campaign_id === c.id).reduce((sum, s) => sum + Number(s.total_amount), 0);
-        return Number(c.spend) > 0 ? rev / Number(c.spend) : 0;
-      })
-      .filter((r) => r > 0);
-    return rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
+    let totalRevenue = 0;
+    let totalSpend = 0;
+    activeCampaigns.forEach((c) => {
+      const rev = sales.filter((s) => s.campaign_id === c.id).reduce((sum, s) => sum + Number(s.total_amount), 0);
+      totalRevenue += rev;
+      totalSpend += Number(c.spend || 0);
+    });
+    return totalSpend > 0 ? totalRevenue / totalSpend : 0;
   }, [activeCampaigns, sales]);
 
   const onboardingProfile = loadOnboarding();
@@ -208,13 +204,19 @@ function ButceCrmDashboard() {
     .sort((a, b) => Number(a.quantity) - Number(b.quantity))
     .slice(0, 5);
 
-  const activeCampaignList = activeCampaigns
+  const activeCampaignsScored = activeCampaigns
     .map((c) => {
       const rev = sales.filter((s) => s.campaign_id === c.id).reduce((sum, s) => sum + Number(s.total_amount), 0);
-      return { ...c, roas: Number(c.spend) > 0 ? rev / Number(c.spend) : 0 };
+      const spend = Number(c.spend || 0);
+      const roas = spend > 0 ? rev / spend : 0;
+      const netKar = rev - spend;
+      return { ...c, roas, netKar };
     })
-    .sort((a, b) => b.roas - a.roas)
-    .slice(0, 5);
+    .sort((a, b) => b.roas - a.roas);
+
+  const activeCampaignList = activeCampaignsScored.slice(0, 5);
+  // ROAS < 1 olan aktif kampanyalar — harcaması olup geri dönüşü zayıf
+  const underperformingAds = activeCampaignsScored.filter((c) => Number(c.spend || 0) > 0 && c.roas < 1).length;
 
   const topProduct = useMemo(() => {
     const m: Record<string, number> = {};
@@ -239,6 +241,14 @@ function ButceCrmDashboard() {
     const e = Object.entries(m).sort((a, b) => b[1] - a[1])[0];
     return e ? { name: e[0], amount: e[1] } : null;
   }, [periodExpenses]);
+
+  // İade Oranı
+  const returnCount = periodReturns.filter((r) => inRange(r.return_date)).length;
+  const returnRate = periodSales.length > 0 ? (returnCount / periodSales.length) * 100 : 0;
+
+  // Ortalama Sipariş Değeri (AOV) — iptal hariç aktif satışlardan
+  const activePeriodSales = periodSales.filter((s) => s.status !== "iptal");
+  const aov = activePeriodSales.length > 0 ? totalIncome / activePeriodSales.length : 0;
 
   const supplierDebt = purchases.reduce((s, p) => s + Math.max(0, Number(p.amount) - Number(p.paid_amount || 0)), 0);
 
@@ -357,49 +367,110 @@ function ButceCrmDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Toplam Gelir" value={formatCurrency(totalIncome)} icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" valueClass="text-emerald-600" sub={totalReturnAmount > 0 ? `↳ İade: −${formatCurrency(totalReturnAmount)}` : undefined} />
-        <MetricCard title="Toplam Gider" value={formatCurrency(totalExpense)} icon={<TrendingDown className="h-5 w-5 text-red-600" />} bg="bg-red-100" valueClass="text-red-600" sub={`Reklam: ${formatCurrency(adsSpend)}`} />
-        <MetricCard title="Net Kâr" value={formatCurrency(netProfit)} icon={<DollarSign className={`h-5 w-5 ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`} />} bg={netProfit >= 0 ? "bg-emerald-100" : "bg-red-100"} valueClass={netProfit >= 0 ? "text-emerald-600" : "text-red-600"} sub={`Maliyet: ${formatCurrency(totalCost)}`} />
-        <MetricCard title="Kâr Marjı" value={`%${margin.toFixed(1)}`} icon={<Percent className="h-5 w-5 text-blue-600" />} bg="bg-blue-100" valueClass={margin >= 0 ? "text-emerald-600" : "text-red-600"} />
-      </div>
+      {/* KATMAN 1 — ALARM BANDI */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {kayipKar.total > 0 && (
+          <KazanilmamisFirsatKart
+            bosReklam={kayipKar.bosReklam}
+            iadeMaliyeti={kayipKar.iadeMaliyeti}
+            negatifMarjin={kayipKar.negatifMarjin}
+            total={kayipKar.total}
+            formatCurrency={formatCurrency}
+          />
+        )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Tahmini Gelir" value={formatCurrency(potentialIncome)} icon={<Clock className="h-5 w-5 text-amber-600" />} bg="bg-amber-100" valueClass="text-amber-600" />
-        <MetricCard title="Toplam Stok Değeri" value={formatCurrency(stockValue)} icon={<Package className="h-5 w-5 text-indigo-600" />} bg="bg-indigo-100" valueClass="text-foreground" />
-        <MetricCard title="Aktif Reklam Harcaması" value={formatCurrency(activeAdsSpend)} icon={<Megaphone className="h-5 w-5 text-fuchsia-600" />} bg="bg-fuchsia-100" valueClass="text-foreground" sub={`${activeCampaigns.length} aktif kampanya`} />
-        <MetricCard title="Ortalama ROAS" value={`${activeRoas.toFixed(2)}x`} icon={<Target className="h-5 w-5 text-cyan-600" />} bg="bg-cyan-100" valueClass="text-foreground" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Nakit Dengesi (Alacak/Borç Oranı) */}
-        <div className={`rounded-xl border-2 p-4 ${debtRatio.ratio === null ? "border-border bg-card" : debtRatio.ratio >= 1 ? "border-emerald-200 bg-emerald-50/40" : "border-red-300 bg-red-50/40"}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${debtRatio.ratio === null ? "bg-muted" : debtRatio.ratio >= 1 ? "bg-emerald-100" : "bg-red-100"}`}>
-              <Building2 className={`h-4 w-4 ${debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`} />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">Nakit Dengesi</p>
-          </div>
-          {debtRatio.ratio === null ? (
-            <p className="text-lg font-bold text-muted-foreground">Borç kaydı yok</p>
-          ) : (
-            <>
-              <p className={`text-2xl font-bold ${debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`}>
-                {debtRatio.ratio.toFixed(2)}x
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {debtRatio.ratio >= 1 ? "Alacak borçtan fazla — sağlıklı" : "⚠ Borç alacağı geçti"}
-              </p>
-              <div className="mt-2 flex justify-between text-xs gap-4">
-                <span className="text-emerald-600">Alacak: {formatCurrency(debtRatio.totalReceivable)}</span>
-                <span className="text-red-500">Borç: {formatCurrency(debtRatio.totalPayable)}</span>
+        <Card className={`border-2 ${upcomingBorder}`}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" /> Bu Hafta Ne Ödeyeceğim?
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Önümüzdeki 7 gün</p>
+          </CardHeader>
+          <CardContent>
+            {upcomingWeek.total === 0 && upcomingWeek.totalCount === 0 ? (
+              <p className="text-sm text-emerald-700 font-medium">Bu hafta ödemeniz yok 🎉</p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingWeek.groups.slice(0, 5).map((g, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-secondary capitalize">{dayLabel(g.date)}</span>
+                    </span>
+                    <span className="font-medium">
+                      {formatCurrency(g.total)}
+                      <span className="text-xs text-muted-foreground ml-1.5">· {g.count} ödeme</span>
+                    </span>
+                  </div>
+                ))}
+                {upcomingWeek.groups.length > 5 && (
+                  <p className="text-xs text-muted-foreground">+{upcomingWeek.groups.length - 5} gün daha</p>
+                )}
+                <div className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
+                  <span>Toplam: {formatCurrency(upcomingWeek.total)}</span>
+                  <span className="text-muted-foreground font-normal text-xs">
+                    {upcomingWeek.days} gün · {upcomingWeek.totalCount} ödeme
+                  </span>
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Sessiz Müşteriler (Hayalet) */}
-        {ghostCustomerCount > 0 && (
+        <Card className={`border-2 ${criticalStock.length === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-orange-300 bg-orange-50/40"} ${onboardingProfile?.focus === "stok" ? "ring-2 ring-primary" : ""}`}>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-orange-600" /> Kritik Stok</CardTitle></CardHeader>
+          <CardContent>
+            {criticalStock.length === 0 ? <p className="text-sm text-muted-foreground">Tüm stoklar normal seviyede ✓</p> : (
+              <div className="space-y-2">
+                {criticalStock.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-orange-50">
+                    <p className="text-sm font-medium truncate">{p.name}</p>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-orange-600">{Number(p.quantity)}</p>
+                      <p className="text-xs text-muted-foreground">eşik: {Number(p.low_stock_threshold)}</p>
+                    </div>
+                  </div>
+                ))}
+                <a href="/app/butcecrm/stok" className="text-xs text-orange-700 hover:underline inline-block pt-1">→ Stok sayfasına git</a>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* KATMAN 2 — SAĞLIK METRİKLERİ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Net Kâr" value={formatCurrency(netProfit)} icon={<DollarSign className={`h-5 w-5 ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`} />} bg={netProfit >= 0 ? "bg-emerald-100" : "bg-red-100"} valueClass={netProfit >= 0 ? "text-emerald-600" : "text-red-600"} sub={`Gelir: ${formatCurrency(totalIncome)} · Maliyet: ${formatCurrency(totalCost)}${totalReturnAmount > 0 ? ` · İade: −${formatCurrency(totalReturnAmount)}` : ""}`} />
+        <MetricCard title="Kâr Marjı" value={`%${margin.toFixed(1)}`} icon={<Percent className="h-5 w-5 text-blue-600" />} bg="bg-blue-100" valueClass={margin >= 0 ? "text-emerald-600" : "text-red-600"} />
+        <MetricCard
+          title="Nakit Dengesi"
+          value={debtRatio.ratio !== null ? `${debtRatio.ratio.toFixed(2)}x` : "—"}
+          icon={<Building2 className={`h-5 w-5 ${debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`} />}
+          bg={debtRatio.ratio === null ? "bg-muted" : debtRatio.ratio >= 1 ? "bg-emerald-100" : "bg-red-100"}
+          valueClass={debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}
+          sub={debtRatio.ratio !== null ? `Alacak: ${formatCurrency(debtRatio.totalReceivable)} · Borç: ${formatCurrency(debtRatio.totalPayable)}` : "Borç kaydı yok"}
+        />
+        <MetricCard title="Bekleyen Tahsilat" value={formatCurrency(potentialIncome)} icon={<Clock className="h-5 w-5 text-amber-600" />} bg="bg-amber-100" valueClass="text-amber-600" href={potentialIncome > 0 ? "/app/butcecrm/satislar" : undefined} action={potentialIncome > 0 ? "Tahsilatları gör" : undefined} />
+      </div>
+
+      {/* KATMAN 2b — YENİ METRİKLER */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <MetricCard
+          title="İade Oranı"
+          value={`%${returnRate.toFixed(1)}`}
+          icon={<TrendingDown className={`h-5 w-5 ${returnCount > 0 ? "text-amber-600" : "text-emerald-600"}`} />}
+          bg={returnCount > 0 ? "bg-amber-100" : "bg-emerald-100"}
+          valueClass={returnCount > 0 ? "text-amber-600" : "text-emerald-600"}
+          sub={`${returnCount} iade / ${periodSales.length} satış`}
+        />
+        <MetricCard
+          title="Ort. Sipariş Değeri"
+          value={formatCurrency(aov)}
+          icon={<DollarSign className="h-5 w-5 text-blue-600" />}
+          bg="bg-blue-100"
+          valueClass="text-foreground"
+          sub={`${activePeriodSales.length} aktif satış`}
+        />
+        {ghostCustomerCount > 0 ? (
           <div className="rounded-xl border-2 border-purple-200 bg-purple-50/40 p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -411,56 +482,12 @@ function ButceCrmDashboard() {
             <p className="text-xs text-muted-foreground mt-0.5">60+ gündür alışveriş yapmadı</p>
             <a href="/app/butcecrm/cariler" className="text-xs text-purple-600 hover:underline mt-2 inline-block">→ Cariler'e git</a>
           </div>
+        ) : (
+          <MetricCard title="Sessiz Müşteriler" value="0" icon={<Users className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" valueClass="text-emerald-600" sub="Tüm müşteriler aktif" />
         )}
       </div>
 
-      {kayipKar.total > 0 && (
-        <KayipKarKart
-          bosReklam={kayipKar.bosReklam}
-          iadeMaliyeti={kayipKar.iadeMaliyeti}
-          negatifMarjin={kayipKar.negatifMarjin}
-          total={kayipKar.total}
-          formatCurrency={formatCurrency}
-        />
-      )}
-
-      <Card className={`border-2 ${upcomingBorder}`}>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-primary" /> Bu Hafta Ne Ödeyeceğim?
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">Önümüzdeki 7 gün</p>
-        </CardHeader>
-        <CardContent>
-          {upcomingWeek.total === 0 && upcomingWeek.totalCount === 0 ? (
-            <p className="text-sm text-emerald-700 font-medium">Bu hafta ödemeniz yok 🎉</p>
-          ) : (
-            <div className="space-y-2">
-              {upcomingWeek.groups.slice(0, 5).map((g, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-xs font-medium px-2 py-0.5 rounded bg-secondary capitalize">{dayLabel(g.date)}</span>
-                  </span>
-                  <span className="font-medium">
-                    {formatCurrency(g.total)}
-                    <span className="text-xs text-muted-foreground ml-1.5">· {g.count} ödeme</span>
-                  </span>
-                </div>
-              ))}
-              {upcomingWeek.groups.length > 5 && (
-                <p className="text-xs text-muted-foreground">+{upcomingWeek.groups.length - 5} gün daha</p>
-              )}
-              <div className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold">
-                <span>Toplam: {formatCurrency(upcomingWeek.total)}</span>
-                <span className="text-muted-foreground font-normal text-xs">
-                  {upcomingWeek.days} gün · {upcomingWeek.totalCount} ödeme
-                </span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+      {/* KATMAN 3 — DETAY */}
       <Card>
         <CardHeader><CardTitle className="text-base">Gelir vs Gider Trendi (Son 6 Ay)</CardTitle></CardHeader>
         <CardContent>
@@ -496,46 +523,61 @@ function ButceCrmDashboard() {
                     <p className="text-sm font-semibold whitespace-nowrap">{formatCurrency(p.remaining)}</p>
                   </div>
                 ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className={onboardingProfile?.focus === "stok" ? "ring-2 ring-primary" : undefined}>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-orange-600" /> Kritik Stok</CardTitle></CardHeader>
-          <CardContent>
-            {criticalStock.length === 0 ? <p className="text-sm text-muted-foreground">Tüm stoklar normal seviyede ✓</p> : (
-              <div className="space-y-2">
-                {criticalStock.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-orange-50">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-orange-600">{Number(p.quantity)}</p>
-                      <p className="text-xs text-muted-foreground">eşik: {Number(p.low_stock_threshold)}</p>
-                    </div>
-                  </div>
-                ))}
+                <a href="/app/butcecrm/satislar" className="text-xs text-amber-700 hover:underline inline-block pt-1">→ Tüm tahsilatları gör</a>
               </div>
             )}
           </CardContent>
         </Card>
 
         <Card className={onboardingProfile?.focus === "reklam" ? "ring-2 ring-primary" : undefined}>
-          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Megaphone className="h-4 w-4 text-fuchsia-600" /> Reklam Performansı</CardTitle></CardHeader>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Megaphone className="h-4 w-4 text-fuchsia-600" /> Reklam Performansı</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {activeCampaigns.length} aktif kampanya · Harcama: {formatCurrency(activeAdsSpend)} · Ort. ROAS: {activeRoas.toFixed(2)}x
+            </p>
+          </CardHeader>
           <CardContent>
             {activeCampaignList.length === 0 ? <p className="text-sm text-muted-foreground">Aktif kampanya yok</p> : (
               <div className="space-y-2">
                 {activeCampaignList.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50">
+                  <a key={c.id} href={`/app/butcecrm/reklam/${c.id}`} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(Number(c.spend))}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(Number(c.spend))}
+                        <span className={`ml-1.5 ${c.netKar >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          {c.netKar >= 0 ? "+" : "−"}₺{formatCurrency(Math.abs(c.netKar))}
+                        </span>
+                      </p>
                     </div>
                     <p className={`text-sm font-semibold ${c.roas >= 1 ? "text-emerald-600" : "text-red-600"}`}>{c.roas.toFixed(2)}x</p>
-                  </div>
+                  </a>
                 ))}
+                <a href="/app/butcecrm/reklam" className="text-xs text-fuchsia-700 hover:underline inline-block pt-1">→ Reklam sayfasına git</a>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-cyan-600" /> Reklam Özeti</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-cyan-50/60">
+              <span className="text-sm text-muted-foreground">Aktif Reklam Harcaması</span>
+              <span className="text-sm font-semibold">{formatCurrency(activeAdsSpend)}</span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50">
+              <span className="text-sm text-muted-foreground">Ortalama ROAS</span>
+              <span className={`text-sm font-semibold ${activeRoas >= 1 ? "text-emerald-600" : "text-red-600"}`}>{activeRoas.toFixed(2)}x</span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50">
+              <span className="text-sm text-muted-foreground">Aktif Kampanya</span>
+              <span className="text-sm font-semibold">{activeCampaigns.length}</span>
+            </div>
+            <div className={`flex items-center justify-between p-2.5 rounded-lg ${underperformingAds > 0 ? "bg-red-50/60" : "bg-secondary/50"}`}>
+              <span className="text-sm text-muted-foreground">Verimi Düşük Kampanya (ROAS&lt;1)</span>
+              <span className={`text-sm font-semibold ${underperformingAds > 0 ? "text-red-600" : "text-emerald-600"}`}>{underperformingAds}</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -550,21 +592,23 @@ function ButceCrmDashboard() {
   );
 }
 
-function MetricCard({ title, value, icon, bg, valueClass, sub }: { title: string; value: string; icon: React.ReactNode; bg: string; valueClass?: string; sub?: string }) {
-  return (
-    <Card>
+function MetricCard({ title, value, icon, bg, valueClass, sub, href, action }: { title: string; value: string; icon: React.ReactNode; bg: string; valueClass?: string; sub?: string; href?: string; action?: string }) {
+  const card = (
+    <Card className={href ? "transition-colors hover:border-primary/40 hover:bg-secondary/30 cursor-pointer h-full" : undefined}>
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className={`text-2xl font-bold truncate ${valueClass || ""}`}>{value}</p>
             {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+            {href && action && <p className="text-xs text-primary mt-1.5">{action} →</p>}
           </div>
           <div className={`h-12 w-12 rounded-full ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         </div>
       </CardContent>
     </Card>
   );
+  return href ? <a href={href} className="block">{card}</a> : card;
 }
 
 function QuickCard({ icon, bg, label, value, sub }: { icon: React.ReactNode; bg: string; label: string; value: string; sub: string }) {

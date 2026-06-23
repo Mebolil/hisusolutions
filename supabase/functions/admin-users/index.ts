@@ -66,5 +66,21 @@ Deno.serve(async (req) => {
     });
   }
 
+  if (req.method === "POST" && action === "update-trial") {
+    const { user_id, trial_ends_at } = await req.json();
+    if (!user_id || !trial_ends_at) return new Response("missing params", { status: 400, headers: corsHeaders });
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ trial_ends_at })
+      .eq("user_id", user_id);
+
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   return new Response("not found", { status: 404, headers: corsHeaders });
 });

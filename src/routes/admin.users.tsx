@@ -16,6 +16,11 @@ interface UserProfile {
   created_at: string;
 }
 
+function toDateInputValue(isoString: string | null): string {
+  if (!isoString) return "";
+  return isoString.slice(0, 10); // "YYYY-MM-DD"
+}
+
 export const Route = createFileRoute("/admin/users")({
   component: AdminUsers,
 });
@@ -25,8 +30,10 @@ function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [updatingTrial, setUpdatingTrial] = useState<string | null>(null);
   const [resetting, setResetting] = useState<string | null>(null);
   const [planSelections, setPlanSelections] = useState<Record<string, string>>({});
+  const [trialDateSelections, setTrialDateSelections] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -44,8 +51,13 @@ function AdminUsers() {
       const data = await res.json();
       setUsers(data);
       const sel: Record<string, string> = {};
-      data.forEach((u: UserProfile) => { sel[u.user_id] = u.plan ?? "trial"; });
+      const dateSel: Record<string, string> = {};
+      data.forEach((u: UserProfile) => {
+        sel[u.user_id] = u.plan ?? "trial";
+        dateSel[u.user_id] = toDateInputValue(u.trial_ends_at);
+      });
       setPlanSelections(sel);
+      setTrialDateSelections(dateSel);
       setLoading(false);
     })();
   }, []);
@@ -69,6 +81,28 @@ function AdminUsers() {
       toast.error("Güncelleme başarısız");
     }
     setUpdating(null);
+  }
+
+  async function updateTrialDate(userId: string) {
+    const dateStr = trialDateSelections[userId];
+    if (!dateStr) { toast.error("Tarih seçilmedi"); return; }
+    setUpdatingTrial(userId);
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-users?action=update-trial`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session!.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId, trial_ends_at: `${dateStr}T23:59:59+03:00` }),
+    });
+    if (res.ok) {
+      toast.success("Trial tarihi güncellendi");
+      setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, trial_ends_at: `${dateStr}T23:59:59+03:00` } : u));
+    } else {
+      toast.error("Güncelleme başarısız");
+    }
+    setUpdatingTrial(null);
   }
 
   async function handleResetPassword(email: string, userId: string) {
@@ -98,7 +132,7 @@ function AdminUsers() {
               <th className="px-4 py-3">Mevcut Plan</th>
               <th className="px-4 py-3">Trial Bitiş</th>
               <th className="px-4 py-3">Kayıt</th>
-              <th className="px-4 py-3">Güncelle</th>
+              <th className="px-4 py-3">Plan Güncelle</th>
               <th className="px-4 py-3">Şifre</th>
             </tr>
           </thead>
@@ -109,8 +143,22 @@ function AdminUsers() {
                 <td className="px-4 py-3">
                   <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{u.plan ?? "—"}</span>
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-400">
-                  {u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString("tr-TR") : "—"}
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={trialDateSelections[u.user_id] ?? ""}
+                      onChange={e => setTrialDateSelections(prev => ({ ...prev, [u.user_id]: e.target.value }))}
+                      className="rounded-lg border border-white/10 bg-gray-800 px-2 py-1 text-xs text-white [color-scheme:dark]"
+                    />
+                    <button
+                      onClick={() => updateTrialDate(u.user_id)}
+                      disabled={updatingTrial === u.user_id}
+                      className="rounded-lg bg-amber-600 px-3 py-1 text-xs font-semibold hover:bg-amber-500 disabled:opacity-50"
+                    >
+                      {updatingTrial === u.user_id ? "…" : "Uzat"}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-400">
                   {new Date(u.created_at).toLocaleDateString("tr-TR")}

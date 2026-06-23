@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
 import { Route as UctanUcaYazilimRouteImport } from './routes/uctan-uca-yazilim'
+import { Route as SifreSifirlaRouteImport } from './routes/sifre-sifirla'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as OdemeRouteImport } from './routes/odeme'
@@ -47,6 +48,11 @@ const WebSitesiRoute = WebSitesiRouteImport.update({
 const UctanUcaYazilimRoute = UctanUcaYazilimRouteImport.update({
   id: '/uctan-uca-yazilim',
   path: '/uctan-uca-yazilim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SifreSifirlaRoute = SifreSifirlaRouteImport.update({
+  id: '/sifre-sifirla',
+  path: '/sifre-sifirla',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanelRoute = PanelRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   OdemeRoute: typeof OdemeRoute
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
+  SifreSifirlaRoute: typeof SifreSifirlaRoute
   UctanUcaYazilimRoute: typeof UctanUcaYazilimRoute
   WebSitesiRoute: typeof WebSitesiRoute
   AppButcecrmRoute: typeof AppButcecrmRouteWithChildren
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       path: '/uctan-uca-yazilim'
       fullPath: '/uctan-uca-yazilim'
       preLoaderRoute: typeof UctanUcaYazilimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sifre-sifirla': {
+      id: '/sifre-sifirla'
+      path: '/sifre-sifirla'
+      fullPath: '/sifre-sifirla'
+      preLoaderRoute: typeof SifreSifirlaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/panel': {
@@ -672,6 +692,7 @@ const rootRouteChildren: RootRouteChildren = {
   OdemeRoute: OdemeRoute,
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,
+  SifreSifirlaRoute: SifreSifirlaRoute,
   UctanUcaYazilimRoute: UctanUcaYazilimRoute,
   WebSitesiRoute: WebSitesiRoute,
   AppButcecrmRoute: AppButcecrmRouteWithChildren,

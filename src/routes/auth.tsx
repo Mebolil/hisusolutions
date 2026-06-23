@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, Mail } from "lucide-react";
+import { ArrowLeft, Lock, Mail, CheckCircle } from "lucide-react";
 import { HisuLogo } from "@/components/HisuLogo";
 import { supabase, REMEMBER_ME_KEY } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,8 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const navigate = useNavigate();
 
   // Email doğrulama linkinden dönen kullanıcıyı panele yönlendir
@@ -33,9 +35,27 @@ function AuthPage() {
       if (event === "SIGNED_IN" && session) {
         navigate({ to: "/panel" });
       }
+      // PASSWORD_RECOVERY eventi kasıtlı yakalanmıyor — /sifre-sifirla route'u halleder
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/sifre-sifirla`,
+    });
+    // Güvenlik gereği: hata da olsa success da olsa "gönderildi" göster
+    // Email enumeration saldırısını engeller
+    setForgotSent(true);
+    setLoading(false);
+  };
+
+  const resetForgot = () => {
+    setForgotMode(false);
+    setForgotSent(false);
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +89,56 @@ function AuthPage() {
 
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm md:p-10">
+          {forgotMode ? (
+            forgotSent ? (
+              <div className="text-center">
+                <CheckCircle className="mx-auto h-14 w-14 text-green-500" />
+                <h1 className="mt-4 text-2xl font-bold">Bağlantı yolda!</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Gelen kutunuzu kontrol edin. Gelmezse spam klasörünü de kontrol edin.
+                </p>
+                <p className="mt-3 text-xs text-muted-foreground">Bağlantı 1 saat geçerlidir.</p>
+                <button
+                  type="button"
+                  onClick={resetForgot}
+                  className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  ← Giriş sayfasına dön
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold">Olur, hemen halledelim.</h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    E-posta adresinize bağlantı gönderiyoruz — birkaç dakika içinde girişte olursunuz.
+                  </p>
+                </div>
+                <form onSubmit={handleForgot} className="mt-8 space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="forgot-email">E-posta</Label>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input id="forgot-email" type="email" placeholder="ornek@email.com" className="pl-10" value={email} onChange={e => setEmail(e.target.value)} required />
+                    </div>
+                  </div>
+                  <Button type="submit" disabled={loading} className="w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90">
+                    {loading ? "Yükleniyor..." : "Bağlantı Gönder"}
+                  </Button>
+                </form>
+                <p className="mt-6 text-center">
+                  <button
+                    type="button"
+                    onClick={resetForgot}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                  >
+                    ← Giriş sayfasına dön
+                  </button>
+                </p>
+              </>
+            )
+          ) : (
+          <>
           <div className="text-center">
             <h1 className="text-3xl font-bold">{mode === "signin" ? "Giriş Yap" : "15 Gün Ücretsiz Dene"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -100,6 +170,17 @@ function AuthPage() {
               </div>
             </div>
             {mode === "signin" && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setForgotMode(true)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Şifremi unuttum
+                </button>
+              </div>
+            )}
+            {mode === "signin" && (
               <label htmlFor="remember" className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
                   id="remember"
@@ -120,6 +201,8 @@ function AuthPage() {
               {mode === "signin" ? "15 Gün Ücretsiz Başla" : "Giriş Yap"}
             </button>
           </p>
+          </>
+          )}
         </div>
       </main>
     </div>

@@ -58,13 +58,13 @@ function ButceCrmDashboard() {
         "yyyy-MM-dd"
       );
       const [s, e, p, c, cu, pu, ret] = await Promise.all([
-        supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
-        supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
+        supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom).limit(50000),
+        supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom).limit(50000),
         supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
         supabase.from("campaigns").select("*").eq("user_id", uid).is("deleted_at", null).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).is("deleted_at", null).limit(2000),
         supabase.from("purchases").select("id,amount,paid_amount,payment_status").eq("user_id", uid).is("deleted_at", null).limit(2000),
-        supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").is("deleted_at", null).gte("return_date", fetchFrom),
+        supabase.from("returns").select("id,return_date,return_amount").eq("user_id", uid).eq("status", "active").is("deleted_at", null).gte("return_date", fetchFrom).limit(20000),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -106,6 +106,16 @@ function ButceCrmDashboard() {
 
   const customerMap = useMemo(() => Object.fromEntries(customers.map((c) => [c.id, c.name])), [customers]);
 
+  const campaignRevenueMap = useMemo(() => {
+    const map = new Map<string, number>();
+    sales.forEach((s) => {
+      if (s.campaign_id) {
+        map.set(s.campaign_id, (map.get(s.campaign_id) || 0) + Number(s.total_amount || 0));
+      }
+    });
+    return map;
+  }, [sales]);
+
   const inRange = (d: string) => {
     try { return isWithinInterval(parseISO(d), range); } catch { return false; }
   };
@@ -135,20 +145,18 @@ function ButceCrmDashboard() {
     let totalRevenue = 0;
     let totalSpend = 0;
     activeCampaigns.forEach((c) => {
-      const rev = sales.filter((s) => s.campaign_id === c.id).reduce((sum, s) => sum + Number(s.total_amount), 0);
+      const rev = campaignRevenueMap.get(c.id) || 0;
       totalRevenue += rev;
       totalSpend += Number(c.spend || 0);
     });
     return totalSpend > 0 ? totalRevenue / totalSpend : 0;
-  }, [activeCampaigns, sales]);
+  }, [activeCampaigns, campaignRevenueMap]);
 
   const onboardingProfile = loadOnboarding();
 
   const kayipKar = useMemo(() => {
     const bosReklam = periodCampaigns.reduce((sum, c) => {
-      const rev = sales
-        .filter((s) => s.campaign_id === c.id)
-        .reduce((s, x) => s + Number(x.total_amount), 0);
+      const rev = campaignRevenueMap.get(c.id) || 0;
       const roas = Number(c.spend) > 0 ? rev / Number(c.spend) : 0;
       return sum + (roas < 1 ? Number(c.spend) : 0);
     }, 0);
@@ -169,7 +177,7 @@ function ButceCrmDashboard() {
       negatifMarjin,
       total: bosReklam + iadeMaliyeti + negatifMarjin,
     };
-  }, [periodCampaigns, periodSales, periodReturns, sales, range]);
+  }, [periodCampaigns, periodSales, periodReturns, campaignRevenueMap, range]);
 
   const trendData = useMemo(() => {
     const arr = [];
@@ -206,7 +214,7 @@ function ButceCrmDashboard() {
 
   const activeCampaignsScored = activeCampaigns
     .map((c) => {
-      const rev = sales.filter((s) => s.campaign_id === c.id).reduce((sum, s) => sum + Number(s.total_amount), 0);
+      const rev = campaignRevenueMap.get(c.id) || 0;
       const spend = Number(c.spend || 0);
       const roas = spend > 0 ? rev / spend : 0;
       const netKar = rev - spend;
@@ -248,7 +256,10 @@ function ButceCrmDashboard() {
 
   // Ortalama Sipariş Değeri (AOV) — iptal hariç aktif satışlardan
   const activePeriodSales = periodSales.filter((s) => s.status !== "iptal");
-  const aov = activePeriodSales.length > 0 ? totalIncome / activePeriodSales.length : 0;
+  const aovBase = activePeriodSales.filter((s) => s.status !== "iade_edildi");
+  const aov = aovBase.length > 0
+    ? aovBase.reduce((s, x) => s + Number(x.total_amount || 0), 0) / aovBase.length
+    : 0;
 
   const supplierDebt = purchases.reduce((s, p) => s + Math.max(0, Number(p.amount) - Number(p.paid_amount || 0)), 0);
 
@@ -336,6 +347,40 @@ function ButceCrmDashboard() {
   const periodLabels: Record<Period, string> = { week: "Bu Hafta", month: "Bu Ay", year: "Bu Yıl" };
 
   if (loading) return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Yükleniyor...</p></div>;
+
+  if (sales.length === 0 && expenses.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Ana Sayfa</h1>
+          <p className="text-muted-foreground text-sm">BütçeCRM — Tüm modüllerin gerçek zamanlı özeti</p>
+        </div>
+        <Card className="border-2 border-primary/20">
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className="mb-4 text-5xl">📊</div>
+            <h2 className="text-xl font-semibold mb-2">Henüz veri yok</h2>
+            <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+              İlk satışını veya giderini ekle — panel hemen canlanıyor.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href="/app/butcecrm/satislar"
+                className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground h-9 px-4 text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                İlk Satışı Ekle
+              </a>
+              <a
+                href="/app/butcecrm/giderler"
+                className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 px-4 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                Gider Ekle
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -442,12 +487,16 @@ function ButceCrmDashboard() {
         <MetricCard title="Net Kâr" value={formatCurrency(netProfit)} icon={<DollarSign className={`h-5 w-5 ${netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`} />} bg={netProfit >= 0 ? "bg-emerald-100" : "bg-red-100"} valueClass={netProfit >= 0 ? "text-emerald-600" : "text-red-600"} sub={`Gelir: ${formatCurrency(totalIncome)} · Maliyet: ${formatCurrency(totalCost)}${totalReturnAmount > 0 ? ` · İade: −${formatCurrency(totalReturnAmount)}` : ""}`} />
         <MetricCard title="Kâr Marjı" value={`%${margin.toFixed(1)}`} icon={<Percent className="h-5 w-5 text-blue-600" />} bg="bg-blue-100" valueClass={margin >= 0 ? "text-emerald-600" : "text-red-600"} />
         <MetricCard
-          title="Nakit Dengesi"
-          value={debtRatio.ratio !== null ? `${debtRatio.ratio.toFixed(2)}x` : "—"}
-          icon={<Building2 className={`h-5 w-5 ${debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}`} />}
-          bg={debtRatio.ratio === null ? "bg-muted" : debtRatio.ratio >= 1 ? "bg-emerald-100" : "bg-red-100"}
-          valueClass={debtRatio.ratio === null ? "text-muted-foreground" : debtRatio.ratio >= 1 ? "text-emerald-600" : "text-red-600"}
-          sub={debtRatio.ratio !== null ? `Alacak: ${formatCurrency(debtRatio.totalReceivable)} · Borç: ${formatCurrency(debtRatio.totalPayable)}` : "Borç kaydı yok"}
+          title="Net Pozisyon"
+          value={formatCurrency(debtRatio.totalReceivable - debtRatio.totalPayable)}
+          icon={<Building2 className={`h-5 w-5 ${
+            debtRatio.totalReceivable >= debtRatio.totalPayable
+              ? "text-emerald-600"
+              : "text-red-600"
+          }`} />}
+          bg={debtRatio.totalReceivable >= debtRatio.totalPayable ? "bg-emerald-100" : "bg-red-100"}
+          valueClass={debtRatio.totalReceivable >= debtRatio.totalPayable ? "text-emerald-600" : "text-red-600"}
+          sub={`Alacak: ${formatCurrency(debtRatio.totalReceivable)} · Borç: ${formatCurrency(debtRatio.totalPayable)}${debtRatio.ratio !== null ? ` · Oran: ${debtRatio.ratio.toFixed(2)}x` : ""}`}
         />
         <MetricCard title="Bekleyen Tahsilat" value={formatCurrency(potentialIncome)} icon={<Clock className="h-5 w-5 text-amber-600" />} bg="bg-amber-100" valueClass="text-amber-600" href={potentialIncome > 0 ? "/app/butcecrm/satislar" : undefined} action={potentialIncome > 0 ? "Tahsilatları gör" : undefined} />
       </div>

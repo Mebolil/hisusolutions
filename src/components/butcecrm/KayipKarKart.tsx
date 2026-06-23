@@ -29,18 +29,39 @@ export function KazanilmamisFirsatKart({
         <p className="text-3xl font-bold text-amber-700">{formatCurrency(total)}</p>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Düşük verimli reklam</span>
-            <span className="font-medium">{bosReklam > 0 ? formatCurrency(bosReklam) : "-"}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">İade etkisi</span>
-            <span className="font-medium">{iadeMaliyeti > 0 ? formatCurrency(iadeMaliyeti) : "-"}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Zarar eden satışlar</span>
-            <span className="font-medium">{negatifMarjin > 0 ? formatCurrency(negatifMarjin) : "-"}</span>
-          </div>
+          {bosReklam > 0 ? (
+            <a href="/app/butcecrm/reklam" className="flex items-center justify-between text-sm hover:underline decoration-current">
+              <span className="text-muted-foreground">Düşük verimli reklam</span>
+              <span className="font-medium">{formatCurrency(bosReklam)} <span className="text-xs">→</span></span>
+            </a>
+          ) : (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Düşük verimli reklam</span>
+              <span className="font-medium">-</span>
+            </div>
+          )}
+          {iadeMaliyeti > 0 ? (
+            <a href="/app/butcecrm/iadeler" className="flex items-center justify-between text-sm hover:underline decoration-current">
+              <span className="text-muted-foreground">İade etkisi</span>
+              <span className="font-medium">{formatCurrency(iadeMaliyeti)} <span className="text-xs">→</span></span>
+            </a>
+          ) : (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">İade etkisi</span>
+              <span className="font-medium">-</span>
+            </div>
+          )}
+          {negatifMarjin > 0 ? (
+            <a href="/app/butcecrm/satislar" className="flex items-center justify-between text-sm hover:underline decoration-current">
+              <span className="text-muted-foreground">Zarar eden satışlar</span>
+              <span className="font-medium">{formatCurrency(negatifMarjin)} <span className="text-xs">→</span></span>
+            </a>
+          ) : (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Zarar eden satışlar</span>
+              <span className="font-medium">-</span>
+            </div>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground pt-1">

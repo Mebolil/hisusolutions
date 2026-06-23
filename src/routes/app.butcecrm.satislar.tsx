@@ -113,11 +113,11 @@ function SalesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [s, c, ca, p, ret] = await Promise.all([
-      supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }),
-      supabase.from("customers").select("id,name").eq("user_id", uid).order("name"),
-      supabase.from("campaigns").select("id,name").eq("user_id", uid).order("name"),
+      supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }).limit(50000),
+      supabase.from("customers").select("id,name").eq("user_id", uid).order("name").limit(5000),
+      supabase.from("campaigns").select("id,name").eq("user_id", uid).order("name").limit(2000),
       supabase.from("products").select("id,name,quantity,unit_price").eq("user_id", uid).is("deleted_at", null).order("name"),
-      supabase.from("returns").select("sale_id,quantity").eq("user_id", uid).eq("status", "active").is("deleted_at", null),
+      supabase.from("returns").select("sale_id,quantity").eq("user_id", uid).eq("status", "active").is("deleted_at", null).limit(20000),
     ]);
     setSales((s.data as Sale[]) || []);
     setCustomers((c.data as Customer[]) || []);
@@ -235,20 +235,21 @@ function SalesPage() {
   );
 
   const totals = useMemo(() => {
-    const total = filtered.reduce((s, x) => s + Number(x.total_amount || 0), 0);
-    const paid = filtered.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
-    const cost = filtered.reduce((s, x) => s + Number(x.total_cost || 0), 0);
+    const activeSales = filtered.filter((s) => !s.status || s.status === "aktif");
+    const total = activeSales.reduce((s, x) => s + Number(x.total_amount || 0), 0);
+    const paid = activeSales.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
+    const cost = activeSales.reduce((s, x) => s + Number(x.total_cost || 0), 0);
     const profit = total - cost;
     const margin = total > 0 ? (profit / total) * 100 : 0;
-    const avg = filtered.length > 0 ? total / filtered.length : 0;
+    const avg = activeSales.length > 0 ? total / activeSales.length : 0;
     const cancelledCount = filtered.filter((s) => s.status === "iptal" || s.status === "iade_edildi").length;
-    const activeCount = filtered.filter((s) => !s.status || s.status === "aktif").length;
+    const activeCount = activeSales.length;
     return { total, paid, cost, profit, margin, avg, remaining: total - paid, count: filtered.length, cancelledCount, activeCount };
   }, [filtered]);
 
   const platformBreakdown = useMemo(() => {
     const map = new Map<string, { revenue: number; profit: number; count: number }>();
-    filtered.forEach((s) => {
+    filtered.filter((s) => !s.status || s.status === "aktif").forEach((s) => {
       const k = s.platform || "Belirtilmemiş";
       const cur = map.get(k) || { revenue: 0, profit: 0, count: 0 };
       cur.revenue += Number(s.total_amount || 0);
@@ -263,7 +264,7 @@ function SalesPage() {
 
   const topProducts = useMemo(() => {
     const map = new Map<string, { qty: number; revenue: number; profit: number }>();
-    filtered.forEach((s) => {
+    filtered.filter((s) => !s.status || s.status === "aktif").forEach((s) => {
       const k = s.product_name || "—";
       const cur = map.get(k) || { qty: 0, revenue: 0, profit: 0 };
       cur.qty += Number(s.quantity || 0);
@@ -313,27 +314,56 @@ function SalesPage() {
   async function deleteSale(sale: Sale) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return toast.error("Oturum bulunamadı");
-    const { error } = await supabase.from("sales").update({ deleted_at: new Date().toISOString() }).eq("id", sale.id).eq("user_id", session.user.id);
+    const uid = session.user.id;
+    const { error } = await supabase
+      .from("sales")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", sale.id)
+      .eq("user_id", uid);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     setSales((prev) => prev.filter((s) => s.id !== sale.id));
 
-    // Restore stock for the matching product
     const matched = products.find(
       (p) => p.name.trim().toLowerCase() === sale.product_name.trim().toLowerCase()
     );
+    let prevStockQty: number | null = null;
     if (matched) {
-      const newQty = (matched.quantity ?? 0) + (Number(sale.quantity) || 0);
+      prevStockQty = matched.quantity ?? 0;
+      const newQty = prevStockQty + (Number(sale.quantity) || 0);
       const { error: stockErr } = await supabase
-        .from("products").update({ quantity: newQty }).eq("id", matched.id).eq("user_id", session.user.id);
+        .from("products")
+        .update({ quantity: newQty })
+        .eq("id", matched.id)
+        .eq("user_id", uid);
       if (stockErr) {
-        toast.warning("Satış silindi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
+        toast.warning("Satış arşivlendi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
       } else {
         setProducts((prev) => prev.map((p) => p.id === matched.id ? { ...p, quantity: newQty } : p));
-        toast.success("Satış silindi, stok geri yüklendi");
       }
-    } else {
-      toast.success("Satış silindi");
     }
+
+    const savedPrevQty = prevStockQty;
+    const savedMatchedId = matched?.id ?? null;
+    toast.success("Satış arşivlendi", {
+      action: {
+        label: "Geri Al",
+        onClick: async () => {
+          await supabase
+            .from("sales")
+            .update({ deleted_at: null })
+            .eq("id", sale.id)
+            .eq("user_id", uid);
+          if (savedMatchedId !== null && savedPrevQty !== null) {
+            await supabase
+              .from("products")
+              .update({ quantity: savedPrevQty })
+              .eq("id", savedMatchedId)
+              .eq("user_id", uid);
+          }
+          load();
+        },
+      },
+    });
   }
 
   const [editing, setEditing] = useState<Sale | null>(null);
@@ -759,7 +789,7 @@ function SalesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Satışı sil?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Bu işlem geri alınamaz. "{s.product_name}" satışı kalıcı olarak silinecek.
+                                "{s.product_name}" satışı arşivlenecek.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -1093,12 +1123,17 @@ function NewSaleDialog({
       if (prod) {
         const newQty = Math.max(0, Number(prod.quantity || 0) - (Number(form.quantity) || 1));
         const { error: stockErr } = await supabase
-          .from("products").update({ quantity: newQty }).eq("id", form.product_id);
+          .from("products").update({ quantity: newQty }).eq("id", form.product_id).eq("user_id", session.user.id);
         if (stockErr) toast.warning("Satış kaydedildi ancak stok güncellenemedi: " + friendlyDbError(stockErr));
       }
     }
     setSaving(false);
-    toast.success("Satış eklendi");
+    const saleProfit = finalCost > 0 ? total - finalCost : null;
+    toast.success(
+      saleProfit !== null && saleProfit > 0
+        ? `Satış eklendi · Kâr +${formatCurrency(saleProfit)}`
+        : "Satış eklendi"
+    );
     reset();
     setOpen(false);
     onCreated();

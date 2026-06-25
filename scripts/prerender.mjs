@@ -26,6 +26,7 @@ const ROUTES = [
   '/blog/butcecrm-nedir-eticaret-reklam-muhasebe',
   '/blog/butcecrm-ilk-30-gun-kurulum-rehberi',
   '/blog/trendyol-sku-bazli-karlilik-analizi',
+  '/kar-hesaplayici',
 ];
 
 const mimeTypes = {

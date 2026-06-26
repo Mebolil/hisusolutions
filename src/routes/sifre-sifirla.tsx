@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { HisuLogo } from "@/components/HisuLogo";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ function SifreSifirlaPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -113,14 +115,48 @@ function SifreSifirlaPage() {
                   <Label htmlFor="password">Şifre</Label>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="password" type="password" placeholder="En az 6 karakter" className="pl-10" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
+                    <Input
+                      id="password"
+                      type={showPass ? "text" : "password"}
+                      placeholder="En az 6 karakter"
+                      className="pl-10 pr-10"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                    >
+                      {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="confirm">Şifre tekrar</Label>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="confirm" type="password" placeholder="Şifrenizi tekrar girin" className="pl-10" value={confirm} onChange={e => setConfirm(e.target.value)} minLength={6} required />
+                    <Input
+                      id="confirm"
+                      type={showConfirm ? "text" : "password"}
+                      placeholder="Şifrenizi tekrar girin"
+                      className="pl-10 pr-10"
+                      value={confirm}
+                      onChange={e => setConfirm(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">En az 6 karakter</p>

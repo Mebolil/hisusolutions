@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, Mail, CheckCircle } from "lucide-react";
+import { ArrowLeft, Lock, Mail, CheckCircle, Eye, EyeOff, User } from "lucide-react";
 import { HisuLogo } from "@/components/HisuLogo";
 import { supabase, REMEMBER_ME_KEY } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,12 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search) => ({
     mode: (search.mode as "signin" | "signup") ?? "signin",
   }),
-  head: () => ({ meta: [{ title: "Giriş Yap — Hisu Solutions" }] }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const { mode: initialMode } = Route.useSearch();
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup" | "confirmation">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -27,6 +26,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const navigate = useNavigate();
 
   // Email doğrulama linkinden dönen kullanıcıyı panele yönlendir
@@ -39,6 +39,15 @@ function AuthPage() {
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      signin: "Giriş Yap — Hisu Solutions",
+      signup: "Kayıt Ol — Hisu Solutions",
+      confirmation: "Kayıt Tamamlandı — Hisu Solutions",
+    };
+    document.title = titles[mode] ?? "Hisu Solutions";
+  }, [mode]);
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +76,12 @@ function AuthPage() {
       if (error) toast.error(error.message);
       else { toast.success("Giriş başarılı"); navigate({ to: "/panel" }); }
     } else {
-      window.localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
       const { error } = await supabase.auth.signUp({
         email, password,
         options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: name } },
       });
       if (error) toast.error(error.message);
-      else toast.success("Kayıt oluşturuldu! E-postanızı kontrol edin.");
+      else setMode("confirmation");
     }
     setLoading(false);
   };
@@ -89,7 +97,23 @@ function AuthPage() {
 
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm md:p-10">
-          {forgotMode ? (
+          {mode === "confirmation" ? (
+            <div className="text-center">
+              <CheckCircle className="mx-auto h-14 w-14 text-green-500" />
+              <h1 className="mt-4 text-2xl font-bold">E-postanızı doğrulayın</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Kayıt e-postası gönderildi. Gelen kutunuzu kontrol edin.
+              </p>
+              <p className="mt-3 text-xs text-muted-foreground">Spam klasörünü de kontrol edin.</p>
+              <button
+                type="button"
+                onClick={() => setMode("signin")}
+                className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+              >
+                ← Giriş sayfasına dön
+              </button>
+            </div>
+          ) : forgotMode ? (
             forgotSent ? (
               <div className="text-center">
                 <CheckCircle className="mx-auto h-14 w-14 text-green-500" />
@@ -109,7 +133,7 @@ function AuthPage() {
             ) : (
               <>
                 <div className="text-center">
-                  <h1 className="text-3xl font-bold">Olur, hemen halledelim.</h1>
+                  <h1 className="text-3xl font-bold">Şifrenizi sıfırlayalım.</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
                     E-posta adresinize bağlantı gönderiyoruz — birkaç dakika içinde girişte olursunuz.
                   </p>
@@ -152,7 +176,10 @@ function AuthPage() {
             {mode === "signup" && (
               <div className="space-y-1.5">
                 <Label htmlFor="name">Ad Soyad</Label>
-                <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="name" placeholder="Ad Soyad" className="pl-10" value={name} onChange={e => setName(e.target.value)} required />
+                </div>
               </div>
             )}
             <div className="space-y-1.5">
@@ -166,15 +193,53 @@ function AuthPage() {
               <Label htmlFor="password">Şifre</Label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="En az 6 karakter" className="pl-10" value={password} onChange={e => setPassword(e.target.value)} minLength={6} required />
+                <Input
+                  id="password"
+                  type={showPass ? "text" : "password"}
+                  placeholder="En az 6 karakter"
+                  className="pl-10 pr-10"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
+            {mode === "signup" && password.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex gap-1">
+                  {[
+                    password.length >= 8,
+                    /[A-Z]/.test(password),
+                    /[0-9]/.test(password),
+                  ].map((met, i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-colors ${met ? "bg-green-500" : "bg-muted"}`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                    ? "Güçlü şifre"
+                    : "En az 8 karakter, büyük harf ve rakam ekleyin"}
+                </p>
+              </div>
+            )}
             {mode === "signin" && (
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => setForgotMode(true)}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-foreground/70 hover:text-primary transition-colors"
                 >
                   Şifremi unuttum
                 </button>

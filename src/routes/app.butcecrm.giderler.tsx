@@ -125,7 +125,7 @@ function ExpensesPage() {
 
     if (!c.data?.length) {
       const defaults = ["Kira","Elektrik","Su","İnternet","Personel","Muhasebe","Reklam","Vergi","Kargo","Diğer"];
-      await supabase.from("expense_categories").insert(defaults.map((name) => ({ name })));
+      await supabase.from("expense_categories").insert(defaults.map((name) => ({ name, user_id: uid })));
       const { data: seeded } = await supabase.from("expense_categories").select("id,name").order("name");
       setCategories((seeded as Category[]) || []);
     } else {
@@ -805,7 +805,7 @@ function ExpenseDialog({
     } else {
       const { error } = await supabase.from("expenses").insert(payload);
       if (!error && form.category === "__new__" && cat) {
-        await supabase.from("expense_categories").insert({ name: cat }).then(() => {});
+        await supabase.from("expense_categories").insert({ name: cat, user_id: session.user.id }).then(() => {});
       }
       setSaving(false);
       if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));

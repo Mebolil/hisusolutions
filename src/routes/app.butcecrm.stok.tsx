@@ -182,10 +182,12 @@ function StockPage() {
   }
 
   async function loadCategories() {
+    const { data: { session } } = await supabase.auth.getSession();
+    const catUid = session?.user?.id;
     const { data } = await supabase.from("product_categories").select("id,name").order("name");
-    if (!data?.length) {
+    if (!data?.length && catUid) {
       const defaults = ["Genel","Elektronik","Giyim","Aksesuar","Kozmetik","Gıda"];
-      await supabase.from("product_categories").insert(defaults.map((name) => ({ name })));
+      await supabase.from("product_categories").insert(defaults.map((name) => ({ name, user_id: catUid })));
       const { data: seeded } = await supabase.from("product_categories").select("id,name").order("name");
       setCategories((seeded as Category[]) || []);
       return;
@@ -829,7 +831,7 @@ function NewProductDialog({
     };
     const { error } = await supabase.from("products").insert(payload);
     if (!error && form.category === "__new__" && cat) {
-      await supabase.from("product_categories").insert({ name: cat }).then(() => {});
+      await supabase.from("product_categories").insert({ name: cat, user_id: userId }).then(() => {});
     }
     setSaving(false);
     if (error) return toast.error("Eklenemedi: " + friendlyDbError(error));
@@ -989,10 +991,11 @@ function EditProductDialog({
         quantity: diff,
         unit_cost: form.unit_price ? Number(form.unit_price) : 0,
         note: "Manuel düzeltme",
+        user_id: uid,
       });
     }
     if (!error && form.category === "__new__" && cat) {
-      await supabase.from("product_categories").insert({ name: cat }).then(() => {});
+      await supabase.from("product_categories").insert({ name: cat, user_id: uid }).then(() => {});
     }
     setSaving(false);
     if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));

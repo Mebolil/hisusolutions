@@ -116,7 +116,7 @@ function ExpensesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [e, c, s] = await Promise.all([
-      supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).order("expense_date", { ascending: false }),
+      supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).order("expense_date", { ascending: false }).limit(50000),
       supabase.from("expense_categories").select("id,name").order("name"),
       supabase.from("sales").select("id,product_name,sale_date").eq("user_id", uid).is("deleted_at", null).order("sale_date", { ascending: false }).limit(200),
     ]);

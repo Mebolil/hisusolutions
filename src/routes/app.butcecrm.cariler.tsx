@@ -234,7 +234,7 @@ function PartyList({ kind, title }: { kind: Kind; title: string }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
-    const { data } = await supabase.from(kind).select("*").eq("user_id", uid).is("deleted_at", null).order("name");
+    const { data } = await supabase.from(kind).select("*").eq("user_id", uid).is("deleted_at", null).order("name").limit(10000);
     const parties = (data as Party[]) || [];
     setItems(parties);
 

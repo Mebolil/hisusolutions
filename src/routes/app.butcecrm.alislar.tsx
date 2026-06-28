@@ -90,7 +90,7 @@ function PurchasesPage() {
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
     const [p, s, pr] = await Promise.all([
-      supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).order("purchase_date", { ascending: false }),
+      supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).order("purchase_date", { ascending: false }).limit(50000),
       supabase.from("suppliers").select("id,name").eq("user_id", uid).order("name"),
       supabase.from("products").select("id,name,unit_price,quantity").eq("user_id", uid).is("deleted_at", null).order("name"),
     ]);

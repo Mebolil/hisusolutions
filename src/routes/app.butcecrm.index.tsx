@@ -187,10 +187,22 @@ function ButceCrmDashboard() {
       const within = (x: string) => { try { return isWithinInterval(parseISO(x), r); } catch { return false; } };
       const ms = sales.filter((s) => within(s.sale_date));
       const me = expenses.filter((e) => within(e.expense_date));
-      const mc = campaigns.filter((c) => within(c.start_date));
+      // Kampanya spend'ini aktif olduğu aylara orantılı dağıt
+      const campaignSpend = campaigns.reduce((total, c) => {
+        try {
+          const cStart = parseISO(c.start_date);
+          const cEnd = c.end_date ? parseISO(c.end_date) : now;
+          const overlapStart = new Date(Math.max(cStart.getTime(), r.start.getTime()));
+          const overlapEnd = new Date(Math.min(cEnd.getTime(), r.end.getTime()));
+          if (overlapStart > overlapEnd) return total;
+          const totalDays = Math.max(1, differenceInDays(cEnd, cStart) + 1);
+          const overlapDays = differenceInDays(overlapEnd, overlapStart) + 1;
+          return total + (Number(c.spend || 0) * overlapDays / totalDays);
+        } catch { return total; }
+      }, 0);
       const inc = ms.reduce((s, x) => s + Number(x.paid_amount || 0), 0);
       const cost = ms.reduce((s, x) => s + Number(x.total_cost || 0), 0);
-      const exp = me.reduce((s, x) => s + Number(x.paid_amount || 0), 0) + mc.reduce((s, c) => s + Number(c.spend || 0), 0);
+      const exp = me.reduce((s, x) => s + Number(x.paid_amount || 0), 0) + campaignSpend;
       arr.push({ name: format(d, "MMM yy", { locale: tr }), Gelir: inc, Gider: exp, "Net Kâr": inc - exp - cost });
     }
     return arr;

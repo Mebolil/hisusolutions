@@ -160,6 +160,12 @@ export const Route = createFileRoute("/kar-hesaplayici")({
             {
               "@type": "ListItem",
               position: 2,
+              name: "Kâr Hesaplayıcılar",
+              item: "https://hisusolutions.com/kar-hesaplayici",
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
               name: "Trendyol Kâr Hesaplayıcı",
               item: "https://hisusolutions.com/kar-hesaplayici",
             },

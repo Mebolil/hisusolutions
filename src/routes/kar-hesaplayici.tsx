@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { FaqBlock, type FaqItem } from "@/components/site/FaqBlock";
 import { trackEvent } from "@/lib/analytics";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,10 +19,14 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 
+type FaqItem = { q: string; a: string };
+
+const STOPAJ_ORANI = 0.01;
+
 const PAGE_TITLE =
-  "Trendyol Kâr ve Komisyon Hesaplayıcı 2026 — Ücretsiz";
+  "Trendyol Kâr ve Komisyon Hesaplayıcı 2026 — Stopaj Dahil | Hisu Solutions";
 const PAGE_DESCRIPTION =
-  "Trendyol'da kaça satarsan ne kadar kazanırsın? Hedef kârını gir, komisyon, kargo ve platform ücretleri dahil minimum satış fiyatını öğren. Önce kâr, sonra fiyat.";
+  "Trendyol'da kaça satarsan ne kadar kazanırsın? Komisyon, %1 e-ticaret stopajı ve kargo dahil minimum satış fiyatını saniyeler içinde öğren. Ücretsiz. Önce kâr, sonra fiyat.";
 const PAGE_URL = "https://hisusolutions.com/kar-hesaplayici";
 
 const faqs: FaqItem[] = [
@@ -33,7 +36,15 @@ const faqs: FaqItem[] = [
   },
   {
     q: "Trendyol platform hizmet bedeli nedir?",
-    a: "Trendyol, her sipariş için komisyona ek olarak platform hizmet bedeli alır. Varsayılan değer 10.19 TL olup bu araçta düzenlenebilirdir.",
+    a: "Trendyol, her sipariş için komisyona ek olarak platform hizmet bedeli alır. Varsayılan değer 10.19 TL olup bu araçta düzenlenebilirdir. Yani 500 TL'lik bir satışta Trendyol hem komisyon hem de 10,19 TL sabit platform hizmet bedeli keser.",
+  },
+  {
+    q: "Trendyol satışlarında e-ticaret stopajı var mı?",
+    a: "Evet. 1 Ocak 2025'ten itibaren tüm e-ticaret pazaryeri satışlarında %1 gelir vergisi stopajı uygulanmaktadır; Trendyol da bu kapsama dahildir. Örneğin 500 TL'ye sattığınız bir üründe Trendyol ödeme yaparken 5 TL stopaj keser. Çoğu kâr hesaplayıcı bu kalemi göstermez; bu araç stopajı formüle dahil eder ve ayrı kalem olarak gösterir.",
+  },
+  {
+    q: "Trendyol'da zarar etmeden satabileceğim minimum fiyat nedir?",
+    a: "Break-even (başa baş) fiyatı = (Ürün maliyeti + Platform hizmet bedeli + Kargo + Paketleme) ÷ (1 − Komisyon oranı − %1 Stopaj). Örneğin 200 TL maliyetli bir ürün için Giyim & Moda kategorisinde (%21,36 komisyon) varsayılan kargo ve platform bedeli ile break-even yaklaşık 357 TL'dir. Hesaplayıcıya hedef kâr = 0 girerek kendi ürününüzün break-even fiyatını anında öğrenebilirsiniz.",
   },
   {
     q: "Trendyol'da iade maliyeti nasıl hesaplanır?",
@@ -41,7 +52,11 @@ const faqs: FaqItem[] = [
   },
   {
     q: "Trendyol'da minimum satış fiyatı nasıl belirlenir?",
-    a: "Minimum satış fiyatı = (hedef kâr + ürün maliyeti + platform hizmet bedeli + kargo + paketleme) ÷ (1 − komisyon oranı). Bu formüle göre hesaplama yapan Türkiye'deki nadir ücretsiz araçlardan biridir.",
+    a: "Minimum satış fiyatı = (Hedef kâr + Ürün maliyeti + Platform hizmet bedeli + Kargo + Paketleme) ÷ (1 − Komisyon oranı − %1 Stopaj). Bu formüle göre hesaplama yapan ve stopajı da dahil eden Türkiye'deki nadir ücretsiz araçlardan biridir.",
+  },
+  {
+    q: "Trendyol mu Hepsiburada mı daha az komisyon alıyor?",
+    a: "Kategoriye göre değişir. Giyim'de Trendyol %21,36 alırken Hepsiburada %21 alır. Elektronik büyük cihazlarda Trendyol %7,50, Hepsiburada %4,50'dir — bu kategoride Hepsiburada avantajlı. Her iki platform da 1 Ocak 2025'ten itibaren %1 stopaja tabi. Trendyol'a ek olarak 10,19 TL platform hizmet bedeli uygularken Hepsiburada bu bedeli 5 Temmuz 2025'te kaldırdı. Hepsiburada'daki kâr marjınızı hesaplamak için Hepsiburada Kâr Hesaplayıcımızı kullanabilirsiniz.",
   },
   {
     q: "BütçeCRM ile Trendyol kârı nasıl takip edilir?",
@@ -62,6 +77,19 @@ const CATEGORIES = [
   { label: "Diğer", rate: 0.18 },
 ] as const;
 
+const CATEGORIES_TABLE = [
+  { label: "Giyim & Moda", rate: 0.2136 },
+  { label: "Ayakkabı", rate: 0.2339 },
+  { label: "Çanta & Aksesuar", rate: 0.2136 },
+  { label: "Elektronik — Büyük (telefon, laptop, TV)", rate: 0.075 },
+  { label: "Elektronik — Küçük / Akıllı", rate: 0.155 },
+  { label: "Ev & Yaşam", rate: 0.19 },
+  { label: "Bebek & Oyuncak", rate: 0.165 },
+  { label: "Gıda & Pet", rate: 0.1525 },
+  { label: "Kişisel Bakım & Kozmetik", rate: 0.17 },
+  { label: "Diğer", rate: 0.18 },
+] as const;
+
 export const Route = createFileRoute("/kar-hesaplayici")({
   head: () => ({
     meta: [
@@ -73,6 +101,10 @@ export const Route = createFileRoute("/kar-hesaplayici")({
       { property: "og:title", content: PAGE_TITLE },
       { property: "og:description", content: PAGE_DESCRIPTION },
       { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: PAGE_TITLE },
+      { name: "twitter:description", content: PAGE_DESCRIPTION },
+      { name: "twitter:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [{ rel: "canonical", href: PAGE_URL }],
     scripts: [
@@ -101,11 +133,43 @@ export const Route = createFileRoute("/kar-hesaplayici")({
           operatingSystem: "Web",
           inLanguage: "tr-TR",
           isAccessibleForFree: true,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
+          featureList:
+            "Komisyon hesaplama, E-ticaret stopajı, Kargo maliyeti, Platform hizmet bedeli, İade senaryosu, Net kâr tahmini",
+          datePublished: "2026-06-28",
+          dateModified: "2026-06-28",
           provider: {
             "@type": "Organization",
             name: "Hisu Solutions",
             url: "https://hisusolutions.com",
           },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Ana Sayfa",
+              item: "https://hisusolutions.com",
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Kâr Hesaplayıcılar",
+              item: "https://hisusolutions.com/kar-hesaplayici",
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: "Trendyol Kâr Hesaplayıcı",
+              item: "https://hisusolutions.com/kar-hesaplayici",
+            },
+          ],
         }),
       },
     ],
@@ -120,19 +184,13 @@ function KarHesaplayiciPage() {
   const [commissionRate, setCommissionRate] = useState<string>("");
   const [platformFee, setPlatformFee] = useState<string>("10.19");
 
-  const [shipping, setShipping] = useState<string>("65");
+  const [shipping, setShipping] = useState<string>("75");
   const [packaging, setPackaging] = useState<string>("0");
   const [returnRate, setReturnRate] = useState<string>("0");
 
   const [hasTracked, setHasTracked] = useState(false);
+  const lossTracked = useRef(false);
   const resultRef = useRef<HTMLDivElement>(null);
-
-  const isReady =
-    targetProfit !== "" &&
-    productCost !== "" &&
-    commissionRate !== "" &&
-    parseFloat(commissionRate) > 0 &&
-    parseFloat(commissionRate) < 100;
 
   const tp = parseFloat(targetProfit) || 0;
   const pc = parseFloat(productCost) || 0;
@@ -142,20 +200,33 @@ function KarHesaplayiciPage() {
   const cr = (parseFloat(commissionRate) || 0) / 100;
   const rr = (parseFloat(returnRate) || 0) / 100;
 
-  const sellingPrice = (tp + pc + pf + sh + pkg) / (1 - cr);
+  const denominator = 1 - cr - STOPAJ_ORANI;
+  const sellingPrice =
+    denominator > 0 ? (tp + pc + pf + sh + pkg) / denominator : 0;
   const commissionAmount = sellingPrice * cr;
+  const stopajAmount = sellingPrice * STOPAJ_ORANI;
 
   const returnCost = sh * 2 + pkg;
   const effectiveProfit = tp * (1 - rr) - returnCost * rr;
 
-  const totalDeductions = commissionAmount + pf + sh + pkg;
+  const totalDeductions = commissionAmount + stopajAmount + pf + sh + pkg;
+  const profitMargin = sellingPrice > 0 ? (tp / sellingPrice) * 100 : 0;
+
+  const isReady =
+    targetProfit !== "" &&
+    productCost !== "" &&
+    commissionRate !== "" &&
+    parseFloat(commissionRate) > 0 &&
+    parseFloat(commissionRate) < 100 &&
+    denominator > 0;
 
   useEffect(() => {
     if (isReady && !hasTracked) {
       const price = sellingPrice;
       const range = price < 200 ? "0-200" : price < 500 ? "200-500" : "500+";
-      trackEvent("kar_hesaplayici_hesapla");
+      trackEvent("ty_kar_hesaplayici_hesapla");
       trackEvent("hesap_sonucu_aralik", { aralik: range });
+      trackEvent("ty_stopaj_gosterildi");
       setHasTracked(true);
     }
   }, [isReady, sellingPrice, hasTracked]);
@@ -163,6 +234,16 @@ function KarHesaplayiciPage() {
   useEffect(() => {
     setHasTracked(false);
   }, [targetProfit, productCost, commissionRate]);
+
+  useEffect(() => {
+    if (rr > 0 && effectiveProfit < 0 && !lossTracked.current) {
+      trackEvent("ty_iade_ile_zarar");
+      lossTracked.current = true;
+    }
+    if (!(rr > 0 && effectiveProfit < 0)) {
+      lossTracked.current = false;
+    }
+  }, [rr, effectiveProfit]);
 
   useEffect(() => {
     if (isReady) {
@@ -180,17 +261,33 @@ function KarHesaplayiciPage() {
             Ücretsiz Araç · E-Ticaret Satıcıları İçin
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
-            Hedef Kârından{" "}
-            <span className="text-primary">Minimum Satış Fiyatını</span>{" "}
-            Hesapla
+            Trendyol'da{" "}
+            <span className="text-primary">Ne Kadar Kazanırsın?</span>
           </h1>
           <p className="mt-4 text-lg italic text-muted-foreground">
             "Önce kâr, sonra fiyat"
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-            Hedef kârını gir, komisyon, kargo ve platform ücretleri dahil minimum
-            satış fiyatını saniyeler içinde öğren.
+            Hedef kârını gir — komisyon, %1 e-ticaret stopajı, platform hizmet
+            bedeli ve kargo dahil{" "}
+            <strong>Trendyol'da kaça satman gerektiğini</strong> ve zarar etmeden
+            minimum satış fiyatını saniyeler içinde öğren.
           </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Son güncelleme: Haziran 2026 · Kaynak: Trendyol Satıcı Sözleşmesi
+            komisyon tablosu
+          </p>
+          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-left">
+            <p className="text-sm text-amber-900">
+              <strong>
+                Çoğu hesaplayıcı Trendyol komisyonunu hesaplar; %1 e-ticaret
+                stopajını göstermez.
+              </strong>{" "}
+              1 Ocak 2025'ten itibaren zorunlu olan bu kesinti, gerçek net kârı
+              doğrudan etkiler. Bu araç stopajı ayrı bir kalem olarak formüle
+              dahil eder.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -238,7 +335,7 @@ function KarHesaplayiciPage() {
                     setSelectedCategory(val);
                     const cat = CATEGORIES.find((c) => c.label === val);
                     if (cat) setCommissionRate((cat.rate * 100).toFixed(2));
-                    trackEvent("kategori_secildi", { kategori: val });
+                    trackEvent("ty_kategori_secildi", { kategori: val });
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -291,7 +388,7 @@ function KarHesaplayiciPage() {
             <Accordion type="single" collapsible className="mt-4">
               <AccordionItem value="extra" className="border-b-0">
                 <AccordionTrigger className="text-sm font-medium hover:no-underline">
-                  Ek Maliyetler{" "}
+                  Ek Maliyetleri Özelleştir{" "}
                   <span className="ml-1 text-xs text-muted-foreground font-normal">
                     Kargo {shipping} TL · Paket {packaging} TL · İade %{returnRate}
                   </span>
@@ -308,7 +405,18 @@ function KarHesaplayiciPage() {
                         min="0"
                         value={shipping}
                         onChange={(e) => setShipping(e.target.value)}
+                        onBlur={() => {
+                          if (shipping !== "75") {
+                            trackEvent("ty_kargo_degistirildi", {
+                              tutar: parseFloat(shipping),
+                            });
+                          }
+                        }}
                       />
+                      <small className="mt-1 block text-xs text-muted-foreground">
+                        Emin değilseniz 75 TL bırakın. Trendyol kargo 60–100 TL
+                        arasında değişir (küçük ~65, orta ~75, büyük ~90 TL).
+                      </small>
                     </div>
                     <div>
                       <label className="mb-1.5 block text-sm font-medium">
@@ -324,14 +432,14 @@ function KarHesaplayiciPage() {
                     </div>
                     <div>
                       <label className="mb-1.5 block text-sm font-medium">
-                        Beklenen İade Oranı
+                        İade Oranı — kâr marjınızı etkiler (varsayılan: %0)
                       </label>
                       <Select
                         value={returnRate}
                         onValueChange={(v) => {
                           setReturnRate(v);
                           if (v !== "0")
-                            trackEvent("iade_orani_girildi", { oran: v });
+                            trackEvent("ty_iade_orani_girildi", { oran: v });
                         }}
                       >
                         <SelectTrigger className="w-full">
@@ -417,6 +525,28 @@ function KarHesaplayiciPage() {
                     </div>
                   </div>
 
+                  {/* %1 E-Ticaret Stopajı */}
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-sm">
+                      <span className="text-amber-500">×</span>
+                      <span className="text-amber-700">%1 E-Ticaret Stopajı</span>
+                      <span className="text-xs text-muted-foreground">
+                        (çoğu araçta gösterilmez)
+                      </span>
+                    </span>
+                    <div className="text-right">
+                      <span className="font-semibold text-amber-700">
+                        {stopajAmount.toFixed(2)} TL
+                      </span>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        (%1)
+                      </span>
+                    </div>
+                  </div>
+                  <p className="ml-6 text-xs text-muted-foreground">
+                    Gelir vergisi avansıdır, Trendyol'un kesintisi değil.
+                  </p>
+
                   {/* Platform Hizmet Bedeli */}
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm">
@@ -434,11 +564,11 @@ function KarHesaplayiciPage() {
                   {sh > 0 && (
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">−</span>
-                        <span className="text-muted-foreground">Kargo</span>
+                        <span className="text-red-600">×</span>
+                        <span className="text-red-600">Kargo</span>
                       </span>
                       <div className="text-right">
-                        <span className="font-medium text-muted-foreground">
+                        <span className="font-medium text-red-600">
                           {sh.toFixed(2)} TL
                         </span>
                       </div>
@@ -449,11 +579,11 @@ function KarHesaplayiciPage() {
                   {pkg > 0 && (
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">−</span>
-                        <span className="text-muted-foreground">Paketleme</span>
+                        <span className="text-red-600">×</span>
+                        <span className="text-red-600">Paketleme</span>
                       </span>
                       <div className="text-right">
-                        <span className="font-medium text-muted-foreground">
+                        <span className="font-medium text-red-600">
                           {pkg.toFixed(2)} TL
                         </span>
                       </div>
@@ -461,22 +591,52 @@ function KarHesaplayiciPage() {
                   )}
 
                   {/* Toplam Kesintiler */}
-                  <div className="mt-3 border-t border-border pt-3">
+                  <div className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-red-600">
                         Toplam Kesintiler
                       </span>
-                      <span className="font-bold text-red-600">
-                        {totalDeductions.toFixed(2)} TL (
-                        {((totalDeductions / sellingPrice) * 100).toFixed(1)}%)
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-red-600">
+                          {totalDeductions.toFixed(2)} TL
+                        </span>
+                        <span className="rounded px-1.5 py-0.5 text-sm font-semibold bg-red-100 text-red-700">
+                          %{((totalDeductions / sellingPrice) * 100).toFixed(1)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* İade uyarısı */}
-                {parseFloat(returnRate) > 0 && (
-                  <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                {/* Zarar uyarısı */}
+                {parseFloat(returnRate) > 0 && effectiveProfit < 0 && (
+                  <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                    <p className="text-sm font-semibold text-red-700">
+                      Bu iade oranıyla zarar ediyorsunuz.
+                    </p>
+                    <p className="mt-0.5 text-xs text-red-600">
+                      İade dahil efektif kâr: {effectiveProfit.toFixed(2)} TL
+                    </p>
+                  </div>
+                )}
+
+                {/* Düşük kâr marjı */}
+                {!(parseFloat(returnRate) > 0 && effectiveProfit < 0) &&
+                  profitMargin < 15 &&
+                  profitMargin > 0 && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-sm text-amber-800">
+                        <span className="font-semibold">
+                          Kâr marjınız %{profitMargin.toFixed(1)}
+                        </span>{" "}
+                        — beklenmedik gider bu kârı sıfırlayabilir.
+                      </p>
+                    </div>
+                  )}
+
+                {/* İade bilgisi — zarar yok ama iade seçili */}
+                {parseFloat(returnRate) > 0 && effectiveProfit >= 0 && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
                     <p className="text-sm text-amber-800">
                       <span className="font-semibold">
                         İade dahil efektif kâr:
@@ -501,7 +661,7 @@ function KarHesaplayiciPage() {
                     onClick={() => trackEvent("hesaplayici_cta_tiklandi", { fiyat: Math.round(sellingPrice) })}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                   >
-                    15 Gün Ücretsiz Dene →
+                    Bu kârı tüm ürünlerin için otomatik takip et →
                   </Link>
                 </div>
               </div>
@@ -514,24 +674,24 @@ function KarHesaplayiciPage() {
       <section className="border-y border-border/60 bg-card">
         <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
           <h2 className="text-center text-3xl font-bold md:text-4xl">
-            Nasıl Çalışır?
+            Trendyol Kâr Hesaplama Nasıl Çalışır?
           </h2>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
               {
                 n: "1",
-                t: "Kâr Hedefini Gir",
-                d: "Ürün başına kazanmak istediğin net kârı ve ürün maliyetini yaz.",
+                t: "Trendyol'da Kaça Satmak İstediğini Gir",
+                d: "Ürün başına kazanmak istediğin net kârı ve tedarik maliyetini yaz. Sıfır kâr girersen zarar etmeden satış fiyatını (break-even) bulursun.",
               },
               {
                 n: "2",
-                t: "Kategori Seç",
-                d: "Trendyol kategorini seç — komisyon oranı otomatik gelir, istersen düzenlersin.",
+                t: "Giyim, Elektronik veya Kategorini Seç",
+                d: "Trendyol kategorini seç — komisyon oranı otomatik gelir. Giyim %21,36, Elektronik büyük %7,50, Ayakkabı %23,39. İstersen manuel olarak da düzenleyebilirsin.",
               },
               {
                 n: "3",
-                t: "Fiyatı Öğren",
-                d: "Anında minimum satış fiyatını ve tüm kesintilerin dökümünü gör.",
+                t: "Stopaj Dahil Gerçek Kârını Öğren",
+                d: "Komisyon, %1 e-ticaret stopajı, platform hizmet bedeli ve kargo dahil tüm kesintilerin dökümünü ve minimum satış fiyatını anında gör. Ücretsiz ve sınırsız.",
               },
             ].map((s) => (
               <div
@@ -547,8 +707,75 @@ function KarHesaplayiciPage() {
         </div>
       </section>
 
+      {/* Komisyon Oranları Tablosu */}
+      <section className="mx-auto max-w-5xl px-4 pb-16 pt-16 lg:px-8">
+        <h2 className="mb-2 text-3xl font-bold md:text-4xl">
+          Trendyol Komisyon Oranları 2026 — Kategori Tablosu
+        </h2>
+        <p className="mb-8 text-muted-foreground">
+          Aşağıdaki oranlar Trendyol Satıcı Sözleşmesi komisyon listesine
+          dayanmaktadır (Haziran 2026 güncel). Her komisyon oranına ek olarak
+          satış bedeli üzerinden %1 e-ticaret stopajı uygulanır.
+        </p>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="px-4 py-3 text-left font-semibold">Kategori</th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  Komisyon Oranı
+                </th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  Stopaj Dahil Toplam Kesinti
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {CATEGORIES_TABLE.map((row, i) => (
+                <tr
+                  key={row.label}
+                  className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}
+                >
+                  <td className="px-4 py-3">{row.label}</td>
+                  <td className="px-4 py-3 text-right font-medium">
+                    %{(row.rate * 100).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-red-600">
+                    %{((row.rate + 0.01) * 100).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          * Stopaj oranı (%1) tüm kategoriler için sabittir. "Toplam Kesinti"
+          sütunu yalnızca komisyon + stopaj toplamını gösterir; kargo, paketleme
+          ve platform hizmet bedeli dahil değildir.
+        </p>
+      </section>
+
       {/* FAQ */}
-      <FaqBlock items={faqs} title="Trendyol Komisyon ve Kâr Hakkında Sorular" />
+      <section className="border-t border-border/60">
+        <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
+          <h2 className="mb-12 text-center text-3xl font-bold md:text-4xl">
+            Trendyol Komisyon ve Kâr Hakkında Sorular
+          </h2>
+          <div className="space-y-8">
+            {faqs.map((faq) => (
+              <div
+                key={faq.q}
+                className="rounded-2xl border border-border bg-card p-6"
+              >
+                <h3 className="text-lg font-bold">{faq.q}</h3>
+                <p className="mt-3 leading-relaxed text-muted-foreground">
+                  {faq.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA Banner */}
       <section className="mx-auto max-w-5xl px-4 py-16 lg:px-8">

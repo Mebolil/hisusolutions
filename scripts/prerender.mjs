@@ -27,6 +27,7 @@ const ROUTES = [
   '/blog/butcecrm-ilk-30-gun-kurulum-rehberi',
   '/blog/trendyol-sku-bazli-karlilik-analizi',
   '/kar-hesaplayici',
+  '/hepsiburada-kar-hesaplayici',
 ];
 
 const mimeTypes = {

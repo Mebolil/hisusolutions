@@ -15,7 +15,9 @@ import { Route as SifreSifirlaRouteImport } from './routes/sifre-sifirla'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as OdemeRouteImport } from './routes/odeme'
+import { Route as KarHesaplayiciRouteImport } from './routes/kar-hesaplayici'
 import { Route as IletisimRouteImport } from './routes/iletisim'
+import { Route as HepsiburadaKarHesaplayiciRouteImport } from './routes/hepsiburada-kar-hesaplayici'
 import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
 import { Route as ButcelemeRouteImport } from './routes/butceleme'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -70,11 +72,22 @@ const OdemeRoute = OdemeRouteImport.update({
   path: '/odeme',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KarHesaplayiciRoute = KarHesaplayiciRouteImport.update({
+  id: '/kar-hesaplayici',
+  path: '/kar-hesaplayici',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IletisimRoute = IletisimRouteImport.update({
   id: '/iletisim',
   path: '/iletisim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HepsiburadaKarHesaplayiciRoute =
+  HepsiburadaKarHesaplayiciRouteImport.update({
+    id: '/hepsiburada-kar-hesaplayici',
+    path: '/hepsiburada-kar-hesaplayici',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const HakkimizdaRoute = HakkimizdaRouteImport.update({
   id: '/hakkimizda',
   path: '/hakkimizda',
@@ -199,7 +212,9 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
+  '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
+  '/kar-hesaplayici': typeof KarHesaplayiciRoute
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
@@ -230,7 +245,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
+  '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
+  '/kar-hesaplayici': typeof KarHesaplayiciRoute
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
@@ -261,7 +278,9 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
+  '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
+  '/kar-hesaplayici': typeof KarHesaplayiciRoute
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
@@ -295,7 +314,9 @@ export interface FileRouteTypes {
     | '/blog'
     | '/butceleme'
     | '/hakkimizda'
+    | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
+    | '/kar-hesaplayici'
     | '/odeme'
     | '/otomasyon'
     | '/panel'
@@ -326,7 +347,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/butceleme'
     | '/hakkimizda'
+    | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
+    | '/kar-hesaplayici'
     | '/odeme'
     | '/otomasyon'
     | '/panel'
@@ -356,7 +379,9 @@ export interface FileRouteTypes {
     | '/blog'
     | '/butceleme'
     | '/hakkimizda'
+    | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
+    | '/kar-hesaplayici'
     | '/odeme'
     | '/otomasyon'
     | '/panel'
@@ -389,7 +414,9 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   ButcelemeRoute: typeof ButcelemeRoute
   HakkimizdaRoute: typeof HakkimizdaRoute
+  HepsiburadaKarHesaplayiciRoute: typeof HepsiburadaKarHesaplayiciRoute
   IletisimRoute: typeof IletisimRoute
+  KarHesaplayiciRoute: typeof KarHesaplayiciRoute
   OdemeRoute: typeof OdemeRoute
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
@@ -443,11 +470,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OdemeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kar-hesaplayici': {
+      id: '/kar-hesaplayici'
+      path: '/kar-hesaplayici'
+      fullPath: '/kar-hesaplayici'
+      preLoaderRoute: typeof KarHesaplayiciRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/iletisim': {
       id: '/iletisim'
       path: '/iletisim'
       fullPath: '/iletisim'
       preLoaderRoute: typeof IletisimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hepsiburada-kar-hesaplayici': {
+      id: '/hepsiburada-kar-hesaplayici'
+      path: '/hepsiburada-kar-hesaplayici'
+      fullPath: '/hepsiburada-kar-hesaplayici'
+      preLoaderRoute: typeof HepsiburadaKarHesaplayiciRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hakkimizda': {
@@ -688,7 +729,9 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   ButcelemeRoute: ButcelemeRoute,
   HakkimizdaRoute: HakkimizdaRoute,
+  HepsiburadaKarHesaplayiciRoute: HepsiburadaKarHesaplayiciRoute,
   IletisimRoute: IletisimRoute,
+  KarHesaplayiciRoute: KarHesaplayiciRoute,
   OdemeRoute: OdemeRoute,
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,

@@ -8,7 +8,7 @@ import { HisuLogo } from "@/components/HisuLogo";
 
 const CALCULATORS = [
   { to: "/kar-hesaplayici", label: "Trendyol", active: true },
-  { label: "Hepsiburada", active: false },
+  { to: "/hepsiburada-kar-hesaplayici", label: "Hepsiburada", active: true },
   { label: "N11", active: false },
   { label: "Çiçeksepeti", active: false },
 ];

@@ -26,7 +26,7 @@ const STOPAJ_ORANI = 0.01;
 const PAGE_TITLE =
   "Trendyol Kâr ve Komisyon Hesaplayıcı 2026 — Stopaj Dahil | Hisu Solutions";
 const PAGE_DESCRIPTION =
-  "Trendyol'da kaça satarsan ne kadar kazanırsın? Komisyon, %1 e-ticaret stopajı ve kargo dahil minimum satış fiyatını saniyeler içinde öğren. Ücretsiz. Önce kâr, sonra fiyat.";
+  "Trendyol'da kaça satarsan ne kadar kazanırsın? Komisyon, %1 e-ticaret stopajı, platform hizmet bedeli ve kargo dahil minimum satış fiyatını saniyeler içinde öğren. Ücretsiz. Önce kâr, sonra fiyat.";
 const PAGE_URL = "https://hisusolutions.com/kar-hesaplayici";
 
 const faqs: FaqItem[] = [
@@ -136,7 +136,7 @@ export const Route = createFileRoute("/kar-hesaplayici")({
           offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
           featureList:
             "Komisyon hesaplama, E-ticaret stopajı, Kargo maliyeti, Platform hizmet bedeli, İade senaryosu, Net kâr tahmini",
-          datePublished: "2026-06-28",
+          datePublished: "2026-06-25",
           dateModified: "2026-06-28",
           provider: {
             "@type": "Organization",
@@ -160,12 +160,6 @@ export const Route = createFileRoute("/kar-hesaplayici")({
             {
               "@type": "ListItem",
               position: 2,
-              name: "Kâr Hesaplayıcılar",
-              item: "https://hisusolutions.com/kar-hesaplayici",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
               name: "Trendyol Kâr Hesaplayıcı",
               item: "https://hisusolutions.com/kar-hesaplayici",
             },
@@ -771,6 +765,15 @@ function KarHesaplayiciPage() {
                 <p className="mt-3 leading-relaxed text-muted-foreground">
                   {faq.a}
                 </p>
+                {faq.q.includes("Hepsiburada") && (
+                  <Link
+                    to="/hepsiburada-kar-hesaplayici"
+                    onClick={() => trackEvent("ty_hb_crosslink_tiklandi")}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                  >
+                    Hepsiburada Kâr Hesaplayıcı →
+                  </Link>
+                )}
               </div>
             ))}
           </div>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import type { FaqItem } from "@/components/site/FaqBlock";
 import { trackEvent } from "@/lib/analytics";
+
+type FaqItem = { q: string; a: string };
 import { Input } from "@/components/ui/input";
 import {
   Select,

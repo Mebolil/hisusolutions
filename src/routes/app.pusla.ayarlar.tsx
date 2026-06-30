@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
-import { Plus, Trash2, Settings as SettingsIcon, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Settings as SettingsIcon, RotateCcw, Store, CheckCircle2, XCircle, Loader2, RefreshCw, Link, Unlink } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
   useSettings, DEFAULT_SETTINGS,
@@ -89,6 +90,7 @@ function AyarlarPage() {
           <TabsTrigger value="carriers">Kargo Firmaları</TabsTrigger>
           <TabsTrigger value="orderStatuses">Sipariş Durumları</TabsTrigger>
           <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
+          <TabsTrigger value="marketplaces">Pazar Yerleri</TabsTrigger>
           <TabsTrigger value="account">Hesap</TabsTrigger>
         </TabsList>
 
@@ -178,6 +180,10 @@ function AyarlarPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="marketplaces">
+          <MarketplacesTab />
         </TabsContent>
 
         <TabsContent value="account">
@@ -475,5 +481,407 @@ function PaymentMethodEditor({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Pazar Yerleri Sekmesi
+// ──────────────────────────────────────────────────────────────────────────────
+
+type MarketplaceConnection = {
+  id: string;
+  platform: "trendyol" | "hepsiburada";
+  store_name: string;
+  sync_status: "idle" | "running" | "error" | "disabled" | "backfilling";
+  sync_error_message: string | null;
+  sync_error_count: number;
+  is_active: boolean;
+  initial_backfill_done: boolean;
+  last_order_sync_at: string | null;
+  created_at: string;
+  extension_api_token: string;
+};
+
+const SUPABASE_EF_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketplace-connect`;
+
+async function callMarketplaceEF(
+  token: string,
+  method: "GET" | "POST",
+  action: string,
+  body?: object,
+) {
+  const res = await fetch(`${SUPABASE_EF_URL}?action=${action}`, {
+    method,
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+  return json;
+}
+
+function SyncStatusBadge({ status }: { status: MarketplaceConnection["sync_status"] }) {
+  const map: Record<string, { label: string; className: string }> = {
+    idle: { label: "Aktif", className: "bg-green-100 text-green-700 border-green-200" },
+    running: { label: "Sync yapılıyor", className: "bg-blue-100 text-blue-700 border-blue-200" },
+    backfilling: { label: "Veri aktarılıyor", className: "bg-purple-100 text-purple-700 border-purple-200" },
+    error: { label: "Hata", className: "bg-red-100 text-red-700 border-red-200" },
+    disabled: { label: "Devre dışı", className: "bg-gray-100 text-gray-600 border-gray-200" },
+  };
+  const s = map[status] ?? map.idle;
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${s.className}`}>
+      {s.label}
+    </span>
+  );
+}
+
+function ConnectionCard({
+  conn,
+  onDelete,
+  onRefreshToken,
+}: {
+  conn: MarketplaceConnection;
+  onDelete: (id: string) => void;
+  onRefreshToken: (id: string) => void;
+}) {
+  const [showToken, setShowToken] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const lastSync = conn.last_order_sync_at
+    ? new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
+        Math.round((new Date(conn.last_order_sync_at).getTime() - Date.now()) / 60000),
+        "minutes",
+      )
+    : "Henüz sync yapılmadı";
+
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Store className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-sm truncate">{conn.store_name}</p>
+            <p className="text-xs text-muted-foreground capitalize">{conn.platform}</p>
+          </div>
+        </div>
+        <SyncStatusBadge status={conn.sync_status} />
+      </div>
+
+      <div className="text-xs text-muted-foreground space-y-1">
+        <p>Son sipariş sync: {lastSync}</p>
+        {conn.sync_error_message && (
+          <p className="text-red-600 flex items-center gap-1">
+            <XCircle className="h-3 w-3" /> {conn.sync_error_message}
+          </p>
+        )}
+        {!conn.initial_backfill_done && (
+          <p className="text-purple-600">30 günlük geçmiş veri aktarımı hazırlanıyor...</p>
+        )}
+      </div>
+
+      <Separator />
+
+      <div className="space-y-1.5">
+        <p className="text-xs text-muted-foreground font-medium">Chrome Extension Token</p>
+        <div className="flex items-center gap-2">
+          <Input
+            type={showToken ? "text" : "password"}
+            value={conn.extension_api_token}
+            readOnly
+            className="text-xs h-8 font-mono"
+            onFocus={() => setShowToken(true)}
+            onBlur={() => setShowToken(false)}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 flex-shrink-0"
+            onClick={() => onRefreshToken(conn.id)}
+            title="Token'ı yenile"
+          >
+            <RefreshCw className="h-3 w-3" />
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">Extension kimlik doğrulaması için. Tıklayarak görüntüleyin.</p>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          disabled={deleting}
+          onClick={async () => {
+            if (!confirm(`"${conn.store_name}" bağlantısı kaldırılsın mı?`)) return;
+            setDeleting(true);
+            onDelete(conn.id);
+          }}
+        >
+          {deleting
+            ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            : <Unlink className="h-4 w-4 mr-1" />}
+          Bağlantıyı Kaldır
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function AddTrendyolForm({ onSuccess }: { onSuccess: () => void }) {
+  const [supplierId, setSupplierId] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [apiSecret, setApiSecret] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supplierId || !apiKey || !apiSecret) {
+      toast.error("Tüm zorunlu alanları doldurun");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("testing");
+    setErrorMsg("");
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Oturum bulunamadı");
+
+      await callMarketplaceEF(session.access_token, "POST", "connect", {
+        platform: "trendyol",
+        trendyol_supplier_id: supplierId.trim(),
+        api_key: apiKey.trim(),
+        api_secret: apiSecret.trim(),
+        store_name: storeName.trim() || "Trendyol Mağazam",
+      });
+
+      setStatus("success");
+      toast.success("Trendyol bağlantısı başarıyla kuruldu!");
+      setTimeout(() => {
+        onSuccess();
+        setSupplierId(""); setApiKey(""); setApiSecret(""); setStoreName("");
+        setStatus("idle");
+      }, 1500);
+    } catch (err) {
+      setStatus("error");
+      const msg = err instanceof Error ? err.message : "Bağlantı kurulamadı";
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="ty-supplier-id">Supplier ID <span className="text-red-500">*</span></Label>
+          <Input
+            id="ty-supplier-id"
+            placeholder="Örn: 123456"
+            value={supplierId}
+            onChange={(e) => setSupplierId(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ty-store-name">Mağaza Adı (opsiyonel)</Label>
+          <Input
+            id="ty-store-name"
+            placeholder="Örn: Ana Mağaza"
+            value={storeName}
+            onChange={(e) => setStoreName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ty-api-key">API Anahtarı <span className="text-red-500">*</span></Label>
+          <Input
+            id="ty-api-key"
+            type="password"
+            placeholder="Trendyol API Key"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ty-api-secret">API Şifresi <span className="text-red-500">*</span></Label>
+          <Input
+            id="ty-api-secret"
+            type="password"
+            placeholder="Trendyol API Secret"
+            value={apiSecret}
+            onChange={(e) => setApiSecret(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        API bilgilerini <strong>Trendyol Satıcı Paneli → Entegrasyon Bilgileri</strong> bölümünden alabilirsiniz.
+        Anahtarlar şifreli olarak saklanır — mağazanıza yalnızca okuma yetkisiyle erişilir, hiçbir şey yazılmaz.
+      </p>
+
+      {status === "error" && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+          <XCircle className="h-4 w-4 flex-shrink-0" />
+          {errorMsg}
+        </div>
+      )}
+
+      {status === "success" && (
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-3">
+          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+          Bağlantı başarılı! Sipariş verileriniz yakında aktarılmaya başlayacak.
+        </div>
+      )}
+
+      <Button type="submit" disabled={loading || status === "success"}>
+        {loading
+          ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Test ediliyor...</>
+          : <><Link className="h-4 w-4 mr-2" /> Trendyol'u Bağla</>}
+      </Button>
+    </form>
+  );
+}
+
+function MarketplacesTab() {
+  const [connections, setConnections] = useState<MarketplaceConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  const fetchConnections = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const { connections: data } = await callMarketplaceEF(session.access_token, "GET", "list");
+      setConnections(data ?? []);
+    } catch {
+      toast.error("Bağlantılar yüklenemedi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchConnections(); }, []);
+
+  const handleDelete = async (connId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      await callMarketplaceEF(session.access_token, "POST", "delete", { connection_id: connId });
+      toast.success("Bağlantı kaldırıldı");
+      setConnections((prev) => prev.filter((c) => c.id !== connId));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Silinemedi");
+    }
+  };
+
+  const handleRefreshToken = async (connId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const { token } = await callMarketplaceEF(
+        session.access_token, "POST", "refresh-token", { connection_id: connId },
+      );
+      setConnections((prev) =>
+        prev.map((c) => c.id === connId ? { ...c, extension_api_token: token } : c),
+      );
+      toast.success("Extension token yenilendi");
+    } catch {
+      toast.error("Token yenilenemedi");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Store className="h-5 w-5" /> Pazar Yeri Bağlantıları
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Bağlı pazar yerleri siparişlerinizi ve iadelerinizi otomatik olarak senkronize eder.
+              </p>
+            </div>
+            {!showAddForm && (
+              <Button onClick={() => setShowAddForm(true)} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Bağlantı Ekle
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+
+        {showAddForm && (
+          <CardContent className="border-t pt-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm">Trendyol Bağla</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>İptal</Button>
+            </div>
+            <AddTrendyolForm onSuccess={() => { setShowAddForm(false); fetchConnections(); }} />
+          </CardContent>
+        )}
+
+        <CardContent className={showAddForm ? "border-t pt-4" : ""}>
+          {loading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Yükleniyor...
+            </div>
+          ) : connections.length === 0 && !showAddForm ? (
+            <div className="text-center py-10 space-y-3">
+              <Store className="h-10 w-10 text-muted-foreground mx-auto" />
+              <div>
+                <p className="text-sm font-medium">Henüz pazar yeri bağlantısı yok</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Trendyol'u bağlayarak sipariş verilerinizin otomatik aktarılmasını sağlayın.
+                </p>
+              </div>
+              <Button onClick={() => setShowAddForm(true)}>
+                <Plus className="h-4 w-4 mr-1" /> İlk Bağlantıyı Ekle
+              </Button>
+            </div>
+          ) : connections.length > 0 ? (
+            <div className="space-y-3">
+              {connections.map((conn) => (
+                <ConnectionCard
+                  key={conn.id}
+                  conn={conn}
+                  onDelete={handleDelete}
+                  onRefreshToken={handleRefreshToken}
+                />
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card className="border-dashed opacity-75">
+        <CardContent className="pt-5 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
+              <Store className="h-4 w-4 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Hepsiburada — Yakında</p>
+              <p className="text-xs text-muted-foreground">
+                Trendyol entegrasyonu stabilize olduktan sonra eklenecek.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

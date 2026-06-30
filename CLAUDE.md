@@ -323,6 +323,7 @@ Dolayısıyla "Mayıs Satış Artırma Kampanyası" için gelir görünmüyorsa:
 |-------|-------|-----|
 | `20260615_category_seed.sql` | ❌ Pending | Supabase SQL Editor'de çalıştırılacak |
 | Raporlar: DB-level filtreleme | ❌ Pending | Şu an JS'de filter ediliyor |
+| **CSV AI Öner — `ANTHROPIC_API_KEY` secret** | ❌ Pending | Supabase Dashboard → Settings → Edge Functions → Secrets → `ANTHROPIC_API_KEY` ekle, sonra `CsvImportWizard.tsx`'te `LLM_MAPPING_ENABLED = true` yap ve deploy et |
 
 ---
 

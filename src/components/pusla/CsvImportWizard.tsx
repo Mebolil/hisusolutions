@@ -97,9 +97,9 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
 ];
 
 // =============================================================================
-// LLM feature flag — kolayca kapatılabilir
+// LLM feature flag — ANTHROPIC_API_KEY Supabase secret'ı set edilince true yap
 // =============================================================================
-const LLM_MAPPING_ENABLED = true;
+const LLM_MAPPING_ENABLED = false;
 
 // =============================================================================
 // Tipler
@@ -602,7 +602,7 @@ export function CsvImportWizard({
                     ))}
                   </SelectContent>
                 </Select>
-                {LLM_MAPPING_ENABLED && (
+                {LLM_MAPPING_ENABLED ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -613,6 +613,10 @@ export function CsvImportWizard({
                   >
                     {llmLoading ? "AI Analiz ediyor..." : "✨ AI Öner"}
                   </Button>
+                ) : (
+                  <Badge variant="outline" className="text-xs text-muted-foreground gap-1 px-3 py-1">
+                    ✨ AI Öner — Yakında
+                  </Badge>
                 )}
                 {llmUsed && (
                   <Badge variant="secondary" className="text-xs">AI önerisi uygulandı</Badge>

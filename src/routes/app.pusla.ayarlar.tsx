@@ -497,6 +497,7 @@ type MarketplaceConnection = {
   sync_error_count: number;
   is_active: boolean;
   initial_backfill_done: boolean;
+  backfill_last_fetched_date: string | null;
   last_order_sync_at: string | null;
   created_at: string;
   extension_api_token: string;
@@ -543,13 +544,16 @@ function ConnectionCard({
   conn,
   onDelete,
   onRefreshToken,
+  onRetrySync,
 }: {
   conn: MarketplaceConnection;
   onDelete: (id: string) => Promise<void>;
   onRefreshToken: (id: string) => void;
+  onRetrySync: (id: string) => Promise<void>;
 }) {
   const [showToken, setShowToken] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const lastSyncInfo = (() => {
     if (!conn.last_order_sync_at) return { text: "Henüz sync yapılmadı", color: "text-muted-foreground" };
@@ -589,11 +593,15 @@ function ConnectionCard({
 
       <div className="text-xs space-y-1">
         {conn.sync_status === "backfilling" ? (
-          <p className="text-purple-600 flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Trendyol'dan 30 günlük siparişler aktarılıyor...
-            <span className="text-muted-foreground">(Sayfa kapatıldığında da devam eder)</span>
-          </p>
+          <div className="space-y-1">
+            <p className="text-purple-600 flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin flex-shrink-0" />
+              {conn.backfill_last_fetched_date
+                ? `${conn.backfill_last_fetched_date} tarihine kadar aktarıldı, devam ediyor...`
+                : "Son 30 günün siparişleri parça parça aktarılıyor..."}
+            </p>
+            <p className="text-muted-foreground pl-4">Sayfa kapatıldığında da devam eder.</p>
+          </div>
         ) : !conn.initial_backfill_done ? (
           <p className="text-purple-600 flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -632,30 +640,53 @@ function ConnectionCard({
             <RefreshCw className="h-3 w-3" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">Extension kimlik doğrulaması için. Tıklayarak görüntüleyin.</p>
+        <p className="text-xs text-muted-foreground">Chrome eklentisini bu hesaba bağlamak için kullanılır — kopyalayıp eklentiye yapıştırın. Tıklayarak görüntüleyin.</p>
       </div>
 
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          disabled={deleting}
-          onClick={async () => {
-            if (!confirm(`"${conn.store_name}" bağlantısı kaldırılsın mı?`)) return;
-            setDeleting(true);
-            try {
-              await onDelete(conn.id);
-            } finally {
-              setDeleting(false);
-            }
-          }}
-        >
-          {deleting
-            ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            : <Unlink className="h-4 w-4 mr-1" />}
-          Bağlantıyı Kaldır
-        </Button>
+      <div className="flex items-center justify-between">
+        {conn.sync_status === "error" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+            disabled={retrying}
+            onClick={async () => {
+              setRetrying(true);
+              try {
+                await onRetrySync(conn.id);
+              } finally {
+                setRetrying(false);
+              }
+            }}
+          >
+            {retrying
+              ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              : <RefreshCw className="h-4 w-4 mr-1" />}
+            Yeniden Dene
+          </Button>
+        )}
+        <div className="ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            disabled={deleting}
+            onClick={async () => {
+              if (!confirm(`"${conn.store_name}" bağlantısı kaldırılsın mı?`)) return;
+              setDeleting(true);
+              try {
+                await onDelete(conn.id);
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          >
+            {deleting
+              ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              : <Unlink className="h-4 w-4 mr-1" />}
+            Bağlantıyı Kaldır
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -870,6 +901,18 @@ function MarketplacesTab() {
     }
   };
 
+  const handleRetrySync = async (connId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      await callMarketplaceEF(session.access_token, "POST", "retry-sync", { connection_id: connId });
+      toast.success("Sync yeniden başlatıldı");
+      setTimeout(() => fetchConnections(), 2000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Yeniden denenemedi");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -927,6 +970,7 @@ function MarketplacesTab() {
                   conn={conn}
                   onDelete={handleDelete}
                   onRefreshToken={handleRefreshToken}
+                  onRetrySync={handleRetrySync}
                 />
               ))}
             </div>

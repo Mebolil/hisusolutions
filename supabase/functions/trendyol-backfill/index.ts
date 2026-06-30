@@ -3,6 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const CHUNK_DAYS = 7;
+const TOTAL_BACKFILL_DAYS = 30;
+
 const STATUS_MAP: Record<string, string> = {
   Created: "aktif",
   Picking: "aktif",
@@ -18,6 +21,12 @@ function sanitizeError(err: unknown): string {
   if (err instanceof Error) return err.message.slice(0, 300);
   if (typeof err === "string") return err.slice(0, 300);
   return "Bilinmeyen hata";
+}
+
+// Türkiye UTC+3 sabit (2016'dan beri DST yok)
+function toTRDate(msTimestamp: number): string {
+  if (!msTimestamp || msTimestamp <= 0) return new Date().toISOString().slice(0, 10);
+  return new Date(msTimestamp + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 Deno.serve(async (req) => {
@@ -46,7 +55,7 @@ Deno.serve(async (req) => {
 
   const { data: conn, error: connErr } = await adminClient
     .from("marketplace_connections")
-    .select("id, user_id, trendyol_supplier_id, initial_backfill_done")
+    .select("id, user_id, trendyol_supplier_id, initial_backfill_done, backfill_last_fetched_date")
     .eq("id", connection_id)
     .eq("is_active", true)
     .is("deleted_at", null)
@@ -69,11 +78,52 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "API credentials bulunamadı" }), { status: 500 });
   }
 
-  // Backfill başladı
-  await adminClient.from("marketplace_connections").update({
-    sync_status: "backfilling",
-    backfill_started_at: new Date().toISOString(),
-  }).eq("id", connection_id);
+  // Chunk penceresi hesapla
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  const backfillStart = new Date(now.getTime() - TOTAL_BACKFILL_DAYS * 24 * 60 * 60 * 1000);
+
+  let chunkStartDate: Date;
+  if (conn.backfill_last_fetched_date) {
+    // Kaldığı günün ertesinden devam et
+    chunkStartDate = new Date(conn.backfill_last_fetched_date);
+    chunkStartDate.setUTCDate(chunkStartDate.getUTCDate() + 1);
+    chunkStartDate.setUTCHours(0, 0, 0, 0);
+  } else {
+    chunkStartDate = new Date(backfillStart);
+  }
+
+  // Başlangıç bugünü geçtiyse tamamlanmış demektir
+  if (chunkStartDate.getTime() > now.getTime()) {
+    await adminClient.from("marketplace_connections").update({
+      sync_status: "idle",
+      initial_backfill_done: true,
+      backfill_completed_at: new Date().toISOString(),
+      last_order_sync_at: new Date().toISOString(),
+      sync_error_count: 0,
+      sync_error_message: null,
+    }).eq("id", connection_id);
+    return new Response(
+      JSON.stringify({ success: true, completed: true }),
+      { headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // Bu chunk'ın bitiş zamanı (7 gün veya bugün dahil, hangisi önce)
+  const chunkEndDate = new Date(Math.min(
+    chunkStartDate.getTime() + CHUNK_DAYS * 24 * 60 * 60 * 1000,
+    now.getTime() + 24 * 60 * 60 * 1000,
+  ));
+  const isLastChunk = chunkEndDate.getTime() >= now.getTime() + 24 * 60 * 60 * 1000;
+
+  // İlk chunk ise sync_status güncelle
+  const isFirstChunk = !conn.backfill_last_fetched_date;
+  if (isFirstChunk) {
+    await adminClient.from("marketplace_connections").update({
+      sync_status: "backfilling",
+      backfill_started_at: new Date().toISOString(),
+    }).eq("id", connection_id);
+  }
 
   const { data: syncLog } = await adminClient
     .from("marketplace_sync_logs")
@@ -82,8 +132,8 @@ Deno.serve(async (req) => {
       user_id: conn.user_id,
       sync_type: "backfill",
       status: "running",
-      sync_from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      sync_to: new Date().toISOString(),
+      sync_from: chunkStartDate.toISOString(),
+      sync_to: chunkEndDate.toISOString(),
     })
     .select("id")
     .single();
@@ -94,8 +144,10 @@ Deno.serve(async (req) => {
   let totalProcessed = 0;
 
   try {
-    for (let dayOffset = 29; dayOffset >= 0; dayOffset--) {
-      // Bağlantı hala aktif mi kontrol et (kullanıcı silmiş olabilir)
+    const daysInChunk = Math.floor((chunkEndDate.getTime() - chunkStartDate.getTime()) / (24 * 60 * 60 * 1000));
+
+    for (let d = 0; d < daysInChunk; d++) {
+      // Bağlantı hâlâ aktif mi?
       const { data: checkConn } = await adminClient
         .from("marketplace_connections")
         .select("is_active, deleted_at")
@@ -104,10 +156,8 @@ Deno.serve(async (req) => {
 
       if (!checkConn?.is_active || checkConn.deleted_at) break;
 
-      // Günlük pencere: [T 00:00 UTC, T+1 00:00 UTC) — kapalı-açık aralık
-      const dayStart = new Date();
+      const dayStart = new Date(chunkStartDate.getTime() + d * 24 * 60 * 60 * 1000);
       dayStart.setUTCHours(0, 0, 0, 0);
-      dayStart.setUTCDate(dayStart.getUTCDate() - dayOffset);
       const dayEndMs = dayStart.getTime() + 24 * 60 * 60 * 1000;
 
       // İlerleme takibi
@@ -115,7 +165,6 @@ Deno.serve(async (req) => {
         .update({ backfill_last_fetched_date: dayStart.toISOString().slice(0, 10) })
         .eq("id", connection_id);
 
-      // Günlük siparişleri çek (sayfalı)
       let page = 0;
       let hasMore = true;
       let retryCount = 0;
@@ -165,6 +214,9 @@ Deno.serve(async (req) => {
         else page++;
 
         for (const order of orders) {
+          // null/zero orderDate guard — 1970 tarihi DB'ye yazılmasın
+          if (!order.orderDate || order.orderDate <= 0) continue;
+
           const productName =
             (order.lines ?? []).map((l: any) => l.productName).filter(Boolean).join(", ") ||
             "Trendyol Ürünü";
@@ -176,12 +228,12 @@ Deno.serve(async (req) => {
             p_user_id: conn.user_id,
             p_external_id: String(order.id),
             p_external_order_no: order.orderNumber ?? String(order.id),
-            p_platform: "Trendyol",
+            p_platform: "trendyol",
             p_product_name: productName,
             p_quantity: quantity,
             p_total_amount: order.totalPrice ?? 0,
             p_unit_price: order.lines?.[0]?.price ?? (order.totalPrice ?? 0),
-            p_sale_date: new Date(order.orderDate).toISOString().slice(0, 10),
+            p_sale_date: toTRDate(order.orderDate),
             p_status: status,
             p_note: `Trendyol #${order.orderNumber ?? order.id} — maliyet girilmedi`,
           });
@@ -191,17 +243,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Backfill tamamlandı
+    // Chunk log
     const finishedAt = new Date().toISOString();
-    await adminClient.from("marketplace_connections").update({
-      sync_status: "idle",
-      initial_backfill_done: true,
-      backfill_completed_at: finishedAt,
-      last_order_sync_at: finishedAt,
-      sync_error_count: 0,
-      sync_error_message: null,
-    }).eq("id", connection_id);
-
     if (syncLog?.id) {
       await adminClient.from("marketplace_sync_logs").update({
         status: "success",
@@ -212,8 +255,38 @@ Deno.serve(async (req) => {
       }).eq("id", syncLog.id);
     }
 
+    if (isLastChunk) {
+      await adminClient.from("marketplace_connections").update({
+        sync_status: "idle",
+        initial_backfill_done: true,
+        backfill_completed_at: finishedAt,
+        last_order_sync_at: finishedAt,
+        sync_error_count: 0,
+        sync_error_message: null,
+      }).eq("id", connection_id);
+
+      return new Response(
+        JSON.stringify({ success: true, completed: true, records_fetched: totalFetched, records_processed: totalProcessed }),
+        { headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    // Sonraki chunk'ı ateşle (fire-and-forget)
+    const nextFetch = fetch(`${SUPABASE_URL}/functions/v1/trendyol-backfill`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ connection_id }),
+    }).catch((e) => { console.error("Backfill chunk re-trigger hatası:", e); });
+
+    if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+      (globalThis as any).EdgeRuntime.waitUntil(nextFetch);
+    }
+
     return new Response(
-      JSON.stringify({ success: true, records_fetched: totalFetched, records_processed: totalProcessed }),
+      JSON.stringify({ success: true, chunk_done: true, more_chunks: true, records_fetched: totalFetched }),
       { headers: { "Content-Type": "application/json" } },
     );
   } catch (err) {

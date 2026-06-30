@@ -20,8 +20,10 @@ function sanitizeError(err: unknown): string {
   return "Bilinmeyen hata";
 }
 
-function utcDateStr(msTimestamp: number): string {
-  return new Date(msTimestamp).toISOString().slice(0, 10);
+// Türkiye UTC+3 sabit (2016'dan beri DST yok)
+function toTRDate(msTimestamp: number): string {
+  if (!msTimestamp || msTimestamp <= 0) return new Date().toISOString().slice(0, 10);
+  return new Date(msTimestamp + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 Deno.serve(async (req) => {
@@ -151,6 +153,9 @@ Deno.serve(async (req) => {
       else page++;
 
       for (const order of orders) {
+        // null/zero orderDate guard — 1970 tarihi DB'ye yazılmasın
+        if (!order.orderDate || order.orderDate <= 0) continue;
+
         const productName =
           (order.lines ?? []).map((l: any) => l.productName).filter(Boolean).join(", ") ||
           "Trendyol Ürünü";
@@ -162,12 +167,12 @@ Deno.serve(async (req) => {
           p_user_id: conn.user_id,
           p_external_id: String(order.id),
           p_external_order_no: order.orderNumber ?? String(order.id),
-          p_platform: "Trendyol",
+          p_platform: "trendyol",
           p_product_name: productName,
           p_quantity: quantity,
           p_total_amount: order.totalPrice ?? 0,
           p_unit_price: order.lines?.[0]?.price ?? (order.totalPrice ?? 0),
-          p_sale_date: utcDateStr(order.orderDate),
+          p_sale_date: toTRDate(order.orderDate),
           p_status: status,
           p_note: `Trendyol #${order.orderNumber ?? order.id} — maliyet girilmedi`,
         });

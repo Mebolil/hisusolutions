@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
     const { data, error } = await adminClient
       .from("marketplace_connections")
       .select(
-        "id, platform, store_name, sync_status, sync_error_message, sync_error_count, is_active, initial_backfill_done, last_order_sync_at, last_financial_sync_at, last_stock_sync_at, last_return_sync_at, created_at, extension_api_token",
+        "id, platform, store_name, sync_status, sync_error_message, sync_error_count, is_active, initial_backfill_done, backfill_last_fetched_date, last_order_sync_at, last_financial_sync_at, last_stock_sync_at, last_return_sync_at, created_at, extension_api_token",
       )
       .eq("user_id", user.id)
       .is("deleted_at", null)
@@ -338,6 +338,62 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true, token: data.extension_api_token }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // ──────────────────────────────────────────────
+  // Sync yeniden deneme (hata sonrası)
+  // ──────────────────────────────────────────────
+  if (req.method === "POST" && action === "retry-sync") {
+    const { connection_id } = await req.json();
+    if (!connection_id) {
+      return new Response(JSON.stringify({ error: "connection_id zorunlu" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Sadece kullanıcının kendi bağlantısı
+    const { data: conn, error: fetchErr } = await adminClient
+      .from("marketplace_connections")
+      .select("id, is_active, initial_backfill_done")
+      .eq("id", connection_id)
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .single();
+
+    if (fetchErr || !conn) {
+      return new Response(JSON.stringify({ error: "Bağlantı bulunamadı" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Hata sayacını sıfırla, status idle'a al
+    await adminClient.from("marketplace_connections").update({
+      sync_status: "idle",
+      sync_error_count: 0,
+      sync_error_message: null,
+    }).eq("id", connection_id);
+
+    // Backfill tamamlanmamışsa yeniden tetikle
+    if (!conn.initial_backfill_done) {
+      const backfillFetch = fetch(`${SUPABASE_URL}/functions/v1/trendyol-backfill`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ connection_id }),
+      }).catch((e) => { console.error("Retry backfill tetikleme hatası:", e); });
+
+      if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+        (globalThis as any).EdgeRuntime.waitUntil(backfillFetch);
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

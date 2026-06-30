@@ -1,12 +1,12 @@
-# CLAUDE.md — Hisu Solutions / BütçeCRM
+# CLAUDE.md — Hisu Solutions / Pusla
 
-## BütçeCRM KONUMLANMA YASASI — DEĞİŞTİRİLEMEZ TEMEL
+## Pusla KONUMLANMA YASASI — DEĞİŞTİRİLEMEZ TEMEL
 
-> **BütçeCRM sadece bir gelir-gider takip uygulaması değildir.**
+> **Pusla sadece bir gelir-gider takip uygulaması değildir.**
 
-BütçeCRM, e-ticaret işletmesinin mali verilerini platforma, ürüne, reklama, maliyet kalemlerine, harcamalara, iadelere ve iptal sebeplerine göre analiz eden; bu verilerden işletmeye özel netlik çıkaran bir **karar destek sistemidir**.
+Pusla, e-ticaret işletmesinin mali verilerini platforma, ürüne, reklama, maliyet kalemlerine, harcamalara, iadelere ve iptal sebeplerine göre analiz eden; bu verilerden işletmeye özel netlik çıkaran bir **karar destek sistemidir**.
 
-**Sorumluluk çerçevesi:** Analiz BütçeCRM'den, karar işletme sahibinden. Sorumluluk tamamen kullanıcıya aittir.
+**Sorumluluk çerçevesi:** Analiz Pusla'den, karar işletme sahibinden. Sorumluluk tamamen kullanıcıya aittir.
 
 ### İki Paket
 
@@ -84,7 +84,7 @@ Kodlama yaparken **önce bu dosyayı oku**, sonra değişikliğe başla.
 
 ---
 
-## BütçeCRM — Teknik Mimari
+## Pusla — Teknik Mimari
 
 ### Stack
 - **Frontend**: React + TypeScript + TanStack Router (file-based routing)
@@ -200,14 +200,14 @@ supabase.from("sales").select("*").eq("id", id).eq("user_id", uid)
 > `cancelReturn`: Supabase `.update({ quantity: (q) => q-n })` callback çalışmaz. Önce mevcut quantity oku, sonra `Math.max(0, current - qty)` ile set et.
 
 ### `leads`, `bookings`, `page_views`
-- Hisusolutions.com sitesi için; BütçeCRM routelarında kullanılmaz.
+- Hisusolutions.com sitesi için; Pusla routelarında kullanılmaz.
 
 ---
 
 ## TanStack Router — Route Mimarisi
 
 ```
-/app/butcecrm/
+/app/pusla/
 ├── index.tsx          → Dashboard
 ├── satislar.tsx       → Satışlar
 ├── iadeler.tsx        → İadeler (returns modülü — 2026-06-19)
@@ -229,7 +229,7 @@ Parent route (`reklam.tsx`) sadece `<Outlet />` render etmeli, içerik `.index.t
 
 ```tsx
 // reklam.tsx — DOĞRU
-export const Route = createFileRoute("/app/butcecrm/reklam")({
+export const Route = createFileRoute("/app/pusla/reklam")({
   component: () => <Outlet />,
 });
 ```

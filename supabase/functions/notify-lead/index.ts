@@ -2,14 +2,14 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const NOTIFY_EMAILS = ["hatamelih245@gmail.com", "info@hisusolutions.com"];
-const FROM_EMAIL = "bildirim@hisusolutions.com";
+const FROM_EMAIL = "Hisu Pusla <bildirim@hisusolutions.com>";
 
 const SOURCE_LABELS: Record<string, string> = {
   "iletisim": "İletişim Formu",
-  "butcecrm-demo": "BütçeCRM Demo Talebi",
-  "butcecrm-beta-demo": "BütçeCRM Kurucu Beta Demo",
-  "butcecrm-signup": "BütçeCRM Yeni Kayıt",
-  "butcecrm-odeme": "BütçeCRM Ödeme Bildirimi",
+  "pusla-demo": "Pusla Demo Talebi",
+  "pusla-beta-demo": "Pusla Kurucu Beta Demo",
+  "pusla-signup": "Pusla Yeni Kayıt",
+  "pusla-odeme": "Pusla Ödeme Bildirimi",
   "otomasyon": "Otomasyon Keşif Görüşmesi",
   "websitesi": "Web Sitesi Teklif Talebi",
   "lead-magnet": "ROAS Rehberi İsteği",
@@ -55,17 +55,17 @@ serve(async (req) => {
     const company = payload?.company ?? payload?.sirket ?? "";
     const replyTo: string | undefined = payload?.email;
 
-    // butcecrm-signup için özel email oluştur
-    if (source === "butcecrm-signup") {
+    // pusla-signup için özel email oluştur
+    if (source === "pusla-signup") {
       const signupEmail = payload?.email ?? "—";
       const confirmedAt = payload?.confirmed_at
         ? new Date(payload.confirmed_at).toLocaleString("tr-TR")
         : new Date().toLocaleString("tr-TR");
 
-      const signupSubject = `🎉 Yeni BütçeCRM Kayıt: ${signupEmail}`;
+      const signupSubject = `🎉 Yeni Pusla Kayıt: ${signupEmail}`;
       const signupHtml = `
         <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px">
-          <h2 style="margin:0 0 4px;color:#0f172a;font-size:20px">🎉 Yeni BütçeCRM Kayıt</h2>
+          <h2 style="margin:0 0 4px;color:#0f172a;font-size:20px">🎉 Yeni Pusla Kayıt</h2>
           <p style="color:#64748b;margin:0 0 20px;font-size:13px">${confirmedAt}</p>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:20px">
             <p style="margin:0 0 8px;font-size:13px;color:#64748b">Kayıt olan kullanıcı</p>
@@ -216,8 +216,8 @@ serve(async (req) => {
           </ul>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
           <p style="color:#94a3b8;font-size:12px">
-            BütçeCRM ile tüm bu verileri otomatik takip edebilirsiniz —
-            <a href="https://hisusolutions.com/butceleme" style="color:#e07b39">15 günlük ücretsiz deneme</a> başlatın.
+            Pusla ile tüm bu verileri otomatik takip edebilirsiniz —
+            <a href="https://hisusolutions.com/pusla" style="color:#e07b39">15 günlük ücretsiz deneme</a> başlatın.
           </p>
         </div>`;
 

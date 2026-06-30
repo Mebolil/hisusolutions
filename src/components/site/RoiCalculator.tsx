@@ -25,7 +25,7 @@ export function RoiCalculator() {
       <div className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
         <div className="text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-primary">Hesaplayıcı</span>
-          <h2 className="mt-3 text-4xl font-bold">BütçeCRM Sizin İçin Ne Kadar Değerli?</h2>
+          <h2 className="mt-3 text-4xl font-bold">Pusla Sizin İçin Ne Kadar Değerli?</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Kendi verilerinizle hesaplayın — slider'ları hareket ettirin.</p>
         </div>
         <div className="mt-12 rounded-3xl border border-border bg-background p-8 md:p-10">
@@ -70,13 +70,13 @@ export function RoiCalculator() {
               </div>
             </div>
             <div className="flex flex-col justify-center rounded-2xl border border-primary/30 bg-primary-soft p-7 text-center">
-              <p className="text-sm text-muted-foreground">BütçeCRM ile yılda</p>
+              <p className="text-sm text-muted-foreground">Pusla ile yılda</p>
               <p className="mt-2 text-5xl font-bold text-primary">{formatTL(annualSavings)}</p>
               <p className="mt-1 text-sm text-muted-foreground">değerinde zaman kazanırsınız*</p>
               <div className="mt-6 h-px bg-border" />
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">BütçeCRM yıllık maliyeti</span>
+                  <span className="text-muted-foreground">Pusla yıllık maliyeti</span>
                   <span className="font-semibold">{formatTL(butceCRMCost)}</span>
                 </div>
                 <div className="flex justify-between">

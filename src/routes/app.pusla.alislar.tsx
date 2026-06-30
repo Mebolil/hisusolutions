@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+import { CsvToolbar, type CsvField } from "@/components/pusla/CsvToolbar";
 
 const PURCHASES_CSV_FIELDS: CsvField[] = [
   { key: "purchase_date",  label: "Tarih",         required: true, type: "date" },
@@ -50,8 +50,8 @@ type Supplier = { id: string; name: string };
 const STATUSES = ["ödendi", "kısmi", "bekliyor"] as const;
 type Status = (typeof STATUSES)[number];
 
-export const Route = createFileRoute("/app/butcecrm/alislar")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Alışlar" }] }),
+export const Route = createFileRoute("/app/pusla/alislar")({
+  head: () => ({ meta: [{ title: "Pusla — Alışlar" }] }),
   component: PurchasesPage,
 });
 

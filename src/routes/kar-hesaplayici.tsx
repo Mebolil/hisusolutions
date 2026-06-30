@@ -59,8 +59,8 @@ const faqs: FaqItem[] = [
     a: "Kategoriye göre değişir. Giyim'de Trendyol %21,36 alırken Hepsiburada %21 alır. Elektronik büyük cihazlarda Trendyol %7,50, Hepsiburada %4,50'dir — bu kategoride Hepsiburada avantajlı. Her iki platform da 1 Ocak 2025'ten itibaren %1 stopaja tabi. Trendyol'a ek olarak 10,19 TL platform hizmet bedeli uygularken Hepsiburada bu bedeli 5 Temmuz 2025'te kaldırdı. Hepsiburada'daki kâr marjınızı hesaplamak için Hepsiburada Kâr Hesaplayıcımızı kullanabilirsiniz.",
   },
   {
-    q: "BütçeCRM ile Trendyol kârı nasıl takip edilir?",
-    a: "BütçeCRM, Trendyol mağazanızdaki tüm satışları, reklam harcamalarını ve giderleri otomatik takip ederek gerçek zamanlı kâr/zarar gösterir. Manuel hesaplama yapmadan anlık finansal tablonuza ulaşırsınız.",
+    q: "Pusla ile Trendyol kârı nasıl takip edilir?",
+    a: "Pusla, Trendyol mağazanızdaki tüm satışları, reklam harcamalarını ve giderleri otomatik takip ederek gerçek zamanlı kâr/zarar gösterir. Manuel hesaplama yapmadan anlık finansal tablonuza ulaşırsınız.",
   },
 ];
 
@@ -653,11 +653,11 @@ function KarHesaplayiciPage() {
                     Her ürün için bu hesabı elle mi yapıyorsunuz?
                     <span className="font-semibold text-foreground">
                       {" "}
-                      BütçeCRM tüm Trendyol mağazanızı otomatik takip eder.
+                      Pusla tüm Trendyol mağazanızı otomatik takip eder.
                     </span>
                   </p>
                   <Link
-                    to="/butceleme"
+                    to="/pusla"
                     onClick={() => trackEvent("hesaplayici_cta_tiklandi", { fiyat: Math.round(sellingPrice) })}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                   >
@@ -793,15 +793,15 @@ function KarHesaplayiciPage() {
             Kârınızı Otomatik Takip Edin
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">
-            BütçeCRM ile Trendyol mağazanızın tüm finansal tablosunu tek ekranda
+            Pusla ile Trendyol mağazanızın tüm finansal tablosunu tek ekranda
             görün.
           </p>
           <Link
-            to="/butceleme"
+            to="/pusla"
             onClick={() => trackEvent("hesaplayici_cta_tiklandi", { fiyat: isReady ? Math.round(sellingPrice) : null })}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-primary shadow-lg transition-colors hover:bg-white/90"
           >
-            BütçeCRM'i 15 Gün Ücretsiz Dene →
+            Pusla'i 15 Gün Ücretsiz Dene →
           </Link>
         </div>
       </section>

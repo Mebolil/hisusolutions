@@ -1,4 +1,4 @@
--- BütçeCRM Organization ID Altyapısı — 2026-06-22
+-- Pusla Organization ID Altyapısı — 2026-06-22
 -- Plan Uyum Ajanı onaylı ✅
 -- NOT: Manuel Supabase SQL Editor'den çalıştırılacak.
 -- Mevcut RLS politikaları DEĞİŞTİRİLMİYOR. Sütunlar NULL kalıyor.

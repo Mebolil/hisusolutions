@@ -6,21 +6,21 @@ import { RoiCalculator } from "@/components/site/RoiCalculator";
 import { PersonaSection } from "@/components/site/PersonaSection";
 import { ArrowRight, Check, X, BarChart3, Package, Megaphone, Receipt, FileText, BellRing, Users, Clock, TrendingUp, ShoppingCart, Quote, Gift, Zap } from "lucide-react";
 
-export const Route = createFileRoute("/butceleme")({
+export const Route = createFileRoute("/pusla")({
   head: () => ({
     meta: [
-      { title: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
+      { title: "Pusla — E-Ticaret Finansal Karar Destek Sistemi | Hisu Solutions" },
       { name: "description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret işletmeleri ve KOBİ'ler için Türkiye'nin en pratik bütçe yönetim yazılımı. Kurucu Beta ₺499/ay." },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://hisusolutions.com/butceleme" },
+      { property: "og:url", content: "https://hisusolutions.com/pusla" },
       { property: "og:site_name", content: "Hisu Solutions" },
-      { property: "og:title", content: "BütçeCRM — KOBİ Bütçe Yönetim Yazılımı | Hisu Solutions" },
+      { property: "og:title", content: "Pusla — E-Ticaret Finansal Karar Destek Sistemi | Hisu Solutions" },
       { property: "og:description", content: "Satış, stok, gider ve reklam ROI'sini tek ekranda yönetin. E-ticaret ve KOBİ'ler için anahtar teslim bütçe yönetimi." },
       { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
-      { rel: "canonical", href: "https://hisusolutions.com/butceleme" },
+      { rel: "canonical", href: "https://hisusolutions.com/pusla" },
     ],
     scripts: [
       {
@@ -29,10 +29,10 @@ export const Route = createFileRoute("/butceleme")({
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "BütçeCRM nedir?", "acceptedAnswer": { "@type": "Answer", "text": "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." } },
-            { "@type": "Question", "name": "BütçeCRM ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar, sadece 10 slot, ömür boyu kilitli. Sabit liste fiyatı ₺629/ay + KDV. 15 gün ücretsiz deneyebilirsiniz, kart gerekmez." } },
-            { "@type": "Question", "name": "BütçeCRM Excel'den farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. BütçeCRM otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." } },
-            { "@type": "Question", "name": "Kimler BütçeCRM kullanabilir?", "acceptedAnswer": { "@type": "Answer", "text": "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." } },
+            { "@type": "Question", "name": "Pusla nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Pusla, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." } },
+            { "@type": "Question", "name": "Pusla ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar, sadece 10 slot, ömür boyu kilitli. Sabit liste fiyatı ₺629/ay + KDV. 15 gün ücretsiz deneyebilirsiniz, kart gerekmez." } },
+            { "@type": "Question", "name": "Pusla Excel'den farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. Pusla otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." } },
+            { "@type": "Question", "name": "Kimler Pusla kullanabilir?", "acceptedAnswer": { "@type": "Answer", "text": "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." } },
           ]
         }),
       },
@@ -41,10 +41,10 @@ export const Route = createFileRoute("/butceleme")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "BütçeCRM",
+          "name": "Pusla",
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web",
-          "url": "https://hisusolutions.com/butceleme",
+          "url": "https://hisusolutions.com/pusla",
           "description": "E-ticaret ve KOBİ'ler için gelir, gider, stok ve reklam ROI yönetimi. Tek ekranda finansal kontrol.",
           "inLanguage": "tr-TR",
           "aggregateRating": {
@@ -74,14 +74,14 @@ export const Route = createFileRoute("/butceleme")({
 });
 
 const faqs: FaqItem[] = [
-  { q: "BütçeCRM nedir?", a: "BütçeCRM, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
-  { q: "BütçeCRM ne kadar?", a: "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar geçerli, sadece 10 slot var ve bu fiyat ömür boyu kilitli kalır. Beta sonrası sabit fiyat ₺629/ay + KDV'dir. 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
+  { q: "Pusla nedir?", a: "Pusla, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
+  { q: "Pusla ne kadar?", a: "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar geçerli, sadece 10 slot var ve bu fiyat ömür boyu kilitli kalır. Beta sonrası sabit fiyat ₺629/ay + KDV'dir. 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
   { q: "Excel'den geçmek zor olacak mı?", a: "Hayır. Ekibiniz 15 dakikada alışır. Verilerinizi Excel'den import edebilirsiniz. İlk kurulumda biz size rehberlik ediyoruz." },
   { q: "Verilerim güvende mi?", a: "Evet. Supabase altyapısı üzerinde çalışır, SSL şifreleme ile korunur. Verileriniz Türkiye'deki sunucularda tutulur." },
   { q: "İptal edersem verilerimi kaybeder miyim?", a: "Hayır. İptal öncesinde verilerinizi Excel/PDF olarak export edebilirsiniz. Verileriniz size ait, her zaman erişebilirsiniz." },
-  { q: "Referans programı nasıl çalışıyor?", a: "BütçeCRM'i bir arkadaşına önerirsin — o kayıt olunca hem sen hem o 1'er ay ücretsiz kullanım kazanırsınız. Sınır yok, her başarılı referans için ayrı 1 ay kazanırsın. Kampanya 30 Eylül 2026'ya kadar geçerlidir." },
+  { q: "Referans programı nasıl çalışıyor?", a: "Pusla'i bir arkadaşına önerirsin — o kayıt olunca hem sen hem o 1'er ay ücretsiz kullanım kazanırsınız. Sınır yok, her başarılı referans için ayrı 1 ay kazanırsın. Kampanya 30 Eylül 2026'ya kadar geçerlidir." },
   { q: "Teknik bilgi gerekiyor mu?", a: "Sıfır teknik bilgi. Açıp kullanıyorsunuz. İçinde rehber videolar ve adım adım kurulum sihirbazı var. Takıldığınızda destek hattımız açık." },
-  { q: "Kimler BütçeCRM kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
+  { q: "Kimler Pusla kullanabilir?", a: "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." },
 ];
 
 function ButcelemePage() {
@@ -96,7 +96,7 @@ function ButcelemePage() {
         <div className="mx-auto max-w-5xl px-4 py-20 text-center lg:px-8 lg:py-28">
           <span className="inline-flex rounded-full bg-primary-soft px-4 py-1.5 text-sm font-semibold text-accent-foreground">E-Ticaret KOBİ'leri İçin · Trendyol · Hepsiburada · Kendi Siteniz</span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Trendyol'dan Satıyorsun.<br />Meta'ya Reklam Veriyorsun.<br /><span className="text-primary">Hangisi Gerçekten Para Kazandırıyor?</span></h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — BütçeCRM'de var.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — Pusla'de var.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></Link>
           </div>
@@ -141,7 +141,7 @@ function ButcelemePage() {
             </ul>
           </div>
           <div className="rounded-2xl border border-primary/30 bg-primary-soft p-8">
-            <h3 className="text-xl font-bold">BütçeCRM ile:</h3>
+            <h3 className="text-xl font-bold">Pusla ile:</h3>
             <ul className="mt-5 space-y-3">
               {[
                 "Gerçek zamanlı gelir, gider, net kâr — her an güncel",
@@ -160,19 +160,19 @@ function ButcelemePage() {
       <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
         <div className="text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-primary">Önizleme</span>
-          <h2 className="mt-3 text-4xl font-bold">BütçeCRM Nasıl Görünür?</h2>
+          <h2 className="mt-3 text-4xl font-bold">Pusla Nasıl Görünür?</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Tek ekranda tüm finansal tablonuz — gerçek zamanlı, her zaman güncel.</p>
         </div>
         <div className="mt-12 relative">
           <div className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 ring-1 ring-primary/10">
             <video
-              src="/videos/butcecrm-16x9.mp4"
+              src="/videos/pusla-16x9.mp4"
               autoPlay
               muted
               loop
               playsInline
               className="w-full rounded-2xl"
-              aria-label="BütçeCRM ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
+              aria-label="Pusla ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
             />
             <div className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl bg-gradient-to-t from-background/80 to-transparent" />
           </div>
@@ -203,16 +203,16 @@ function ButcelemePage() {
         </div>
       </section>
 
-      {/* Excel vs BütçeCRM Karşılaştırma */}
+      {/* Excel vs Pusla Karşılaştırma */}
       <section className="mx-auto max-w-5xl px-4 py-20 lg:px-8">
-        <h2 className="text-center text-4xl font-bold">Excel mi, BütçeCRM mi?</h2>
+        <h2 className="text-center text-4xl font-bold">Excel mi, Pusla mi?</h2>
         <div className="mt-10 overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-6 py-4 text-left font-semibold">Özellik</th>
                 <th className="px-6 py-4 text-center font-semibold text-muted-foreground">Excel</th>
-                <th className="px-6 py-4 text-center font-semibold text-primary">BütçeCRM</th>
+                <th className="px-6 py-4 text-center font-semibold text-primary">Pusla</th>
               </tr>
             </thead>
             <tbody>
@@ -259,9 +259,9 @@ function ButcelemePage() {
         notForItems={[
           "Henüz satış yapmıyor, fikir aşamasında",
           "Ayda 5'ten az sipariş giriyor",
-          "Muhasebe yazılımı arıyor (BütçeCRM muhasebe değil, operasyon takibi)",
+          "Muhasebe yazılımı arıyor (Pusla muhasebe değil, operasyon takibi)",
           "Mobil uygulama tercih ediyor (şu an web tabanlı, mobil yol haritasında)",
-          "Yasal e-fatura yazılımı arıyor (BütçeCRM bu değil)",
+          "Yasal e-fatura yazılımı arıyor (Pusla bu değil)",
         ]}
       />
 
@@ -406,7 +406,7 @@ function ButcelemePage() {
             </span>
             <h2 className="mt-6 text-4xl font-bold md:text-5xl lg:text-6xl">İkisi de 1 ay<br />ücretsiz kazanır</h2>
             <p className="mx-auto mt-5 max-w-xl text-lg text-primary-foreground/80">
-              BütçeCRM'i beğendiysen bir arkadaşına öner — sen de 1 ay ücretsiz al, arkadaşın da. İkisi de kazanır. Sınır yok.
+              Pusla'i beğendiysen bir arkadaşına öner — sen de 1 ay ücretsiz al, arkadaşın da. İkisi de kazanır. Sınır yok.
             </p>
           </div>
 
@@ -419,7 +419,7 @@ function ButcelemePage() {
             <div className="rounded-2xl bg-white/10 p-8 text-center backdrop-blur-sm">
               <p className="text-5xl font-bold">2</p>
               <p className="mt-3 text-lg font-semibold">O kayıt olsun</p>
-              <p className="mt-2 text-sm text-primary-foreground/70">Arkadaşın linki kullanarak BütçeCRM'e üye olur</p>
+              <p className="mt-2 text-sm text-primary-foreground/70">Arkadaşın linki kullanarak Pusla'e üye olur</p>
             </div>
             <div className="rounded-2xl bg-white/15 p-8 text-center ring-2 ring-white/30 backdrop-blur-sm">
               <p className="text-5xl font-bold">+1 Ay</p>
@@ -457,7 +457,7 @@ function ButcelemePage() {
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
               { label: "Problem", content: "Aylık ciro 120.000 TL. Kâr ne kadar bilmiyor. Excel'de takip ediyor, ay sonu 4 saat harcıyor. Reklamların işe yarayıp yaramadığını bilmiyor." },
-              { label: "Çözüm", content: "BütçeCRM kurulumu 2 günde tamamlandı. Satış, gider ve reklam geliri sisteme bağlandı. Otomatik raporlar devreye girdi." },
+              { label: "Çözüm", content: "Pusla kurulumu 2 günde tamamlandı. Satış, gider ve reklam geliri sisteme bağlandı. Otomatik raporlar devreye girdi." },
               { label: "Sonuç", content: "%18 daha az reklam harcamasıyla aynı ciro elde edildi (gereksiz kampanya tespit edildi). Ay sonu raporu 4 saatten 5 dakikaya düştü." },
             ].map(c => (
               <div key={c.label} className="rounded-2xl border border-border bg-background p-7">
@@ -477,7 +477,7 @@ function ButcelemePage() {
           <h2 className="mt-3 text-4xl font-bold">Dürüst Olmak Gerekirse</h2>
         </div>
         <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
-          <p className="text-lg font-medium leading-relaxed">BütçeCRM beta sürecinde. Henüz onlarca doğrulanmış müşteri yorumumuz yok —</p>
+          <p className="text-lg font-medium leading-relaxed">Pusla beta sürecinde. Henüz onlarca doğrulanmış müşteri yorumumuz yok —</p>
           <p className="mt-2 text-muted-foreground">ve bunu söylemekten çekinmiyoruz.</p>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 15 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
           <Link to="/auth" search={{ mode: "signup" }} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></Link>
@@ -527,7 +527,7 @@ function ButcelemePage() {
             <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">M</span>
             <div>
               <p className="text-sm font-semibold">Melih Hata</p>
-              <p className="text-xs text-muted-foreground">Kurucu · BütçeCRM yapımcısı</p>
+              <p className="text-xs text-muted-foreground">Kurucu · Pusla yapımcısı</p>
             </div>
           </div>
         </blockquote>

@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FROM_EMAIL = "bildirim@hisusolutions.com";
+const FROM_EMAIL = "Hisu Pusla <bildirim@hisusolutions.com>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://hisusolutions.com",
@@ -188,9 +188,9 @@ serve(async (req) => {
             </table>
             ${insightLine}
             <p style="margin:32px 0 0;font-size:12px;color:#94a3b8">
-              —<br/>BütçeCRM<br/>
+              —<br/>Pusla<br/>
               Bildirimleri durdurmak için:
-              <a href="https://hisusolutions.com/app/butcecrm/ayarlar" style="color:#94a3b8">ayarlar</a>
+              <a href="https://hisusolutions.com/app/pusla/ayarlar" style="color:#94a3b8">ayarlar</a>
             </p>
           </div>`;
 
@@ -200,7 +200,7 @@ serve(async (req) => {
           body: JSON.stringify({
             from: FROM_EMAIL,
             to: [userEmail],
-            subject: "BütçeCRM — Bu haftanın finansal nabzı 📊",
+            subject: "Pusla — Bu haftanın finansal nabzı 📊",
             html,
           }),
         });

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatDate, formatCurrency, friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatDate, formatCurrency, friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ReturnKpiCards } from "@/components/butcecrm/ReturnKpiCards";
-import { ReturnDialog } from "@/components/butcecrm/ReturnDialog";
+import { ReturnKpiCards } from "@/components/pusla/ReturnKpiCards";
+import { ReturnDialog } from "@/components/pusla/ReturnDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Search, RotateCcw, Plus } from "lucide-react";
@@ -73,8 +73,8 @@ const REFUND_LABELS: Record<string, string> = {
 
 const ANALYSIS_PIE_COLORS = ["#ef4444","#f59e0b","#6366f1","#3b82f6","#8b5cf6","#ec4899","#14b8a6","#64748b"];
 
-export const Route = createFileRoute("/app/butcecrm/iadeler")({
-  head: () => ({ meta: [{ title: "BütçeCRM — İadeler" }] }),
+export const Route = createFileRoute("/app/pusla/iadeler")({
+  head: () => ({ meta: [{ title: "Pusla — İadeler" }] }),
   component: IadelerPage,
 });
 

@@ -47,8 +47,8 @@ const faqs: FaqItem[] = [
     a: "Formül: Satış Fiyatı = (Hedef Kâr + Ürün Maliyeti + Kargo + Paketleme) ÷ (1 − Komisyon Oranı − %1 Stopaj). Örneğin 100 TL kâr hedefi, 300 TL maliyet, Giyim kategorisi (%21 komisyon), 65 TL kargo ile minimum satış fiyatı yaklaşık 596 TL olur.",
   },
   {
-    q: "BütçeCRM ile Hepsiburada kârı nasıl takip edilir?",
-    a: "BütçeCRM, her satışa komisyon, kargo ve iade maliyetlerini otomatik olarak atayarak gerçek net kârı hesaplar. Manuel Excel takibi yerine anlık kâr tablosu sunar; ürün, platform ve kampanya bazlı kârlılık analizine olanak tanır.",
+    q: "Pusla ile Hepsiburada kârı nasıl takip edilir?",
+    a: "Pusla, her satışa komisyon, kargo ve iade maliyetlerini otomatik olarak atayarak gerçek net kârı hesaplar. Manuel Excel takibi yerine anlık kâr tablosu sunar; ürün, platform ve kampanya bazlı kârlılık analizine olanak tanır.",
   },
   {
     q: "Hepsiburada'da zarar etmeden minimum satış fiyatı nasıl belirlenir?",
@@ -595,11 +595,11 @@ function HepsiburadaKarHesaplayiciPage() {
                   <p className="mb-3 text-sm text-muted-foreground">
                     Her ürün için bu hesabı elle mi yapıyorsunuz?{" "}
                     <span className="font-semibold text-foreground">
-                      BütçeCRM tüm Hepsiburada mağazanızı otomatik takip eder.
+                      Pusla tüm Hepsiburada mağazanızı otomatik takip eder.
                     </span>
                   </p>
                   <Link
-                    to="/butceleme"
+                    to="/pusla"
                     onClick={() => trackEvent("hb_cta_tiklandi", { fiyat: Math.round(sellingPrice) })}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                   >
@@ -746,15 +746,15 @@ function HepsiburadaKarHesaplayiciPage() {
             Kârınızı Otomatik Takip Edin
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-primary-foreground/80">
-            BütçeCRM ile Hepsiburada mağazanızın tüm finansal tablosunu tek ekranda
+            Pusla ile Hepsiburada mağazanızın tüm finansal tablosunu tek ekranda
             görün.
           </p>
           <Link
-            to="/butceleme"
+            to="/pusla"
             onClick={() => trackEvent("hb_cta_tiklandi", { fiyat: isReady ? Math.round(sellingPrice) : null })}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-primary shadow-lg transition-colors hover:bg-white/90"
           >
-            BütçeCRM'i 15 Gün Ücretsiz Dene →
+            Pusla'i 15 Gün Ücretsiz Dene →
           </Link>
         </div>
       </section>

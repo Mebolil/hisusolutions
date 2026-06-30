@@ -1,4 +1,4 @@
--- BütçeCRM 15 Gün Ücretsiz Trial — Migration
+-- Pusla 15 Gün Ücretsiz Trial — Migration
 -- Supabase Dashboard > SQL Editor'de çalıştır
 
 -- 1. profiles tablosuna trial kolonları ekle

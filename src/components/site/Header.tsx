@@ -83,7 +83,7 @@ export function Header() {
   }, []);
 
   const nav = [
-    { to: "/butceleme", label: "BütçeCRM" },
+    { to: "/pusla", label: "Pusla" },
     { to: "/uctan-uca-yazilim", label: "Uçtan Uca" },
     { to: "/blog", label: "Blog" },
     { to: "/hakkimizda", label: "Hakkımızda" },

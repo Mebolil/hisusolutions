@@ -193,7 +193,7 @@ function BlogPostPage() {
           <div className="mx-auto max-w-3xl px-6">
             <div className="rounded-2xl border border-orange-100 bg-white p-8 shadow-sm">
               <h2 className="mb-2 text-xl font-bold text-neutral-900">
-                BütçeCRM ile Reklam ROAS'ınızı Takip Edin
+                Pusla ile Reklam ROAS'ınızı Takip Edin
               </h2>
               <p className="mb-6 text-neutral-500">
                 Trendyol, Meta ve Google reklamlarınızı tek panelde görün.
@@ -202,7 +202,7 @@ function BlogPostPage() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to="/butceleme"
+                  to="/pusla"
                   className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
                 >
                   Ücretsiz Dene <ArrowRight className="h-4 w-4" />

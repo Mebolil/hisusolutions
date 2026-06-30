@@ -13,9 +13,9 @@ import { toast } from "sonner";
 import {
   useSettings, DEFAULT_SETTINGS,
   type AppSettings, type InstallmentPlan, type PaymentMethod,
-} from "@/lib/butcecrm-settings";
+} from "@/lib/pusla-settings";
 
-export const Route = createFileRoute("/app/butcecrm/ayarlar")({
+export const Route = createFileRoute("/app/pusla/ayarlar")({
   component: AyarlarPage,
 });
 

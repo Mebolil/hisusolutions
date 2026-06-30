@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,8 +58,8 @@ const STATUS_BADGE: Record<string, string> = {
   pasif: "bg-secondary text-muted-foreground border-border",
 };
 
-export const Route = createFileRoute("/app/butcecrm/reklam/$id")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Kampanya Detayı" }] }),
+export const Route = createFileRoute("/app/pusla/reklam/$id")({
+  head: () => ({ meta: [{ title: "Pusla — Kampanya Detayı" }] }),
   component: CampaignDetail,
 });
 
@@ -84,7 +84,7 @@ function CampaignDetail() {
     ]);
     if (c.error || !c.data) {
       toast.error("Kampanya bulunamadı");
-      navigate({ to: "/app/butcecrm/reklam" });
+      navigate({ to: "/app/pusla/reklam" });
       return;
     }
     setCampaign(c.data as Campaign);
@@ -156,7 +156,7 @@ function CampaignDetail() {
     const { error } = await supabase.from("campaigns").update({ deleted_at: new Date().toISOString() }).eq("id", campaign.id).eq("user_id", session.user.id);
     if (error) return toast.error("Silinemedi: " + friendlyDbError(error));
     toast.success("Kampanya silindi");
-    navigate({ to: "/app/butcecrm/reklam" });
+    navigate({ to: "/app/pusla/reklam" });
   }
 
   if (loading) {
@@ -171,7 +171,7 @@ function CampaignDetail() {
       {/* Başlık */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-start gap-3">
-          <Link to="/app/butcecrm/reklam" className="mt-1 text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/app/pusla/reklam" className="mt-1 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>

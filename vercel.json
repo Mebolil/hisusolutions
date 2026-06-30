@@ -1,4 +1,10 @@
 {
+  "redirects": [
+    { "source": "/butceleme", "destination": "/pusla", "permanent": true },
+    { "source": "/app/butcecrm/:path*", "destination": "/app/pusla/:path*", "permanent": true },
+    { "source": "/blog/butcecrm-ilk-30-gun-kurulum-rehberi", "destination": "/blog/pusla-ilk-30-gun-kurulum-rehberi", "permanent": true },
+    { "source": "/blog/butcecrm-nedir-eticaret-reklam-muhasebe", "destination": "/blog/pusla-nedir-eticaret-reklam-muhasebe", "permanent": true }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {

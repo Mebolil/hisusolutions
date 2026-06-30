@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +53,8 @@ const STATUS_BADGE: Record<string, string> = {
 
 const PERIOD_LABELS: Record<Period, string> = { hafta: "Son 7 Gün", ay: "Bu Ay", "3ay": "Son 3 Ay" };
 
-export const Route = createFileRoute("/app/butcecrm/reklam/")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Reklam" }] }),
+export const Route = createFileRoute("/app/pusla/reklam/")({
+  head: () => ({ meta: [{ title: "Pusla — Reklam" }] }),
   component: AdsPage,
 });
 
@@ -405,7 +405,7 @@ function AdsPage() {
                     <TableRow
                       key={c.id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => navigate({ to: "/app/butcecrm/reklam/$id", params: { id: c.id } })}
+                      onClick={() => navigate({ to: "/app/pusla/reklam/$id", params: { id: c.id } })}
                     >
                       <TableCell className="font-medium max-w-[200px]">
                         <span className="truncate block">{c.name}</span>

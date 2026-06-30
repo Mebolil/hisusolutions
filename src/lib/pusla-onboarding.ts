@@ -14,8 +14,19 @@ export type OnboardingProfile = {
   completedAt: string; // ISO date string
 };
 
-const KEY = "butcecrm:onboarding:v1";
-const EVENT = "butcecrm:onboarding-changed";
+// One-time migration: butcecrm → pusla localStorage keys
+if (typeof window !== "undefined") {
+  const OLD_KEY = "butcecrm:onboarding:v1";
+  const NEW_KEY = "pusla:onboarding:v1";
+  const old = localStorage.getItem(OLD_KEY);
+  if (old && !localStorage.getItem(NEW_KEY)) {
+    localStorage.setItem(NEW_KEY, old);
+    localStorage.removeItem(OLD_KEY);
+  }
+}
+
+const KEY = "pusla:onboarding:v1";
+const EVENT = "pusla:onboarding-changed";
 
 export function isOnboardingComplete(): boolean {
   const p = loadOnboarding();

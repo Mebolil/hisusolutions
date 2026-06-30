@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebSitesiRouteImport } from './routes/web-sitesi'
 import { Route as UctanUcaYazilimRouteImport } from './routes/uctan-uca-yazilim'
 import { Route as SifreSifirlaRouteImport } from './routes/sifre-sifirla'
+import { Route as PuslaRouteImport } from './routes/pusla'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as OtomasyonRouteImport } from './routes/otomasyon'
 import { Route as OdemeRouteImport } from './routes/odeme'
@@ -19,28 +20,27 @@ import { Route as KarHesaplayiciRouteImport } from './routes/kar-hesaplayici'
 import { Route as IletisimRouteImport } from './routes/iletisim'
 import { Route as HepsiburadaKarHesaplayiciRouteImport } from './routes/hepsiburada-kar-hesaplayici'
 import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
-import { Route as ButcelemeRouteImport } from './routes/butceleme'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as AppButcecrmRouteImport } from './routes/app.butcecrm'
+import { Route as AppPuslaRouteImport } from './routes/app.pusla'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AppButcecrmIndexRouteImport } from './routes/app.butcecrm.index'
-import { Route as AppButcecrmStokRouteImport } from './routes/app.butcecrm.stok'
-import { Route as AppButcecrmSatislarRouteImport } from './routes/app.butcecrm.satislar'
-import { Route as AppButcecrmReklamRouteImport } from './routes/app.butcecrm.reklam'
-import { Route as AppButcecrmRaporlarRouteImport } from './routes/app.butcecrm.raporlar'
-import { Route as AppButcecrmIadelerRouteImport } from './routes/app.butcecrm.iadeler'
-import { Route as AppButcecrmHatirlaticilarRouteImport } from './routes/app.butcecrm.hatirlaticilar'
-import { Route as AppButcecrmGiderlerRouteImport } from './routes/app.butcecrm.giderler'
-import { Route as AppButcecrmCarilerRouteImport } from './routes/app.butcecrm.cariler'
-import { Route as AppButcecrmAyarlarRouteImport } from './routes/app.butcecrm.ayarlar'
-import { Route as AppButcecrmAlislarRouteImport } from './routes/app.butcecrm.alislar'
-import { Route as AppButcecrmReklamIndexRouteImport } from './routes/app.butcecrm.reklam.index'
-import { Route as AppButcecrmReklamIdRouteImport } from './routes/app.butcecrm.reklam.$id'
+import { Route as AppPuslaIndexRouteImport } from './routes/app.pusla.index'
+import { Route as AppPuslaStokRouteImport } from './routes/app.pusla.stok'
+import { Route as AppPuslaSatislarRouteImport } from './routes/app.pusla.satislar'
+import { Route as AppPuslaReklamRouteImport } from './routes/app.pusla.reklam'
+import { Route as AppPuslaRaporlarRouteImport } from './routes/app.pusla.raporlar'
+import { Route as AppPuslaIadelerRouteImport } from './routes/app.pusla.iadeler'
+import { Route as AppPuslaHatirlaticilarRouteImport } from './routes/app.pusla.hatirlaticilar'
+import { Route as AppPuslaGiderlerRouteImport } from './routes/app.pusla.giderler'
+import { Route as AppPuslaCarilerRouteImport } from './routes/app.pusla.cariler'
+import { Route as AppPuslaAyarlarRouteImport } from './routes/app.pusla.ayarlar'
+import { Route as AppPuslaAlislarRouteImport } from './routes/app.pusla.alislar'
+import { Route as AppPuslaReklamIndexRouteImport } from './routes/app.pusla.reklam.index'
+import { Route as AppPuslaReklamIdRouteImport } from './routes/app.pusla.reklam.$id'
 
 const WebSitesiRoute = WebSitesiRouteImport.update({
   id: '/web-sitesi',
@@ -55,6 +55,11 @@ const UctanUcaYazilimRoute = UctanUcaYazilimRouteImport.update({
 const SifreSifirlaRoute = SifreSifirlaRouteImport.update({
   id: '/sifre-sifirla',
   path: '/sifre-sifirla',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PuslaRoute = PuslaRouteImport.update({
+  id: '/pusla',
+  path: '/pusla',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanelRoute = PanelRouteImport.update({
@@ -93,11 +98,6 @@ const HakkimizdaRoute = HakkimizdaRouteImport.update({
   path: '/hakkimizda',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ButcelemeRoute = ButcelemeRouteImport.update({
-  id: '/butceleme',
-  path: '/butceleme',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
@@ -128,9 +128,9 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
-const AppButcecrmRoute = AppButcecrmRouteImport.update({
-  id: '/app/butcecrm',
-  path: '/app/butcecrm',
+const AppPuslaRoute = AppPuslaRouteImport.update({
+  id: '/app/pusla',
+  path: '/app/pusla',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -138,71 +138,70 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
-const AppButcecrmIndexRoute = AppButcecrmIndexRouteImport.update({
+const AppPuslaIndexRoute = AppPuslaIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmStokRoute = AppButcecrmStokRouteImport.update({
+const AppPuslaStokRoute = AppPuslaStokRouteImport.update({
   id: '/stok',
   path: '/stok',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmSatislarRoute = AppButcecrmSatislarRouteImport.update({
+const AppPuslaSatislarRoute = AppPuslaSatislarRouteImport.update({
   id: '/satislar',
   path: '/satislar',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmReklamRoute = AppButcecrmReklamRouteImport.update({
+const AppPuslaReklamRoute = AppPuslaReklamRouteImport.update({
   id: '/reklam',
   path: '/reklam',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmRaporlarRoute = AppButcecrmRaporlarRouteImport.update({
+const AppPuslaRaporlarRoute = AppPuslaRaporlarRouteImport.update({
   id: '/raporlar',
   path: '/raporlar',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmIadelerRoute = AppButcecrmIadelerRouteImport.update({
+const AppPuslaIadelerRoute = AppPuslaIadelerRouteImport.update({
   id: '/iadeler',
   path: '/iadeler',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmHatirlaticilarRoute =
-  AppButcecrmHatirlaticilarRouteImport.update({
-    id: '/hatirlaticilar',
-    path: '/hatirlaticilar',
-    getParentRoute: () => AppButcecrmRoute,
-  } as any)
-const AppButcecrmGiderlerRoute = AppButcecrmGiderlerRouteImport.update({
+const AppPuslaHatirlaticilarRoute = AppPuslaHatirlaticilarRouteImport.update({
+  id: '/hatirlaticilar',
+  path: '/hatirlaticilar',
+  getParentRoute: () => AppPuslaRoute,
+} as any)
+const AppPuslaGiderlerRoute = AppPuslaGiderlerRouteImport.update({
   id: '/giderler',
   path: '/giderler',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmCarilerRoute = AppButcecrmCarilerRouteImport.update({
+const AppPuslaCarilerRoute = AppPuslaCarilerRouteImport.update({
   id: '/cariler',
   path: '/cariler',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmAyarlarRoute = AppButcecrmAyarlarRouteImport.update({
+const AppPuslaAyarlarRoute = AppPuslaAyarlarRouteImport.update({
   id: '/ayarlar',
   path: '/ayarlar',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmAlislarRoute = AppButcecrmAlislarRouteImport.update({
+const AppPuslaAlislarRoute = AppPuslaAlislarRouteImport.update({
   id: '/alislar',
   path: '/alislar',
-  getParentRoute: () => AppButcecrmRoute,
+  getParentRoute: () => AppPuslaRoute,
 } as any)
-const AppButcecrmReklamIndexRoute = AppButcecrmReklamIndexRouteImport.update({
+const AppPuslaReklamIndexRoute = AppPuslaReklamIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppButcecrmReklamRoute,
+  getParentRoute: () => AppPuslaReklamRoute,
 } as any)
-const AppButcecrmReklamIdRoute = AppButcecrmReklamIdRouteImport.update({
+const AppPuslaReklamIdRoute = AppPuslaReklamIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => AppButcecrmReklamRoute,
+  getParentRoute: () => AppPuslaReklamRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -210,7 +209,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
-  '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
@@ -218,32 +216,32 @@ export interface FileRoutesByFullPath {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/pusla': typeof PuslaRoute
   '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
-  '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/pusla': typeof AppPuslaRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
-  '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
-  '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
-  '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
-  '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
-  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
-  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamRouteWithChildren
-  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
-  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
-  '/app/butcecrm/': typeof AppButcecrmIndexRoute
-  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
-  '/app/butcecrm/reklam/': typeof AppButcecrmReklamIndexRoute
+  '/app/pusla/alislar': typeof AppPuslaAlislarRoute
+  '/app/pusla/ayarlar': typeof AppPuslaAyarlarRoute
+  '/app/pusla/cariler': typeof AppPuslaCarilerRoute
+  '/app/pusla/giderler': typeof AppPuslaGiderlerRoute
+  '/app/pusla/hatirlaticilar': typeof AppPuslaHatirlaticilarRoute
+  '/app/pusla/iadeler': typeof AppPuslaIadelerRoute
+  '/app/pusla/raporlar': typeof AppPuslaRaporlarRoute
+  '/app/pusla/reklam': typeof AppPuslaReklamRouteWithChildren
+  '/app/pusla/satislar': typeof AppPuslaSatislarRoute
+  '/app/pusla/stok': typeof AppPuslaStokRoute
+  '/app/pusla/': typeof AppPuslaIndexRoute
+  '/app/pusla/reklam/$id': typeof AppPuslaReklamIdRoute
+  '/app/pusla/reklam/': typeof AppPuslaReklamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
@@ -251,24 +249,25 @@ export interface FileRoutesByTo {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/pusla': typeof PuslaRoute
   '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
-  '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
-  '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
-  '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
-  '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
-  '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
-  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
-  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
-  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
-  '/app/butcecrm': typeof AppButcecrmIndexRoute
-  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamIndexRoute
+  '/app/pusla/alislar': typeof AppPuslaAlislarRoute
+  '/app/pusla/ayarlar': typeof AppPuslaAyarlarRoute
+  '/app/pusla/cariler': typeof AppPuslaCarilerRoute
+  '/app/pusla/giderler': typeof AppPuslaGiderlerRoute
+  '/app/pusla/hatirlaticilar': typeof AppPuslaHatirlaticilarRoute
+  '/app/pusla/iadeler': typeof AppPuslaIadelerRoute
+  '/app/pusla/raporlar': typeof AppPuslaRaporlarRoute
+  '/app/pusla/satislar': typeof AppPuslaSatislarRoute
+  '/app/pusla/stok': typeof AppPuslaStokRoute
+  '/app/pusla': typeof AppPuslaIndexRoute
+  '/app/pusla/reklam/$id': typeof AppPuslaReklamIdRoute
+  '/app/pusla/reklam': typeof AppPuslaReklamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -276,7 +275,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
-  '/butceleme': typeof ButcelemeRoute
   '/hakkimizda': typeof HakkimizdaRoute
   '/hepsiburada-kar-hesaplayici': typeof HepsiburadaKarHesaplayiciRoute
   '/iletisim': typeof IletisimRoute
@@ -284,26 +282,27 @@ export interface FileRoutesById {
   '/odeme': typeof OdemeRoute
   '/otomasyon': typeof OtomasyonRoute
   '/panel': typeof PanelRoute
+  '/pusla': typeof PuslaRoute
   '/sifre-sifirla': typeof SifreSifirlaRoute
   '/uctan-uca-yazilim': typeof UctanUcaYazilimRoute
   '/web-sitesi': typeof WebSitesiRoute
   '/admin/users': typeof AdminUsersRoute
-  '/app/butcecrm': typeof AppButcecrmRouteWithChildren
+  '/app/pusla': typeof AppPuslaRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/app/butcecrm/alislar': typeof AppButcecrmAlislarRoute
-  '/app/butcecrm/ayarlar': typeof AppButcecrmAyarlarRoute
-  '/app/butcecrm/cariler': typeof AppButcecrmCarilerRoute
-  '/app/butcecrm/giderler': typeof AppButcecrmGiderlerRoute
-  '/app/butcecrm/hatirlaticilar': typeof AppButcecrmHatirlaticilarRoute
-  '/app/butcecrm/iadeler': typeof AppButcecrmIadelerRoute
-  '/app/butcecrm/raporlar': typeof AppButcecrmRaporlarRoute
-  '/app/butcecrm/reklam': typeof AppButcecrmReklamRouteWithChildren
-  '/app/butcecrm/satislar': typeof AppButcecrmSatislarRoute
-  '/app/butcecrm/stok': typeof AppButcecrmStokRoute
-  '/app/butcecrm/': typeof AppButcecrmIndexRoute
-  '/app/butcecrm/reklam/$id': typeof AppButcecrmReklamIdRoute
-  '/app/butcecrm/reklam/': typeof AppButcecrmReklamIndexRoute
+  '/app/pusla/alislar': typeof AppPuslaAlislarRoute
+  '/app/pusla/ayarlar': typeof AppPuslaAyarlarRoute
+  '/app/pusla/cariler': typeof AppPuslaCarilerRoute
+  '/app/pusla/giderler': typeof AppPuslaGiderlerRoute
+  '/app/pusla/hatirlaticilar': typeof AppPuslaHatirlaticilarRoute
+  '/app/pusla/iadeler': typeof AppPuslaIadelerRoute
+  '/app/pusla/raporlar': typeof AppPuslaRaporlarRoute
+  '/app/pusla/reklam': typeof AppPuslaReklamRouteWithChildren
+  '/app/pusla/satislar': typeof AppPuslaSatislarRoute
+  '/app/pusla/stok': typeof AppPuslaStokRoute
+  '/app/pusla/': typeof AppPuslaIndexRoute
+  '/app/pusla/reklam/$id': typeof AppPuslaReklamIdRoute
+  '/app/pusla/reklam/': typeof AppPuslaReklamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -312,7 +311,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/blog'
-    | '/butceleme'
     | '/hakkimizda'
     | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
@@ -320,32 +318,32 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/pusla'
     | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
-    | '/app/butcecrm'
+    | '/app/pusla'
     | '/blog/$slug'
     | '/blog/'
-    | '/app/butcecrm/alislar'
-    | '/app/butcecrm/ayarlar'
-    | '/app/butcecrm/cariler'
-    | '/app/butcecrm/giderler'
-    | '/app/butcecrm/hatirlaticilar'
-    | '/app/butcecrm/iadeler'
-    | '/app/butcecrm/raporlar'
-    | '/app/butcecrm/reklam'
-    | '/app/butcecrm/satislar'
-    | '/app/butcecrm/stok'
-    | '/app/butcecrm/'
-    | '/app/butcecrm/reklam/$id'
-    | '/app/butcecrm/reklam/'
+    | '/app/pusla/alislar'
+    | '/app/pusla/ayarlar'
+    | '/app/pusla/cariler'
+    | '/app/pusla/giderler'
+    | '/app/pusla/hatirlaticilar'
+    | '/app/pusla/iadeler'
+    | '/app/pusla/raporlar'
+    | '/app/pusla/reklam'
+    | '/app/pusla/satislar'
+    | '/app/pusla/stok'
+    | '/app/pusla/'
+    | '/app/pusla/reklam/$id'
+    | '/app/pusla/reklam/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/auth'
-    | '/butceleme'
     | '/hakkimizda'
     | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
@@ -353,31 +351,31 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/pusla'
     | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
     | '/blog/$slug'
     | '/blog'
-    | '/app/butcecrm/alislar'
-    | '/app/butcecrm/ayarlar'
-    | '/app/butcecrm/cariler'
-    | '/app/butcecrm/giderler'
-    | '/app/butcecrm/hatirlaticilar'
-    | '/app/butcecrm/iadeler'
-    | '/app/butcecrm/raporlar'
-    | '/app/butcecrm/satislar'
-    | '/app/butcecrm/stok'
-    | '/app/butcecrm'
-    | '/app/butcecrm/reklam/$id'
-    | '/app/butcecrm/reklam'
+    | '/app/pusla/alislar'
+    | '/app/pusla/ayarlar'
+    | '/app/pusla/cariler'
+    | '/app/pusla/giderler'
+    | '/app/pusla/hatirlaticilar'
+    | '/app/pusla/iadeler'
+    | '/app/pusla/raporlar'
+    | '/app/pusla/satislar'
+    | '/app/pusla/stok'
+    | '/app/pusla'
+    | '/app/pusla/reklam/$id'
+    | '/app/pusla/reklam'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
     | '/blog'
-    | '/butceleme'
     | '/hakkimizda'
     | '/hepsiburada-kar-hesaplayici'
     | '/iletisim'
@@ -385,26 +383,27 @@ export interface FileRouteTypes {
     | '/odeme'
     | '/otomasyon'
     | '/panel'
+    | '/pusla'
     | '/sifre-sifirla'
     | '/uctan-uca-yazilim'
     | '/web-sitesi'
     | '/admin/users'
-    | '/app/butcecrm'
+    | '/app/pusla'
     | '/blog/$slug'
     | '/blog/'
-    | '/app/butcecrm/alislar'
-    | '/app/butcecrm/ayarlar'
-    | '/app/butcecrm/cariler'
-    | '/app/butcecrm/giderler'
-    | '/app/butcecrm/hatirlaticilar'
-    | '/app/butcecrm/iadeler'
-    | '/app/butcecrm/raporlar'
-    | '/app/butcecrm/reklam'
-    | '/app/butcecrm/satislar'
-    | '/app/butcecrm/stok'
-    | '/app/butcecrm/'
-    | '/app/butcecrm/reklam/$id'
-    | '/app/butcecrm/reklam/'
+    | '/app/pusla/alislar'
+    | '/app/pusla/ayarlar'
+    | '/app/pusla/cariler'
+    | '/app/pusla/giderler'
+    | '/app/pusla/hatirlaticilar'
+    | '/app/pusla/iadeler'
+    | '/app/pusla/raporlar'
+    | '/app/pusla/reklam'
+    | '/app/pusla/satislar'
+    | '/app/pusla/stok'
+    | '/app/pusla/'
+    | '/app/pusla/reklam/$id'
+    | '/app/pusla/reklam/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -412,7 +411,6 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRouteWithChildren
-  ButcelemeRoute: typeof ButcelemeRoute
   HakkimizdaRoute: typeof HakkimizdaRoute
   HepsiburadaKarHesaplayiciRoute: typeof HepsiburadaKarHesaplayiciRoute
   IletisimRoute: typeof IletisimRoute
@@ -420,10 +418,11 @@ export interface RootRouteChildren {
   OdemeRoute: typeof OdemeRoute
   OtomasyonRoute: typeof OtomasyonRoute
   PanelRoute: typeof PanelRoute
+  PuslaRoute: typeof PuslaRoute
   SifreSifirlaRoute: typeof SifreSifirlaRoute
   UctanUcaYazilimRoute: typeof UctanUcaYazilimRoute
   WebSitesiRoute: typeof WebSitesiRoute
-  AppButcecrmRoute: typeof AppButcecrmRouteWithChildren
+  AppPuslaRoute: typeof AppPuslaRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -447,6 +446,13 @@ declare module '@tanstack/react-router' {
       path: '/sifre-sifirla'
       fullPath: '/sifre-sifirla'
       preLoaderRoute: typeof SifreSifirlaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pusla': {
+      id: '/pusla'
+      path: '/pusla'
+      fullPath: '/pusla'
+      preLoaderRoute: typeof PuslaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/panel': {
@@ -498,13 +504,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HakkimizdaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/butceleme': {
-      id: '/butceleme'
-      path: '/butceleme'
-      fullPath: '/butceleme'
-      preLoaderRoute: typeof ButcelemeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/blog': {
       id: '/blog'
       path: '/blog'
@@ -547,11 +546,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
-    '/app/butcecrm': {
-      id: '/app/butcecrm'
-      path: '/app/butcecrm'
-      fullPath: '/app/butcecrm'
-      preLoaderRoute: typeof AppButcecrmRouteImport
+    '/app/pusla': {
+      id: '/app/pusla'
+      path: '/app/pusla'
+      fullPath: '/app/pusla'
+      preLoaderRoute: typeof AppPuslaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -561,96 +560,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/app/butcecrm/': {
-      id: '/app/butcecrm/'
+    '/app/pusla/': {
+      id: '/app/pusla/'
       path: '/'
-      fullPath: '/app/butcecrm/'
-      preLoaderRoute: typeof AppButcecrmIndexRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/'
+      preLoaderRoute: typeof AppPuslaIndexRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/stok': {
-      id: '/app/butcecrm/stok'
+    '/app/pusla/stok': {
+      id: '/app/pusla/stok'
       path: '/stok'
-      fullPath: '/app/butcecrm/stok'
-      preLoaderRoute: typeof AppButcecrmStokRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/stok'
+      preLoaderRoute: typeof AppPuslaStokRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/satislar': {
-      id: '/app/butcecrm/satislar'
+    '/app/pusla/satislar': {
+      id: '/app/pusla/satislar'
       path: '/satislar'
-      fullPath: '/app/butcecrm/satislar'
-      preLoaderRoute: typeof AppButcecrmSatislarRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/satislar'
+      preLoaderRoute: typeof AppPuslaSatislarRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/reklam': {
-      id: '/app/butcecrm/reklam'
+    '/app/pusla/reklam': {
+      id: '/app/pusla/reklam'
       path: '/reklam'
-      fullPath: '/app/butcecrm/reklam'
-      preLoaderRoute: typeof AppButcecrmReklamRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/reklam'
+      preLoaderRoute: typeof AppPuslaReklamRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/raporlar': {
-      id: '/app/butcecrm/raporlar'
+    '/app/pusla/raporlar': {
+      id: '/app/pusla/raporlar'
       path: '/raporlar'
-      fullPath: '/app/butcecrm/raporlar'
-      preLoaderRoute: typeof AppButcecrmRaporlarRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/raporlar'
+      preLoaderRoute: typeof AppPuslaRaporlarRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/iadeler': {
-      id: '/app/butcecrm/iadeler'
+    '/app/pusla/iadeler': {
+      id: '/app/pusla/iadeler'
       path: '/iadeler'
-      fullPath: '/app/butcecrm/iadeler'
-      preLoaderRoute: typeof AppButcecrmIadelerRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/iadeler'
+      preLoaderRoute: typeof AppPuslaIadelerRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/hatirlaticilar': {
-      id: '/app/butcecrm/hatirlaticilar'
+    '/app/pusla/hatirlaticilar': {
+      id: '/app/pusla/hatirlaticilar'
       path: '/hatirlaticilar'
-      fullPath: '/app/butcecrm/hatirlaticilar'
-      preLoaderRoute: typeof AppButcecrmHatirlaticilarRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/hatirlaticilar'
+      preLoaderRoute: typeof AppPuslaHatirlaticilarRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/giderler': {
-      id: '/app/butcecrm/giderler'
+    '/app/pusla/giderler': {
+      id: '/app/pusla/giderler'
       path: '/giderler'
-      fullPath: '/app/butcecrm/giderler'
-      preLoaderRoute: typeof AppButcecrmGiderlerRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/giderler'
+      preLoaderRoute: typeof AppPuslaGiderlerRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/cariler': {
-      id: '/app/butcecrm/cariler'
+    '/app/pusla/cariler': {
+      id: '/app/pusla/cariler'
       path: '/cariler'
-      fullPath: '/app/butcecrm/cariler'
-      preLoaderRoute: typeof AppButcecrmCarilerRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/cariler'
+      preLoaderRoute: typeof AppPuslaCarilerRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/ayarlar': {
-      id: '/app/butcecrm/ayarlar'
+    '/app/pusla/ayarlar': {
+      id: '/app/pusla/ayarlar'
       path: '/ayarlar'
-      fullPath: '/app/butcecrm/ayarlar'
-      preLoaderRoute: typeof AppButcecrmAyarlarRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/ayarlar'
+      preLoaderRoute: typeof AppPuslaAyarlarRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/alislar': {
-      id: '/app/butcecrm/alislar'
+    '/app/pusla/alislar': {
+      id: '/app/pusla/alislar'
       path: '/alislar'
-      fullPath: '/app/butcecrm/alislar'
-      preLoaderRoute: typeof AppButcecrmAlislarRouteImport
-      parentRoute: typeof AppButcecrmRoute
+      fullPath: '/app/pusla/alislar'
+      preLoaderRoute: typeof AppPuslaAlislarRouteImport
+      parentRoute: typeof AppPuslaRoute
     }
-    '/app/butcecrm/reklam/': {
-      id: '/app/butcecrm/reklam/'
+    '/app/pusla/reklam/': {
+      id: '/app/pusla/reklam/'
       path: '/'
-      fullPath: '/app/butcecrm/reklam/'
-      preLoaderRoute: typeof AppButcecrmReklamIndexRouteImport
-      parentRoute: typeof AppButcecrmReklamRoute
+      fullPath: '/app/pusla/reklam/'
+      preLoaderRoute: typeof AppPuslaReklamIndexRouteImport
+      parentRoute: typeof AppPuslaReklamRoute
     }
-    '/app/butcecrm/reklam/$id': {
-      id: '/app/butcecrm/reklam/$id'
+    '/app/pusla/reklam/$id': {
+      id: '/app/pusla/reklam/$id'
       path: '/$id'
-      fullPath: '/app/butcecrm/reklam/$id'
-      preLoaderRoute: typeof AppButcecrmReklamIdRouteImport
-      parentRoute: typeof AppButcecrmReklamRoute
+      fullPath: '/app/pusla/reklam/$id'
+      preLoaderRoute: typeof AppPuslaReklamIdRouteImport
+      parentRoute: typeof AppPuslaReklamRoute
     }
   }
 }
@@ -677,49 +676,50 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
-interface AppButcecrmReklamRouteChildren {
-  AppButcecrmReklamIdRoute: typeof AppButcecrmReklamIdRoute
-  AppButcecrmReklamIndexRoute: typeof AppButcecrmReklamIndexRoute
+interface AppPuslaReklamRouteChildren {
+  AppPuslaReklamIdRoute: typeof AppPuslaReklamIdRoute
+  AppPuslaReklamIndexRoute: typeof AppPuslaReklamIndexRoute
 }
 
-const AppButcecrmReklamRouteChildren: AppButcecrmReklamRouteChildren = {
-  AppButcecrmReklamIdRoute: AppButcecrmReklamIdRoute,
-  AppButcecrmReklamIndexRoute: AppButcecrmReklamIndexRoute,
+const AppPuslaReklamRouteChildren: AppPuslaReklamRouteChildren = {
+  AppPuslaReklamIdRoute: AppPuslaReklamIdRoute,
+  AppPuslaReklamIndexRoute: AppPuslaReklamIndexRoute,
 }
 
-const AppButcecrmReklamRouteWithChildren =
-  AppButcecrmReklamRoute._addFileChildren(AppButcecrmReklamRouteChildren)
+const AppPuslaReklamRouteWithChildren = AppPuslaReklamRoute._addFileChildren(
+  AppPuslaReklamRouteChildren,
+)
 
-interface AppButcecrmRouteChildren {
-  AppButcecrmAlislarRoute: typeof AppButcecrmAlislarRoute
-  AppButcecrmAyarlarRoute: typeof AppButcecrmAyarlarRoute
-  AppButcecrmCarilerRoute: typeof AppButcecrmCarilerRoute
-  AppButcecrmGiderlerRoute: typeof AppButcecrmGiderlerRoute
-  AppButcecrmHatirlaticilarRoute: typeof AppButcecrmHatirlaticilarRoute
-  AppButcecrmIadelerRoute: typeof AppButcecrmIadelerRoute
-  AppButcecrmRaporlarRoute: typeof AppButcecrmRaporlarRoute
-  AppButcecrmReklamRoute: typeof AppButcecrmReklamRouteWithChildren
-  AppButcecrmSatislarRoute: typeof AppButcecrmSatislarRoute
-  AppButcecrmStokRoute: typeof AppButcecrmStokRoute
-  AppButcecrmIndexRoute: typeof AppButcecrmIndexRoute
+interface AppPuslaRouteChildren {
+  AppPuslaAlislarRoute: typeof AppPuslaAlislarRoute
+  AppPuslaAyarlarRoute: typeof AppPuslaAyarlarRoute
+  AppPuslaCarilerRoute: typeof AppPuslaCarilerRoute
+  AppPuslaGiderlerRoute: typeof AppPuslaGiderlerRoute
+  AppPuslaHatirlaticilarRoute: typeof AppPuslaHatirlaticilarRoute
+  AppPuslaIadelerRoute: typeof AppPuslaIadelerRoute
+  AppPuslaRaporlarRoute: typeof AppPuslaRaporlarRoute
+  AppPuslaReklamRoute: typeof AppPuslaReklamRouteWithChildren
+  AppPuslaSatislarRoute: typeof AppPuslaSatislarRoute
+  AppPuslaStokRoute: typeof AppPuslaStokRoute
+  AppPuslaIndexRoute: typeof AppPuslaIndexRoute
 }
 
-const AppButcecrmRouteChildren: AppButcecrmRouteChildren = {
-  AppButcecrmAlislarRoute: AppButcecrmAlislarRoute,
-  AppButcecrmAyarlarRoute: AppButcecrmAyarlarRoute,
-  AppButcecrmCarilerRoute: AppButcecrmCarilerRoute,
-  AppButcecrmGiderlerRoute: AppButcecrmGiderlerRoute,
-  AppButcecrmHatirlaticilarRoute: AppButcecrmHatirlaticilarRoute,
-  AppButcecrmIadelerRoute: AppButcecrmIadelerRoute,
-  AppButcecrmRaporlarRoute: AppButcecrmRaporlarRoute,
-  AppButcecrmReklamRoute: AppButcecrmReklamRouteWithChildren,
-  AppButcecrmSatislarRoute: AppButcecrmSatislarRoute,
-  AppButcecrmStokRoute: AppButcecrmStokRoute,
-  AppButcecrmIndexRoute: AppButcecrmIndexRoute,
+const AppPuslaRouteChildren: AppPuslaRouteChildren = {
+  AppPuslaAlislarRoute: AppPuslaAlislarRoute,
+  AppPuslaAyarlarRoute: AppPuslaAyarlarRoute,
+  AppPuslaCarilerRoute: AppPuslaCarilerRoute,
+  AppPuslaGiderlerRoute: AppPuslaGiderlerRoute,
+  AppPuslaHatirlaticilarRoute: AppPuslaHatirlaticilarRoute,
+  AppPuslaIadelerRoute: AppPuslaIadelerRoute,
+  AppPuslaRaporlarRoute: AppPuslaRaporlarRoute,
+  AppPuslaReklamRoute: AppPuslaReklamRouteWithChildren,
+  AppPuslaSatislarRoute: AppPuslaSatislarRoute,
+  AppPuslaStokRoute: AppPuslaStokRoute,
+  AppPuslaIndexRoute: AppPuslaIndexRoute,
 }
 
-const AppButcecrmRouteWithChildren = AppButcecrmRoute._addFileChildren(
-  AppButcecrmRouteChildren,
+const AppPuslaRouteWithChildren = AppPuslaRoute._addFileChildren(
+  AppPuslaRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -727,7 +727,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRouteWithChildren,
-  ButcelemeRoute: ButcelemeRoute,
   HakkimizdaRoute: HakkimizdaRoute,
   HepsiburadaKarHesaplayiciRoute: HepsiburadaKarHesaplayiciRoute,
   IletisimRoute: IletisimRoute,
@@ -735,10 +734,11 @@ const rootRouteChildren: RootRouteChildren = {
   OdemeRoute: OdemeRoute,
   OtomasyonRoute: OtomasyonRoute,
   PanelRoute: PanelRoute,
+  PuslaRoute: PuslaRoute,
   SifreSifirlaRoute: SifreSifirlaRoute,
   UctanUcaYazilimRoute: UctanUcaYazilimRoute,
   WebSitesiRoute: WebSitesiRoute,
-  AppButcecrmRoute: AppButcecrmRouteWithChildren,
+  AppPuslaRoute: AppPuslaRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

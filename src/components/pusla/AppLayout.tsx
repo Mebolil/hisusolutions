@@ -14,17 +14,17 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Ana Sayfa",      path: "/app/butcecrm",                icon: LayoutDashboard, enabled: true  },
-  { label: "Satışlar",       path: "/app/butcecrm/satislar",       icon: ShoppingBag,     enabled: true  },
-  { label: "İadeler",        path: "/app/butcecrm/iadeler",        icon: RotateCcw,       enabled: true  },
-  { label: "Giderler",       path: "/app/butcecrm/giderler",       icon: Receipt,         enabled: true  },
-  { label: "Alışlar",        path: "/app/butcecrm/alislar",        icon: ShoppingCart,    enabled: true  },
-  { label: "Stok",           path: "/app/butcecrm/stok",           icon: Package,         enabled: true  },
-  { label: "Reklam",         path: "/app/butcecrm/reklam",         icon: Megaphone,       enabled: true  },
-  { label: "Cariler",        path: "/app/butcecrm/cariler",        icon: Users,           enabled: true  },
-  { label: "Hatırlatıcılar", path: "/app/butcecrm/hatirlaticilar", icon: Bell,            enabled: true  },
-  { label: "Raporlar",       path: "/app/butcecrm/raporlar",       icon: BarChart3,       enabled: true  },
-  { label: "Ayarlar",        path: "/app/butcecrm/ayarlar",        icon: Settings,        enabled: true  },
+  { label: "Ana Sayfa",      path: "/app/pusla",                icon: LayoutDashboard, enabled: true  },
+  { label: "Satışlar",       path: "/app/pusla/satislar",       icon: ShoppingBag,     enabled: true  },
+  { label: "İadeler",        path: "/app/pusla/iadeler",        icon: RotateCcw,       enabled: true  },
+  { label: "Giderler",       path: "/app/pusla/giderler",       icon: Receipt,         enabled: true  },
+  { label: "Alışlar",        path: "/app/pusla/alislar",        icon: ShoppingCart,    enabled: true  },
+  { label: "Stok",           path: "/app/pusla/stok",           icon: Package,         enabled: true  },
+  { label: "Reklam",         path: "/app/pusla/reklam",         icon: Megaphone,       enabled: true  },
+  { label: "Cariler",        path: "/app/pusla/cariler",        icon: Users,           enabled: true  },
+  { label: "Hatırlatıcılar", path: "/app/pusla/hatirlaticilar", icon: Bell,            enabled: true  },
+  { label: "Raporlar",       path: "/app/pusla/raporlar",       icon: BarChart3,       enabled: true  },
+  { label: "Ayarlar",        path: "/app/pusla/ayarlar",        icon: Settings,        enabled: true  },
 ];
 
 function trialDaysLeft(trialEndsAt: string | null): number {
@@ -35,7 +35,7 @@ function trialDaysLeft(trialEndsAt: string | null): number {
 
 type Props = { children: ReactNode; trialEndsAt?: string | null };
 
-export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
+export function PuslaLayout({ children, trialEndsAt = null }: Props) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
 
@@ -43,7 +43,7 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
   const isTrial = trialEndsAt !== null;
 
   const isActive = (path: string) =>
-    path === "/app/butcecrm" ? pathname === "/app/butcecrm" : pathname.startsWith(path);
+    path === "/app/pusla" ? pathname === "/app/pusla" : pathname.startsWith(path);
 
   const renderItem = (item: NavItem, onClick?: () => void) => {
     const active = isActive(item.path);
@@ -82,7 +82,7 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
           {daysLeft === 0 ? "Bugün bitiyor" : `${daysLeft} gün kaldı`}
         </p>
         <Link
-          to="/butceleme"
+          to="/pusla"
           hash="demo"
           className="mt-2 block w-full rounded-lg bg-primary/90 py-1.5 text-center text-[11px] font-semibold text-white hover:bg-primary transition-colors"
         >
@@ -97,7 +97,7 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-[oklch(0.18_0.02_160)] text-white">
         <div className="p-6">
-          <h1 className="text-xl font-bold tracking-tight text-primary">BütçeCRM</h1>
+          <h1 className="text-xl font-bold tracking-tight text-primary">Pusla</h1>
           <p className="text-xs text-white/40 mt-1">E-Ticaret Finans Takibi</p>
         </div>
         <nav className="flex-1 px-3 space-y-1">
@@ -121,7 +121,7 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
           <aside className="relative w-64 h-full bg-[oklch(0.18_0.02_160)] text-white flex flex-col">
             <div className="p-6 flex items-center justify-between">
-              <h1 className="text-xl font-bold text-primary">BütçeCRM</h1>
+              <h1 className="text-xl font-bold text-primary">Pusla</h1>
               <button onClick={() => setOpen(false)}><X className="h-5 w-5" /></button>
             </div>
             <nav className="flex-1 px-3 space-y-1">
@@ -135,7 +135,7 @@ export function ButceCrmLayout({ children, trialEndsAt = null }: Props) {
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         <header className="lg:hidden flex items-center justify-between p-4 border-b bg-card">
           <button onClick={() => setOpen(true)}><Menu className="h-6 w-6" /></button>
-          <h1 className="text-lg font-bold text-primary">BütçeCRM</h1>
+          <h1 className="text-lg font-bold text-primary">Pusla</h1>
           <div className="w-6" />
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">{children}</main>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate, parseCostItems } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate, parseCostItems } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,8 +52,8 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
 
-export const Route = createFileRoute("/app/butcecrm/raporlar")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Raporlar" }] }),
+export const Route = createFileRoute("/app/pusla/raporlar")({
+  head: () => ({ meta: [{ title: "Pusla — Raporlar" }] }),
   component: ReportsPage,
 });
 
@@ -530,7 +530,7 @@ function ReportsPage() {
       "Net Marj %": p.netMargin.toFixed(1),
       "İade Oranı %": p.iadeOran.toFixed(1),
     }))), "Ürün Karlılığı");
-    XLSX.writeFile(wb, `butcecrm-rapor-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    XLSX.writeFile(wb, `pusla-rapor-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("Excel dosyası indirildi");
   }
 
@@ -544,7 +544,7 @@ function ReportsPage() {
     if (!w) return toast.error("Tarayıcı yeni pencereyi engelledi");
     const dGelir = deltaPct(totals.income, prevTotals.income);
     const dKar = deltaPct(totals.profit, prevTotals.profit);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>BütçeCRM Rapor</title>
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pusla Rapor</title>
       <style>
         body{font-family:system-ui,sans-serif;padding:24px;color:#111}
         h1{margin:0 0 4px;font-size:22px}h2{margin:24px 0 8px;font-size:16px;border-bottom:1px solid #ddd;padding-bottom:4px}
@@ -560,7 +560,7 @@ function ReportsPage() {
         @media print{button{display:none}}
       </style></head><body>
       <button onclick="window.print()" style="float:right;padding:8px 16px">PDF olarak yazdır</button>
-      <h1>BütçeCRM Raporu</h1>
+      <h1>Pusla Raporu</h1>
       <p style="color:#666;margin:0">${PERIOD_LABELS[period]} — ${formatDate(format(range.start, "yyyy-MM-dd"))} → ${formatDate(format(range.end, "yyyy-MM-dd"))}</p>
       <p style="color:#666;margin:0;font-size:11px">Karşılaştırma: ${formatDate(format(prevRange.start, "yyyy-MM-dd"))} → ${formatDate(format(prevRange.end, "yyyy-MM-dd"))}</p>
       <h2>Özet</h2>

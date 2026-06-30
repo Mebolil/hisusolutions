@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
 import { parseISO, differenceInDays } from "date-fns";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, ShoppingBag, Trash2, TrendingUp, BarChart3, Award, Pencil, ChevronUp, ChevronDown, RotateCcw } from "lucide-react";
-import { useSettings } from "@/lib/butcecrm-settings";
+import { useSettings } from "@/lib/pusla-settings";
 import { Link } from "@tanstack/react-router";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,8 +26,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
-import { ReturnDialog } from "@/components/butcecrm/ReturnDialog";
+import { CsvToolbar, type CsvField } from "@/components/pusla/CsvToolbar";
+import { ReturnDialog } from "@/components/pusla/ReturnDialog";
 
 const SALES_CSV_FIELDS: CsvField[] = [
   { key: "sale_date",      label: "Tarih",          required: true, type: "date" },
@@ -84,8 +84,8 @@ const SALE_STATUSES = ["aktif", "iptal", "iade_edildi"] as const;
 
 
 
-export const Route = createFileRoute("/app/butcecrm/satislar")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Satışlar" }] }),
+export const Route = createFileRoute("/app/pusla/satislar")({
+  head: () => ({ meta: [{ title: "Pusla — Satışlar" }] }),
   component: SalesPage,
 });
 

@@ -92,7 +92,7 @@ function AboutPage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
               { n: "3", t: "İş Gününde Web Sitesi Teslimi" },
-              { n: "2", t: "Günde BütçeCRM Kurulumu" },
+              { n: "2", t: "Günde Pusla Kurulumu" },
               { n: "24s", t: "Destek Dönüş Süresi" },
             ].map(s => (
               <div key={s.t} className="rounded-2xl border border-border bg-background p-8 text-center">

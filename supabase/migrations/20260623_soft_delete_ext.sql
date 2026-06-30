@@ -1,4 +1,4 @@
--- BütçeCRM Soft Delete Genişletme — 2026-06-23
+-- Pusla Soft Delete Genişletme — 2026-06-23
 -- customers, suppliers, campaigns tablolarına deleted_at eklendi
 
 ALTER TABLE customers  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,8 +61,8 @@ const reminderSchema = z.object({
   note: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
-export const Route = createFileRoute("/app/butcecrm/hatirlaticilar")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Hatırlatıcılar" }] }),
+export const Route = createFileRoute("/app/pusla/hatirlaticilar")({
+  head: () => ({ meta: [{ title: "Pusla — Hatırlatıcılar" }] }),
   component: RemindersPage,
 });
 

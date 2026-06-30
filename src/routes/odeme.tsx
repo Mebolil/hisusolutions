@@ -47,7 +47,7 @@ export const Route = createFileRoute("/odeme")({
   validateSearch: (search) => ({
     plan: (search.plan as string) ?? null,
   }),
-  head: () => ({ meta: [{ title: "Ödeme — BütçeCRM | Hisu Solutions" }] }),
+  head: () => ({ meta: [{ title: "Ödeme — Pusla | Hisu Solutions" }] }),
   component: OdemePage,
 });
 
@@ -74,7 +74,7 @@ function OdemePage() {
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
         body: JSON.stringify({
-          source: "butcecrm-odeme",
+          source: "pusla-odeme",
           payload: {
             name,
             email,

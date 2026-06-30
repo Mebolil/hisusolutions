@@ -1,6 +1,6 @@
-import { friendlyDbError, formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { CsvToolbar } from "@/components/butcecrm/CsvToolbar";
-import type { CsvField } from "@/components/butcecrm/CsvToolbar";
+import { friendlyDbError, formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { CsvToolbar } from "@/components/pusla/CsvToolbar";
+import type { CsvField } from "@/components/pusla/CsvToolbar";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
@@ -85,8 +85,8 @@ const supplierSchema = z.object({
   note: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
-export const Route = createFileRoute("/app/butcecrm/cariler")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Cariler" }] }),
+export const Route = createFileRoute("/app/pusla/cariler")({
+  head: () => ({ meta: [{ title: "Pusla — Cariler" }] }),
   component: PartiesPage,
 });
 

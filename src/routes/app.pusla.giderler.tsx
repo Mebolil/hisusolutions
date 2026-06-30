@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
-import { useSettings } from "@/lib/butcecrm-settings";
+import { CsvToolbar, type CsvField } from "@/components/pusla/CsvToolbar";
+import { useSettings } from "@/lib/pusla-settings";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
@@ -65,8 +65,8 @@ type Status = (typeof STATUSES)[number];
 
 const PIE_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#8b5cf6","#ec4899","#14b8a6","#f97316","#64748b"];
 
-export const Route = createFileRoute("/app/butcecrm/giderler")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Giderler" }] }),
+export const Route = createFileRoute("/app/pusla/giderler")({
+  head: () => ({ meta: [{ title: "Pusla — Giderler" }] }),
   component: ExpensesPage,
 });
 

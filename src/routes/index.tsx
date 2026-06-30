@@ -10,14 +10,14 @@ import { ElegantShape } from "@/components/ui/shape-landing-hero";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Hisu Solutions — E-Ticaret KOBİ'leri İçin BütçeCRM ve Özel Yazılım" },
-      { name: "description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi, stok ve gelir yönetimi. BütçeCRM ile Meta/Google/TikTok hangi satışı getiriyor görün. Uçtan uca özel yazılım çözümleri." },
+      { title: "Hisu Solutions — E-Ticaret KOBİ'leri İçin Pusla ve Özel Yazılım" },
+      { name: "description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi, stok ve gelir yönetimi. Pusla ile Meta/Google/TikTok hangi satışı getiriyor görün. Uçtan uca özel yazılım çözümleri." },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://hisusolutions.com/" },
       { property: "og:site_name", content: "Hisu Solutions" },
-      { property: "og:title", content: "Hisu Solutions — E-Ticaret KOBİ'leri İçin BütçeCRM ve Özel Yazılım" },
-      { property: "og:description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi ve finansal yönetim. BütçeCRM + Uçtan Uca Yazılım." },
+      { property: "og:title", content: "Hisu Solutions — E-Ticaret KOBİ'leri İçin Pusla ve Özel Yazılım" },
+      { property: "og:description", content: "Trendyol ve Hepsiburada satıcıları için reklam ROAS takibi ve finansal yönetim. Pusla + Uçtan Uca Yazılım." },
       { property: "og:image", content: "https://hisusolutions.com/og-image.png" },
     ],
     links: [
@@ -30,13 +30,13 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
+            { "@type": "Question", "name": "Hisu Solutions nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, Pusla yazılımı ve özel tasarım web siteleri sunan bir AaaS (Automation as a Service) platformudur." } },
             { "@type": "Question", "name": "AaaS nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." } },
             { "@type": "Question", "name": "Neden sadece yazılım satmıyorsunuz?", "acceptedAnswer": { "@type": "Answer", "text": "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." } },
-            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "İki ana hizmet: BütçeCRM (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺629) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." } },
+            { "@type": "Question", "name": "Hisu Solutions hangi hizmetleri sunuyor?", "acceptedAnswer": { "@type": "Answer", "text": "İki ana hizmet: Pusla (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺629) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." } },
             { "@type": "Question", "name": "Hisu Solutions ile nasıl iletişime geçebilirim?", "acceptedAnswer": { "@type": "Answer", "text": "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." } },
             { "@type": "Question", "name": "Hisu Solutions'u kim kurdu?", "acceptedAnswer": { "@type": "Answer", "text": "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." } },
-            { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." } },
+            { "@type": "Question", "name": "Hisu Solutions neden kuruldu?", "acceptedAnswer": { "@type": "Answer", "text": "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle Pusla ve otomasyon sistemleri geliştirildi." } },
           ]
         }),
       },
@@ -46,20 +46,20 @@ export const Route = createFileRoute("/")({
 });
 
 const faqs: FaqItem[] = [
-  { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, BütçeCRM yazılımı ve özel tasarım web siteleri sunan bir dijital çözüm platformudur." },
+  { q: "Hisu Solutions nedir?", a: "Hisu Solutions, Türkiye'deki KOBİ'lere ve e-ticaret işletmelerine otomasyon sistemleri, Pusla yazılımı ve özel tasarım web siteleri sunan bir dijital çözüm platformudur." },
   { q: "AaaS nedir?", a: "Sizin için özel kurulan, teslim edilen ve çalışır duruma getirilen bir sistem modeli. Hazır şablon değil — işinize özel kurulum. Siz sistemi öğrenmek zorunda değilsiniz, biz çalıştırırız." },
   { q: "Neden sadece yazılım satmıyorsunuz?", a: "Çünkü biz sadece araç değil, sonuç satıyoruz. Sistemi kurup teslim etmek yetmez — çalışır ve size değer üretir halde olması gerekir. Bu yüzden kurulumdan sonra da yanınızdayız." },
-  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "İki ana hizmet: BütçeCRM (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺629) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." },
+  { q: "Hisu Solutions hangi hizmetleri sunuyor?", a: "İki ana hizmet: Pusla (e-ticaret KOBİ'leri için reklam ROAS takibi ve finansal yönetim yazılımı, aylık ₺629) ve Uçtan Uca Yazılım (işletmenin tüm süreçlerini tek panelde toplayan, sektöre özel kurulan anahtar teslim yazılım çözümü, proje bazlı fiyatlandırma)." },
   { q: "Hisu Solutions ile nasıl iletişime geçebilirim?", a: "info@hisusolutions.com adresinden e-posta, +90 553 900 34 59 numarasından WhatsApp veya telefon ile ulaşabilirsiniz. İletişim formumuzu da kullanabilirsiniz. 24 saat içinde dönüş yapıyoruz." },
   { q: "Hisu Solutions'u kim kurdu?", a: "Hisu Solutions'u Melih Hata kurdu. Melih, 19 yaşında Türkiye'deki KOBİ'lere doğru araçlarla yüksek değerli dijital çözümler sunmak amacıyla Hisu Solutions'u hayata geçirdi." },
-  { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle BütçeCRM ve otomasyon sistemleri geliştirildi." },
+  { q: "Hisu Solutions neden kuruldu?", a: "KOBİ'lerin gereksiz karmaşıklık olmadan kurumsal kalitede dijital altyapıya kavuşması için kuruldu. Doğru araç, maksimum değer felsefesiyle Pusla ve otomasyon sistemleri geliştirildi." },
 ];
 
 const products = [
   {
-    to: "/butceleme",
+    to: "/pusla",
     icon: BarChart3,
-    title: "BütçeCRM",
+    title: "Pusla",
     badge: "Beta ₺499/ay",
     desc: "Trendyol, Hepsiburada ve kendi sitenizde sattığınız geliri; Meta, Google ve TikTok reklamlarınızın ROAS'ını; stok ve giderleri tek ekranda görün.",
     bullets: ["Reklam ROAS takibi (Türkiye'de rakiplerde yok)", "Kritik stok uyarısı", "Ay sonu raporu 5 dakika"],
@@ -200,7 +200,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* BütçeCRM Spotlight */}
+      {/* Pusla Spotlight */}
       <section className="border-t border-border/60 bg-card">
         <div className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
           <div className="text-center">
@@ -210,7 +210,7 @@ function HomePage() {
               <span className="text-primary">Meta'ya Reklam mı Veriyorsunuz?</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Hangisi gerçekten para kazandırıyor? BütçeCRM, reklam ROAS takibini finansal yönetime entegre eden Türkiye'deki tek yazılım. Paraşüt, Uyumsoft ve Logo İşbaşı'nda bu özellik yok.
+              Hangisi gerçekten para kazandırıyor? Pusla, reklam ROAS takibini finansal yönetime entegre eden Türkiye'deki tek yazılım. Paraşüt, Uyumsoft ve Logo İşbaşı'nda bu özellik yok.
             </p>
           </div>
           {/* Video */}
@@ -218,13 +218,13 @@ function HomePage() {
             <div className="relative overflow-hidden rounded-2xl border border-primary/20 shadow-2xl shadow-primary/10 ring-1 ring-primary/10">
               <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 to-transparent" />
               <video
-                src="/videos/butcecrm-16x9.mp4"
+                src="/videos/pusla-16x9.mp4"
                 autoPlay
                 muted
                 loop
                 playsInline
                 className="w-full rounded-2xl"
-                aria-label="BütçeCRM ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
+                aria-label="Pusla ürün videosu — reklam ROAS takibi, stok ve finansal yönetim"
               />
               <div className="absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-card/80 to-transparent" />
             </div>
@@ -249,10 +249,10 @@ function HomePage() {
             </div>
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link to="/butceleme" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:opacity-90">
+            <Link to="/pusla" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:opacity-90">
               15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link to="/butceleme" className="rounded-full border border-border bg-background px-7 py-3.5 text-sm font-semibold transition hover:bg-accent">
+            <Link to="/pusla" className="rounded-full border border-border bg-background px-7 py-3.5 text-sm font-semibold transition hover:bg-accent">
               Detayları Gör
             </Link>
           </div>
@@ -274,7 +274,7 @@ function HomePage() {
               <img src="/images/melih-hata.png" alt="Melih Hata" className="h-20 w-20 shrink-0 rounded-full object-cover object-top" />
               <div>
                 <p className="text-xl font-bold">Melih Hata</p>
-                <p className="text-sm text-muted-foreground">Kurucu &amp; BütçeCRM Yapımcısı</p>
+                <p className="text-sm text-muted-foreground">Kurucu &amp; Pusla Yapımcısı</p>
                 <span className="mt-1.5 inline-block rounded-full bg-primary-soft px-3 py-0.5 text-xs font-semibold text-primary">19 yaşında</span>
               </div>
               <div className="ml-4 flex gap-2">
@@ -302,7 +302,7 @@ function HomePage() {
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
               { icon: Lightbulb, t: "Karmaşıklığa gerek yok", d: "KOBİ'ler kurumsal kaliteyi gereksiz karmaşıklık olmadan hak ediyor." },
-              { icon: Wrench, t: "Önce kendimiz kullandık", d: "BütçeCRM ve otomasyon sistemlerini bizzat geliştirip işletiyoruz — müşteriye sunmadan önce sahadayız." },
+              { icon: Wrench, t: "Önce kendimiz kullandık", d: "Pusla ve otomasyon sistemlerini bizzat geliştirip işletiyoruz — müşteriye sunmadan önce sahadayız." },
               { icon: TrendingUp, t: "Doğru sistem, ölçeklenebilir sonuç", d: "Bu Hisu'nun çekirdeği — her çözümde bu felsefeyle hareket ediyoruz." },
             ].map(c => (
               <div key={c.t} className="rounded-2xl border border-border bg-card p-7">
@@ -360,9 +360,9 @@ function HomePage() {
           </div>
           <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
             <p className="text-lg font-medium leading-relaxed">Onlarca doğrulanmış müşteri yorumumuz yok — ve bunu söylemekten çekinmiyoruz.</p>
-            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">BütçeCRM beta sürecinde. İlk kullanıcılar ürünü şekillendiriyor. 15 gün ücretsiz deneyin — beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
-            <Link to="/butceleme" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
-              BütçeCRM'i Ücretsiz Dene <ArrowRight className="h-4 w-4" />
+            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Pusla beta sürecinde. İlk kullanıcılar ürünü şekillendiriyor. 15 gün ücretsiz deneyin — beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
+            <Link to="/pusla" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+              Pusla'i Ücretsiz Dene <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>

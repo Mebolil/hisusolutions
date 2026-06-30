@@ -46,7 +46,7 @@ export function formatDate(dateStr: string): string {
 export const categoryLabels: Record<BlogFrontmatter["category"], string> = {
   reklam: "Reklam & ROAS",
   bütçe: "Bütçe Yönetimi",
-  ürün: "BütçeCRM",
+  ürün: "Pusla",
 };
 
 export const categoryColors: Record<BlogFrontmatter["category"], string> = {

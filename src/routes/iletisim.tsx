@@ -8,7 +8,7 @@ export const Route = createFileRoute("/iletisim")({
   head: () => ({
     meta: [
       { title: "İletişim — Ücretsiz Keşif Görüşmesi | Hisu Solutions" },
-      { name: "description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde geri dönüş. Otomasyon, BütçeCRM ve web tasarım hizmetleri için ücretsiz görüşme alın." },
+      { name: "description", content: "Projenizi anlatın, size en uygun çözümü birlikte tasarlayalım. 24 saat içinde geri dönüş. Otomasyon, Pusla ve web tasarım hizmetleri için ücretsiz görüşme alın." },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://hisusolutions.com/iletisim" },
@@ -68,7 +68,7 @@ function ContactPage() {
                   { name: "company", label: "Firma Adı" },
                   { name: "email", label: "E-posta", type: "email", required: true },
                   { name: "phone", label: "Telefon", type: "tel" },
-                  { name: "topic", label: "Hangi konuda görüşelim?", type: "select", options: ["BütçeCRM","Web Sitesi","Otomasyon","Genel Danışmanlık","Fiyat Bilgisi","Diğer / Karar vermedim"] },
+                  { name: "topic", label: "Hangi konuda görüşelim?", type: "select", options: ["Pusla","Web Sitesi","Otomasyon","Genel Danışmanlık","Fiyat Bilgisi","Diğer / Karar vermedim"] },
                   { name: "message", label: "Mesajınız", type: "textarea" },
                 ]}
                 submitLabel="Ücretsiz Görüşme Talep Et"

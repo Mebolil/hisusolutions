@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FROM_EMAIL = "bildirim@hisusolutions.com";
+const FROM_EMAIL = "Hisu Pusla <bildirim@hisusolutions.com>";
 const ADMIN_EMAILS = ["hatamelih245@gmail.com", "info@hisusolutions.com"];
 
 serve(async (req) => {
@@ -45,10 +45,10 @@ serve(async (req) => {
         <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px">15 günlük deneme süreniz sona erdi</h2>
         <p style="color:#475569;margin:0 0 20px">Merhaba ${userName},</p>
         <p style="color:#475569;line-height:1.6">
-          BütçeCRM'deki 15 günlük ücretsiz deneme süreniz doldu. Kaydettiğiniz verilere ve tüm özelliklere erişmeye devam etmek için bir plan seçmeniz gerekiyor.
+          Pusla'daki 15 günlük ücretsiz deneme süreniz doldu. Kaydettiğiniz verilere ve tüm özelliklere erişmeye devam etmek için bir plan seçmeniz gerekiyor.
         </p>
         <div style="background:#f8fafc;border-radius:12px;padding:20px;margin:24px 0">
-          <p style="margin:0 0 8px;font-weight:600;color:#0f172a">BütçeCRM ile neler yapabilirsiniz?</p>
+          <p style="margin:0 0 8px;font-weight:600;color:#0f172a">Pusla ile neler yapabilirsiniz?</p>
           <ul style="margin:0;padding-left:20px;color:#475569;line-height:1.8">
             <li>Satış, gider ve stok takibi</li>
             <li>Reklam ROI hesaplama</li>
@@ -82,7 +82,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: FROM_EMAIL,
           to: [userEmail],
-          subject: "BütçeCRM deneme süreniz sona erdi — Planı aktifleştirin",
+          subject: "Pusla deneme süreniz sona erdi — Planı aktifleştirin",
           html: userHtml,
         }),
       }),

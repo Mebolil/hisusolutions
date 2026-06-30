@@ -6,7 +6,7 @@ import { toast } from "sonner";
 const ADMIN_EMAIL = "hatamelih245@gmail.com";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
-const PLANS = ["trial", "butcecrm", "web", "otomasyon", "pro", "enterprise"];
+const PLANS = ["trial", "butcecrm", "pusla", "web", "otomasyon", "pro", "enterprise"];
 
 interface UserProfile {
   user_id: string;

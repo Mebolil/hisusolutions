@@ -1,23 +1,23 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ButceCrmLayout } from "@/components/butcecrm/AppLayout";
-import { OnboardingFlow } from "@/components/butcecrm/OnboardingFlow";
-import { isOnboardingComplete } from "@/lib/butcecrm-onboarding";
+import { PuslaLayout } from "@/components/pusla/AppLayout";
+import { OnboardingFlow } from "@/components/pusla/OnboardingFlow";
+import { isOnboardingComplete } from "@/lib/pusla-onboarding";
 import { supabase } from "@/lib/supabase";
 
-export const Route = createFileRoute("/app/butcecrm")({
+export const Route = createFileRoute("/app/pusla")({
   head: () => ({
     meta: [
-      { title: "BütçeCRM — Ana Sayfa" },
-      { name: "description", content: "BütçeCRM finansal otomasyon paneli." },
+      { title: "Pusla — Ana Sayfa" },
+      { name: "description", content: "Pusla finansal otomasyon paneli." },
     ],
   }),
-  component: ButceCrmGuard,
+  component: PuslaGuard,
 });
 
-const ALLOWED_PLANS = ["butcecrm", "butceleme", "pro", "enterprise", "trial"];
+const ALLOWED_PLANS = ["butcecrm", "butceleme", "pusla", "pro", "enterprise", "trial"];
 
-function ButceCrmGuard() {
+function PuslaGuard() {
   const [ready, setReady] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -60,9 +60,9 @@ function ButceCrmGuard() {
 
   return (
     <>
-      <ButceCrmLayout trialEndsAt={trialEndsAt}>
+      <PuslaLayout trialEndsAt={trialEndsAt}>
         <Outlet />
-      </ButceCrmLayout>
+      </PuslaLayout>
       {showOnboarding && (
         <OnboardingFlow open={showOnboarding} onComplete={() => setShowOnboarding(false)} />
       )}

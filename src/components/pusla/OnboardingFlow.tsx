@@ -18,7 +18,7 @@ import {
   type OnboardingSector,
   type OnboardingRevenue,
   type OnboardingFocus,
-} from "@/lib/butcecrm-onboarding";
+} from "@/lib/pusla-onboarding";
 
 interface OnboardingFlowProps {
   open: boolean;

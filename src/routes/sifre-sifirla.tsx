@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/sifre-sifirla")({
-  head: () => ({ meta: [{ title: "Şifre Sıfırlama — BütçeCRM" }] }),
+  head: () => ({ meta: [{ title: "Şifre Sıfırlama — Pusla" }] }),
   component: SifreSifirlaPage,
 });
 

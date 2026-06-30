@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency } from "@/lib/butcecrm-helpers";
-import { KazanilmamisFirsatKart } from "@/components/butcecrm/KayipKarKart";
-import { loadOnboarding } from "@/lib/butcecrm-onboarding";
+import { formatCurrency } from "@/lib/pusla-helpers";
+import { KazanilmamisFirsatKart } from "@/components/pusla/KayipKarKart";
+import { loadOnboarding } from "@/lib/pusla-onboarding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingDown, DollarSign, Percent, Clock,
@@ -30,11 +30,11 @@ interface Purchase { id: string; amount: number; paid_amount: number; payment_st
 interface Return { id: string; return_date: string; return_amount: number }
 interface PaymentReminder { id: string; title: string; due_date: string; type: string; status: string }
 
-export const Route = createFileRoute("/app/butcecrm/")({
-  component: ButceCrmDashboard,
+export const Route = createFileRoute("/app/pusla/")({
+  component: PuslaDashboard,
 });
 
-function ButceCrmDashboard() {
+function PuslaDashboard() {
   const [period, setPeriod] = useState<Period>("month");
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -365,7 +365,7 @@ function ButceCrmDashboard() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Ana Sayfa</h1>
-          <p className="text-muted-foreground text-sm">BütçeCRM — Tüm modüllerin gerçek zamanlı özeti</p>
+          <p className="text-muted-foreground text-sm">Pusla — Tüm modüllerin gerçek zamanlı özeti</p>
         </div>
         <Card className="border-2 border-primary/20">
           <CardContent className="pt-8 pb-8 text-center">
@@ -376,13 +376,13 @@ function ButceCrmDashboard() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="/app/butcecrm/satislar"
+                href="/app/pusla/satislar"
                 className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground h-9 px-4 text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 İlk Satışı Ekle
               </a>
               <a
-                href="/app/butcecrm/giderler"
+                href="/app/pusla/giderler"
                 className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 px-4 text-sm font-medium hover:bg-accent transition-colors"
               >
                 Gider Ekle
@@ -406,7 +406,7 @@ function ButceCrmDashboard() {
               ? "Perakende finans takibi — tüm modüllerin gerçek zamanlı özeti"
               : onboardingProfile?.sector === "hizmet"
               ? "Hizmet işletmesi finans takibi — gerçek zamanlı özet"
-              : "BütçeCRM — Tüm modüllerin gerçek zamanlı özeti"}
+              : "Pusla — Tüm modüllerin gerçek zamanlı özeti"}
           </p>
         </div>
         <div className="flex gap-1 bg-secondary rounded-lg p-1">
@@ -487,7 +487,7 @@ function ButceCrmDashboard() {
                     </div>
                   </div>
                 ))}
-                <a href="/app/butcecrm/stok" className="text-xs text-orange-700 hover:underline inline-block pt-1">→ Stok sayfasına git</a>
+                <a href="/app/pusla/stok" className="text-xs text-orange-700 hover:underline inline-block pt-1">→ Stok sayfasına git</a>
               </div>
             )}
           </CardContent>
@@ -510,7 +510,7 @@ function ButceCrmDashboard() {
           valueClass={debtRatio.totalReceivable >= debtRatio.totalPayable ? "text-emerald-600" : "text-red-600"}
           sub={`Alacak: ${formatCurrency(debtRatio.totalReceivable)} · Borç: ${formatCurrency(debtRatio.totalPayable)}${debtRatio.ratio !== null ? ` · Oran: ${debtRatio.ratio.toFixed(2)}x` : ""}`}
         />
-        <MetricCard title="Bekleyen Tahsilat" value={formatCurrency(potentialIncome)} icon={<Clock className="h-5 w-5 text-amber-600" />} bg="bg-amber-100" valueClass="text-amber-600" href={potentialIncome > 0 ? "/app/butcecrm/satislar" : undefined} action={potentialIncome > 0 ? "Tahsilatları gör" : undefined} />
+        <MetricCard title="Bekleyen Tahsilat" value={formatCurrency(potentialIncome)} icon={<Clock className="h-5 w-5 text-amber-600" />} bg="bg-amber-100" valueClass="text-amber-600" href={potentialIncome > 0 ? "/app/pusla/satislar" : undefined} action={potentialIncome > 0 ? "Tahsilatları gör" : undefined} />
       </div>
 
       {/* KATMAN 2b — YENİ METRİKLER */}
@@ -541,7 +541,7 @@ function ButceCrmDashboard() {
             </div>
             <p className="text-2xl font-bold text-purple-600">{ghostCustomerCount}</p>
             <p className="text-xs text-muted-foreground mt-0.5">60+ gündür alışveriş yapmadı</p>
-            <a href="/app/butcecrm/cariler" className="text-xs text-purple-600 hover:underline mt-2 inline-block">→ Cariler'e git</a>
+            <a href="/app/pusla/cariler" className="text-xs text-purple-600 hover:underline mt-2 inline-block">→ Cariler'e git</a>
           </div>
         ) : (
           <MetricCard title="Sessiz Müşteriler" value="0" icon={<Users className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" valueClass="text-emerald-600" sub="Tüm müşteriler aktif" />
@@ -584,7 +584,7 @@ function ButceCrmDashboard() {
                     <p className="text-sm font-semibold whitespace-nowrap">{formatCurrency(p.remaining)}</p>
                   </div>
                 ))}
-                <a href="/app/butcecrm/satislar" className="text-xs text-amber-700 hover:underline inline-block pt-1">→ Tüm tahsilatları gör</a>
+                <a href="/app/pusla/satislar" className="text-xs text-amber-700 hover:underline inline-block pt-1">→ Tüm tahsilatları gör</a>
               </div>
             )}
           </CardContent>
@@ -601,7 +601,7 @@ function ButceCrmDashboard() {
             {activeCampaignList.length === 0 ? <p className="text-sm text-muted-foreground">Aktif kampanya yok</p> : (
               <div className="space-y-2">
                 {activeCampaignList.map((c) => (
-                  <a key={c.id} href={`/app/butcecrm/reklam/${c.id}`} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors">
+                  <a key={c.id} href={`/app/pusla/reklam/${c.id}`} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{c.name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -614,7 +614,7 @@ function ButceCrmDashboard() {
                     <p className={`text-sm font-semibold ${c.roas >= 1 ? "text-emerald-600" : "text-red-600"}`}>{c.roas.toFixed(2)}x</p>
                   </a>
                 ))}
-                <a href="/app/butcecrm/reklam" className="text-xs text-fuchsia-700 hover:underline inline-block pt-1">→ Reklam sayfasına git</a>
+                <a href="/app/pusla/reklam" className="text-xs text-fuchsia-700 hover:underline inline-block pt-1">→ Reklam sayfasına git</a>
               </div>
             )}
           </CardContent>

@@ -21,12 +21,12 @@ type Product = {
 
 const PRODUCTS: Product[] = [
   {
-    key: "butceleme",
-    to: "/app/butcecrm",
+    key: "pusla",
+    to: "/app/pusla",
     icon: BarChart3,
-    title: "BütçeCRM",
+    title: "Pusla",
     desc: "Gelir, gider, stok ve reklam ROI'sini tek ekranda yönetin.",
-    plans: ["butcecrm", "butceleme", "pro", "enterprise"],
+    plans: ["butcecrm", "butceleme", "pusla", "pro", "enterprise"],
   },
   {
     key: "web",
@@ -110,7 +110,7 @@ function PanelPage() {
   const trialExpired = isTrial && trialEndsAt !== null && new Date(trialEndsAt) <= new Date();
 
   const hasAccess = (p: Product) => {
-    if (trialActive && p.key === "butceleme") return true;
+    if (trialActive && p.key === "pusla") return true;
     return plan.some(x => p.plans.includes(x));
   };
 
@@ -138,7 +138,7 @@ function PanelPage() {
                 {daysLeft === 0 ? "Deneme süreniz bugün bitiyor!" : `Deneme sürenizde ${daysLeft} gün kaldı`}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                BütçeCRM'e tam erişiminiz var. Süre bitmeden planı aktifleştirin.
+                Pusla'e tam erişiminiz var. Süre bitmeden planı aktifleştirin.
               </p>
             </div>
             <Link
@@ -179,7 +179,7 @@ function PanelPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {PRODUCTS.map(p => {
               const access = hasAccess(p);
-              const isTrialProduct = isTrial && p.key === "butceleme";
+              const isTrialProduct = isTrial && p.key === "pusla";
               const Icon = p.icon;
               return (
                 <div

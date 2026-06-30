@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, parseCostItems, friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, parseCostItems, friendlyDbError } from "@/lib/pusla-helpers";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";

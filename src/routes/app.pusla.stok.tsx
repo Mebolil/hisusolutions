@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
-import { friendlyDbError } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronU
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { CsvToolbar, type CsvField } from "@/components/butcecrm/CsvToolbar";
+import { CsvToolbar, type CsvField } from "@/components/pusla/CsvToolbar";
 
 const PRODUCTS_CSV_FIELDS: CsvField[] = [
   {
@@ -99,8 +99,8 @@ const STATE_BADGE: Record<StockState, string> = {
   out: "bg-red-100 text-red-700 border-red-200",
 };
 
-export const Route = createFileRoute("/app/butcecrm/stok")({
-  head: () => ({ meta: [{ title: "BütçeCRM — Stok" }] }),
+export const Route = createFileRoute("/app/pusla/stok")({
+  head: () => ({ meta: [{ title: "Pusla — Stok" }] }),
   component: StockPage,
 });
 

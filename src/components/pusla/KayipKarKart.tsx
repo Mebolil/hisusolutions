@@ -30,7 +30,7 @@ export function KazanilmamisFirsatKart({
 
         <div className="space-y-2">
           {bosReklam > 0 ? (
-            <a href="/app/butcecrm/reklam" className="flex items-center justify-between text-sm hover:underline decoration-current">
+            <a href="/app/pusla/reklam" className="flex items-center justify-between text-sm hover:underline decoration-current">
               <span className="text-muted-foreground">Düşük verimli reklam</span>
               <span className="font-medium">{formatCurrency(bosReklam)} <span className="text-xs">→</span></span>
             </a>
@@ -41,7 +41,7 @@ export function KazanilmamisFirsatKart({
             </div>
           )}
           {iadeMaliyeti > 0 ? (
-            <a href="/app/butcecrm/iadeler" className="flex items-center justify-between text-sm hover:underline decoration-current">
+            <a href="/app/pusla/iadeler" className="flex items-center justify-between text-sm hover:underline decoration-current">
               <span className="text-muted-foreground">İade etkisi</span>
               <span className="font-medium">{formatCurrency(iadeMaliyeti)} <span className="text-xs">→</span></span>
             </a>
@@ -52,7 +52,7 @@ export function KazanilmamisFirsatKart({
             </div>
           )}
           {negatifMarjin > 0 ? (
-            <a href="/app/butcecrm/satislar" className="flex items-center justify-between text-sm hover:underline decoration-current">
+            <a href="/app/pusla/satislar" className="flex items-center justify-between text-sm hover:underline decoration-current">
               <span className="text-muted-foreground">Zarar eden satışlar</span>
               <span className="font-medium">{formatCurrency(negatifMarjin)} <span className="text-xs">→</span></span>
             </a>

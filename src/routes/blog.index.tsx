@@ -13,17 +13,17 @@ export const Route = createFileRoute("/blog/")({
     meta: [
       {
         title:
-          "Blog — BütçeCRM & E-Ticaret Reklam Yönetimi | Hisu Solutions",
+          "Blog — Pusla & E-Ticaret Reklam Yönetimi | Hisu Solutions",
       },
       {
         name: "description",
         content:
-          "Trendyol, Meta ve Google reklamlarında ROAS takibi, kâr marjı hesaplama ve e-ticaret bütçe yönetimi üzerine uzman yazılar. BütçeCRM ile nasıl çalışırsınız?",
+          "Trendyol, Meta ve Google reklamlarında ROAS takibi, kâr marjı hesaplama ve e-ticaret bütçe yönetimi üzerine uzman yazılar. Pusla ile nasıl çalışırsınız?",
       },
       { name: "robots", content: "index, follow" },
       {
         property: "og:title",
-        content: "Blog — BütçeCRM & E-Ticaret Reklam Yönetimi | Hisu Solutions",
+        content: "Blog — Pusla & E-Ticaret Reklam Yönetimi | Hisu Solutions",
       },
       {
         property: "og:description",
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/blog/")({
           "@type": "Blog",
           name: "Hisu Solutions Blog",
           description:
-            "E-ticaret reklam yönetimi, ROAS takibi ve BütçeCRM üzerine uzman içerikler",
+            "E-ticaret reklam yönetimi, ROAS takibi ve Pusla üzerine uzman içerikler",
           url: "https://hisusolutions.com/blog",
           publisher: {
             "@type": "Organization",
@@ -68,7 +68,7 @@ function BlogListPage() {
             </div>
             <h1 className="mb-4 text-4xl font-bold tracking-tight text-neutral-900 md:text-5xl">
               E-Ticaret Reklam Yönetimi<br />
-              <span className="text-orange-500">ve BütçeCRM Rehberleri</span>
+              <span className="text-orange-500">ve Pusla Rehberleri</span>
             </h1>
             <p className="max-w-xl text-lg text-neutral-500">
               Trendyol, Meta ve Google reklamlarında ROAS takibi, kâr marjı
@@ -131,14 +131,14 @@ function BlogListPage() {
         <section className="border-t border-neutral-100 bg-neutral-50 py-16">
           <div className="mx-auto max-w-2xl px-6 text-center">
             <h2 className="mb-3 text-2xl font-bold text-neutral-900">
-              BütçeCRM'i Ücretsiz Deneyin
+              Pusla'i Ücretsiz Deneyin
             </h2>
             <p className="mb-6 text-neutral-500">
               15 gün ücretsiz, kredi kartı gerekmez. Reklam ROAS'ınızı ve kâr
               marjınızı tek ekranda görün.
             </p>
             <Link
-              to="/butceleme"
+              to="/pusla"
               className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
             >
               Hemen Başla <ArrowRight className="h-4 w-4" />

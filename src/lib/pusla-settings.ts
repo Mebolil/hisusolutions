@@ -36,8 +36,19 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ],
 };
 
-const KEY = "butcecrm:settings:v1";
-const EVENT = "butcecrm:settings-changed";
+// One-time migration: butcecrm → pusla localStorage keys
+if (typeof window !== "undefined") {
+  const OLD_KEY = "butcecrm:settings:v1";
+  const NEW_KEY = "pusla:settings:v1";
+  const old = localStorage.getItem(OLD_KEY);
+  if (old && !localStorage.getItem(NEW_KEY)) {
+    localStorage.setItem(NEW_KEY, old);
+    localStorage.removeItem(OLD_KEY);
+  }
+}
+
+const KEY = "pusla:settings:v1";
+const EVENT = "pusla:settings-changed";
 
 function arr<T>(v: unknown, fallback: T[]): T[] {
   return Array.isArray(v) && v.length >= 0 ? (v as T[]) : fallback;

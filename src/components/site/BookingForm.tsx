@@ -43,7 +43,7 @@ export function BookingForm({
   fields: Field[];
   submitLabel?: string;
 }) {
-  const withQual = source === "butcecrm-demo";
+  const withQual = source === "pusla-demo";
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedDate, setSelectedDate] = useState("");
@@ -78,7 +78,7 @@ export function BookingForm({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Step 2 → Step 3 (qualification) sadece butcecrm-demo için
+    // Step 2 → Step 3 (qualification) sadece pusla-demo için
     if (step === 2 && withQual) {
       trackEvent("booking_step_complete", { step: 2, source });
       setStep(3);
@@ -135,7 +135,7 @@ export function BookingForm({
     toast.success("Randevunuz alındı! 24 saat içinde onay maili gönderilecek.");
   };
 
-  // Adım göstergesi (sadece butcecrm-demo için)
+  // Adım göstergesi (sadece pusla-demo için)
   const StepIndicator = withQual ? (
     <div className="mb-6 flex items-center gap-2">
       {[1, 2, 3].map((s) => (
@@ -279,7 +279,7 @@ export function BookingForm({
         </form>
       )}
 
-      {/* ADIM 3: Qualification (sadece butcecrm-demo) */}
+      {/* ADIM 3: Qualification (sadece pusla-demo) */}
       {step === 3 && withQual && (
         <form onSubmit={onSubmit} className="space-y-6">
           <DemoQualificationStep

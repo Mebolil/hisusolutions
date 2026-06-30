@@ -1,4 +1,4 @@
--- BütçeCRM Teknik İyileştirmeler — 2026-06-19
+-- Pusla Teknik İyileştirmeler — 2026-06-19
 -- Plan Doğrulama Ajanı onaylı
 
 -- ============================================

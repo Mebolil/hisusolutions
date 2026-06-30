@@ -1,4 +1,4 @@
--- BütçeCRM Soft Delete Altyapısı — 2026-06-21
+-- Pusla Soft Delete Altyapısı — 2026-06-21
 -- Plan Uyum Ajanı onaylı ✅
 -- NOT: Bu dosya Supabase Dashboard > SQL Editor'den manuel çalıştırılacak.
 

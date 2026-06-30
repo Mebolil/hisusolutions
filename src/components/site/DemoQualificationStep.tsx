@@ -24,7 +24,7 @@ const QUESTIONS: QualAnswer[] = [
   },
   {
     id: "timeline",
-    question: "BütçeCRM'i ne zaman kullanmayı düşünüyorsunuz?",
+    question: "Pusla'i ne zaman kullanmayı düşünüyorsunuz?",
     options: ["Hemen başlamak istiyorum", "1 – 3 ay içinde", "3 – 6 ay içinde", "Sadece bakıyorum"],
   },
   {

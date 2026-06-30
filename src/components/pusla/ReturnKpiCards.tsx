@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/butcecrm-helpers";
+import { formatCurrency } from "@/lib/pusla-helpers";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
 } from "recharts";

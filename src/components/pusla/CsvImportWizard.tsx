@@ -635,7 +635,7 @@ export function CsvImportWizard({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>BütçeCRM Alanı</TableHead>
+                    <TableHead>Pusla Alanı</TableHead>
                     <TableHead>CSV Sütunu</TableHead>
                     <TableHead>Örnek Değer</TableHead>
                     <TableHead className="w-16">Zorunlu</TableHead>

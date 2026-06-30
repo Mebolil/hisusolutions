@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/butcecrm-helpers";
+import { formatCurrency, formatDate, parseCostItems } from "@/lib/butcecrm-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ import { tr } from "date-fns/locale";
 import {
   BarChart3, FileSpreadsheet, FileText, Calendar, TrendingUp, TrendingDown,
   Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle, Clock,
-  Info, CheckCircle2, XCircle,
+  Info, CheckCircle2, XCircle, Layers,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -33,7 +33,8 @@ type Sale = {
   id: string; sale_date: string; due_date: string | null; customer_id: string | null; product_name: string;
   quantity: number; total_amount: number; total_cost: number | null;
   paid_amount: number | null; payment_status: string;
-  campaign_id: string | null; platform: string | null;
+  campaign_id: string | null; platform: string | null; note: string | null;
+  status: string | null; currency: string | null; exchange_rate: number | null;
 };
 type Expense = { id: string; expense_date: string; category: string; amount: number; paid_amount: number | null };
 type Purchase = { id: string; purchase_date: string; amount: number; paid_amount: number | null };
@@ -41,6 +42,7 @@ type Product = { id: string; name: string; quantity: number; low_stock_threshold
 type Campaign = { id: string; name: string; platform: string | null; status: string; spend: number; start_date: string };
 type Customer = { id: string; name: string };
 type ReturnData = { product_name: string; return_amount: number; return_date: string };
+type SaleCostItem = { sale_id: string; label: string; amount: number; deleted_at: string | null };
 
 type PeriodKey = "week" | "month" | "3m" | "6m" | "year" | "custom";
 
@@ -67,6 +69,7 @@ function ReportsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [returns, setReturns] = useState<ReturnData[]>([]);
+  const [saleCostItems, setSaleCostItems] = useState<SaleCostItem[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -75,8 +78,8 @@ function ReportsPage() {
       const uid = session.user.id;
       // 13 aylık lookback: tüm built-in period'ları (hafta/ay/3ay/6ay/yıl) kapsar
       const fetchFrom = format(subMonths(new Date(), 13), "yyyy-MM-dd");
-      const [s, e, pu, p, c, cu, ret] = await Promise.all([
-        supabase.from("sales").select("*").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom),
+      const [s, e, pu, p, c, cu, ret, sci] = await Promise.all([
+        supabase.from("sales").select("id,sale_date,due_date,customer_id,product_name,quantity,total_amount,total_cost,paid_amount,payment_status,campaign_id,platform,note,status,currency,exchange_rate").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom).limit(50000),
         supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
         supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).gte("purchase_date", fetchFrom),
         supabase.from("products").select("*").eq("user_id", uid).is("deleted_at", null).limit(1000),
@@ -88,6 +91,11 @@ function ReportsPage() {
           .eq("status", "active")
           .is("deleted_at", null)
           .gte("return_date", fetchFrom),
+        supabase.from("sale_cost_items")
+          .select("sale_id,label,amount,deleted_at")
+          .eq("user_id", uid)
+          .gte("created_at", fetchFrom + "T00:00:00.000Z")
+          .limit(50000),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -96,6 +104,8 @@ function ReportsPage() {
       setCampaigns((c.data as Campaign[]) || []);
       setCustomers((cu.data as Customer[]) || []);
       setReturns((ret.data as ReturnData[]) || []);
+      // Graceful: if table doesn't exist yet (pre-migration), fall back to note parsing
+      setSaleCostItems((!sci.error ? (sci.data as SaleCostItem[]) : null) || []);
       setLoading(false);
     })();
   }, []);
@@ -303,6 +313,44 @@ function ReportsPage() {
       .slice(0, 15);
   }, [products, periodSales]);
 
+  // --- MALİYET KALEMLERİ ---
+  const costBreakdown = useMemo(() => {
+    // Build two structures: which sales have been DB-processed (any row, even deleted),
+    // and which active items exist. This prevents deleted-all items from falling back
+    // to stale note-field data in the report.
+    const processedSaleIds = new Set<string>();
+    const dbMap = new Map<string, { label: string; amount: number }[]>();
+    for (const item of saleCostItems) {
+      processedSaleIds.add(item.sale_id);
+      if (item.deleted_at !== null) continue;
+      if (!dbMap.has(item.sale_id)) dbMap.set(item.sale_id, []);
+      dbMap.get(item.sale_id)!.push(item);
+    }
+    const map = new Map<string, { label: string; total: number; count: number }>();
+    for (const sale of periodSales) {
+      if (sale.status === "iptal" || sale.status === "iade_edildi") continue;
+      const items = processedSaleIds.has(sale.id)
+        ? (dbMap.get(sale.id) || [])
+        : parseCostItems(sale.note);
+      for (const item of items) {
+        const key = item.label.toLowerCase().trim();
+        const existing = map.get(key);
+        if (existing) {
+          existing.total += item.amount;
+          existing.count += 1;
+        } else {
+          map.set(key, { label: item.label, total: item.amount, count: 1 });
+        }
+      }
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [periodSales, saleCostItems]);
+
+  const totalCostFromBreakdown = useMemo(
+    () => costBreakdown.reduce((s, i) => s + i.total, 0),
+    [costBreakdown],
+  );
+
   // --- ÜRÜN KARLILIĞI ---
   const periodReturnsByProduct = useMemo(() => {
     const map: Record<string, number> = {};
@@ -464,6 +512,11 @@ function ReportsPage() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(slowMovers.map((p) => ({
       Ürün: p.name, Kategori: p.category, Stok: p.quantity, "Stok Değeri": p.value,
     }))), "Yavaş Stok");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(costBreakdown.map((item) => {
+      const pct = totalCostFromBreakdown > 0 ? (item.total / totalCostFromBreakdown) * 100 : 0;
+      const perSale = item.count > 0 ? item.total / item.count : 0;
+      return { "Maliyet Kalemi": item.label, "Toplam (₺)": item.total.toFixed(2), "Pay (%)": pct.toFixed(1), "Satış Başına Ort. (₺)": perSale.toFixed(2) };
+    })), "Maliyet Kalemleri");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(productProfitability.map((p) => ({
       Ürün: p.name,
       Adet: p.quantity,
@@ -606,6 +659,7 @@ function ReportsPage() {
           <TabsTrigger value="aging">Alacak Yaşlandırma</TabsTrigger>
           <TabsTrigger value="products">Ürün Karlılığı</TabsTrigger>
           <TabsTrigger value="breakeven">Başa Baş</TabsTrigger>
+          <TabsTrigger value="maliyet">Maliyet Analizi</TabsTrigger>
         </TabsList>
 
         {/* GENEL BAKIŞ */}
@@ -1503,6 +1557,137 @@ function ReportsPage() {
               </Card>
             );
           })()}
+        </TabsContent>
+
+        {/* MALİYET ANALİZİ */}
+        <TabsContent value="maliyet" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">
+            Satışlardaki maliyet kalemlerinin dönemsel analizi. Kargo, komisyon, ambalaj gibi her kalemi ayrı ayrı görün.
+          </p>
+
+          {costBreakdown.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+              <Layers className="h-12 w-12 text-muted-foreground/30" />
+              <p className="text-muted-foreground font-medium">Bu dönem için maliyet kalemi bulunamadı</p>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Satışlara maliyet kalemi eklemek için Satışlar sayfasında satış eklerken veya düzenlerken
+                maliyet kalemlerini (kargo, komisyon, ambalaj vb.) doldurun.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Toplam Maliyet (Kalemler)</p>
+                    <p className="text-xl font-bold text-red-600">{formatCurrency(totalCostFromBreakdown)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{costBreakdown.length} farklı kalem</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Satış Başına Ort. Maliyet</p>
+                    <p className="text-xl font-bold">
+                      {formatCurrency(periodSales.length > 0 ? totalCostFromBreakdown / periodSales.length : 0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{periodSales.length} satış üzerinden</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">En Yüksek Kalem</p>
+                    <p className="text-base font-bold text-red-600 truncate" title={costBreakdown[0]?.label}>
+                      {costBreakdown[0]?.label || "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(costBreakdown[0]?.total || 0)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Maliyetin Ciroya Oranı</p>
+                    {(() => {
+                      const ratio = totals.revenue > 0 ? (totalCostFromBreakdown / totals.revenue) * 100 : 0;
+                      return (
+                        <>
+                          <p className={`text-xl font-bold ${ratio < 30 ? "text-emerald-600" : ratio < 50 ? "text-amber-600" : "text-red-600"}`}>
+                            %{ratio.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">toplam ciro üzerinden</p>
+                        </>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader><CardTitle className="text-base">Maliyet Kalemleri Karşılaştırması</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={costBreakdown} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" tickFormatter={(v) => { const n = Number(v); return n >= 1000 ? `₺${(n / 1000).toFixed(1)}k` : `₺${Math.round(n)}`; }} className="text-xs" />
+                        <YAxis dataKey="label" type="category" width={130} className="text-xs"
+                          tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v} />
+                        <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                        <Bar dataKey="total" name="Toplam" radius={[0, 4, 4, 0]}>
+                          {costBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader><CardTitle className="text-base">Kalem Detayı</CardTitle></CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Maliyet Kalemi</TableHead>
+                        <TableHead className="text-right">Toplam</TableHead>
+                        <TableHead className="text-right">Toplam İçindeki Pay</TableHead>
+                        <TableHead className="text-right">Satış Başına Ort.</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {costBreakdown.map((item) => {
+                        const pct = totalCostFromBreakdown > 0 ? (item.total / totalCostFromBreakdown) * 100 : 0;
+                        const perSale = item.count > 0 ? item.total / item.count : 0;
+                        return (
+                          <TableRow key={item.label}>
+                            <TableCell className="font-medium">{item.label}</TableCell>
+                            <TableCell className="text-right font-semibold text-red-600">{formatCurrency(item.total)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
+                                  <div className="h-full bg-red-400 rounded-full" style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="text-muted-foreground w-10 text-right">%{pct.toFixed(1)}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">{formatCurrency(perSale)}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {costBreakdown.length > 1 && (
+                        <TableRow className="bg-muted/30 font-semibold">
+                          <TableCell>TOPLAM</TableCell>
+                          <TableCell className="text-right text-red-600">{formatCurrency(totalCostFromBreakdown)}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">%100</TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {formatCurrency(periodSales.length > 0 ? totalCostFromBreakdown / periodSales.length : 0)}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
       </Tabs>

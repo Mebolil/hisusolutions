@@ -64,6 +64,15 @@ function parseNoteField(notes: string | null | undefined, label: string): string
   const m = notes.match(re);
   return m ? m[1].trim() : "";
 }
+
+function inferCostType(label: string): string {
+  const l = label.toLowerCase();
+  if (/ürün|maliyet/.test(l)) return "urun_maliyeti";
+  if (/kargo|gönderim|teslimat/.test(l)) return "kargo";
+  if (/komisyon/.test(l)) return "komisyon";
+  if (/ambalaj|paket/.test(l)) return "ambalaj";
+  return "diger";
+}
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 type Product = { id: string; name: string; quantity: number; unit_price: number | null };
@@ -1103,19 +1112,38 @@ function NewSaleDialog({
       // Retry without status if column doesn't exist yet
       if (payload.status && /\bstatus\b/i.test(error.message)) {
         delete payload.status;
-        ({ error } = await supabase.from("sales").insert(payload).select("id,total_cost").single());
+        ({ error, data: insertedData } = await supabase.from("sales").insert(payload).select("id,total_cost").single());
       }
     }
     if (error) {
       // Retry without note if column doesn't exist yet
       if (payload.note && /\bnote\b/i.test(error.message)) {
         delete payload.note;
-        ({ error } = await supabase.from("sales").insert(payload));
+        ({ error, data: insertedData } = await supabase.from("sales").insert(payload).select("id,total_cost").single());
       }
     }
     if (error) {
       setSaving(false);
       return toast.error("Eklenemedi: " + friendlyDbError(error));
+    }
+    // Sync cost items to DB — graceful: silently skips if table not yet migrated
+    const saleId = (insertedData as { id?: string } | null)?.id;
+    if (saleId) {
+      const dbCostItems = latestCosts
+        .filter((item) => Number(item.amount) > 0 && item.label.trim())
+        .map((item) => ({
+          user_id: session.user.id,
+          sale_id: saleId,
+          label: item.label.trim(),
+          cost_type: inferCostType(item.label),
+          amount: Number(item.amount),
+        }));
+      if (dbCostItems.length > 0) {
+        const { error: costInsErr } = await supabase.from("sale_cost_items").insert(dbCostItems);
+        if (costInsErr && !/could not find.*column|schema cache/i.test(costInsErr.message ?? "")) {
+          toast.warning("Satış eklendi ancak maliyet kalemleri kaydedilemedi");
+        }
+      }
     }
     // Decrement product stock if linked
     if (decrementStock && form.product_id) {
@@ -1579,9 +1607,43 @@ function EditSaleDialog({
       delete payload.note;
       ({ error } = await supabase.from("sales").update(payload).eq("id", form.id).eq("user_id", uid));
     }
+    if (error) {
+      setSaving(false);
+      return toast.error("Güncellenemedi: " + friendlyDbError(error));
+    }
+    // Sync cost items: soft-delete old rows, insert updated ones
+    const { error: delErr } = await supabase.from("sale_cost_items")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("sale_id", form.id)
+      .eq("user_id", uid)
+      .is("deleted_at", null);
+    let costItemsFailed = false;
+    if (delErr && !/could not find.*column|schema cache/i.test(delErr.message ?? "")) {
+      costItemsFailed = true;
+    }
+    if (!delErr) {
+      const newDbCostItems = editCosts
+        .filter((c) => Number(c.amount) > 0 && c.label.trim())
+        .map((c) => ({
+          user_id: uid,
+          sale_id: form.id,
+          label: c.label.trim(),
+          cost_type: inferCostType(c.label),
+          amount: Number(c.amount),
+        }));
+      if (newDbCostItems.length > 0) {
+        const { error: insErr } = await supabase.from("sale_cost_items").insert(newDbCostItems);
+        if (insErr && !/could not find.*column|schema cache/i.test(insErr.message ?? "")) {
+          costItemsFailed = true;
+        }
+      }
+    }
     setSaving(false);
-    if (error) return toast.error("Güncellenemedi: " + friendlyDbError(error));
-    toast.success("Satış güncellendi");
+    if (costItemsFailed) {
+      toast.warning("Satış güncellendi ancak maliyet kalemleri kaydedilemedi");
+    } else {
+      toast.success("Satış güncellendi");
+    }
     onSaved({ ...form, ...(payload as Partial<Sale>) } as Sale);
   }
 

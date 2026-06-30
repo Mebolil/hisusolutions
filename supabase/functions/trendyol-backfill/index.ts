@@ -24,9 +24,11 @@ function sanitizeError(err: unknown): string {
 }
 
 // Türkiye UTC+3 sabit (2016'dan beri DST yok)
-function toTRDate(msTimestamp: number): string {
-  if (!msTimestamp || msTimestamp <= 0) return new Date().toISOString().slice(0, 10);
-  return new Date(msTimestamp + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// String timestamp da normalize edilir (Trendyol bazen string ms döndürür)
+function toTRDate(msTimestamp: number | string): string {
+  const ts = typeof msTimestamp === "string" ? Number(msTimestamp) : msTimestamp;
+  if (!ts || ts <= 0 || isNaN(ts)) return new Date().toISOString().slice(0, 10);
+  return new Date(ts + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 Deno.serve(async (req) => {
@@ -159,11 +161,7 @@ Deno.serve(async (req) => {
       const dayStart = new Date(chunkStartDate.getTime() + d * 24 * 60 * 60 * 1000);
       dayStart.setUTCHours(0, 0, 0, 0);
       const dayEndMs = dayStart.getTime() + 24 * 60 * 60 * 1000;
-
-      // İlerleme takibi
-      await adminClient.from("marketplace_connections")
-        .update({ backfill_last_fetched_date: dayStart.toISOString().slice(0, 10) })
-        .eq("id", connection_id);
+      const dayDateStr = dayStart.toISOString().slice(0, 10);
 
       let page = 0;
       let hasMore = true;
@@ -241,6 +239,11 @@ Deno.serve(async (req) => {
           if (!upsertErr) totalProcessed++;
         }
       }
+
+      // Gün başarıyla tamamlandıktan SONRA ilerleme kaydet (fetch öncesi değil)
+      await adminClient.from("marketplace_connections")
+        .update({ backfill_last_fetched_date: dayDateStr })
+        .eq("id", connection_id);
     }
 
     // Chunk log

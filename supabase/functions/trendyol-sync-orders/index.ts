@@ -21,9 +21,11 @@ function sanitizeError(err: unknown): string {
 }
 
 // Türkiye UTC+3 sabit (2016'dan beri DST yok)
-function toTRDate(msTimestamp: number): string {
-  if (!msTimestamp || msTimestamp <= 0) return new Date().toISOString().slice(0, 10);
-  return new Date(msTimestamp + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// String timestamp da normalize edilir (Trendyol bazen string ms döndürür)
+function toTRDate(msTimestamp: number | string): string {
+  const ts = typeof msTimestamp === "string" ? Number(msTimestamp) : msTimestamp;
+  if (!ts || ts <= 0 || isNaN(ts)) return new Date().toISOString().slice(0, 10);
+  return new Date(ts + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 Deno.serve(async (req) => {

@@ -505,6 +505,12 @@ type MarketplaceConnection = {
 
 const SUPABASE_EF_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketplace-connect`;
 
+function formatTRDate(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00Z").toLocaleDateString("tr-TR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+}
+
 async function callMarketplaceEF(
   token: string,
   method: "GET" | "POST",
@@ -597,10 +603,10 @@ function ConnectionCard({
             <p className="text-purple-600 flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin flex-shrink-0" />
               {conn.backfill_last_fetched_date
-                ? `${conn.backfill_last_fetched_date} tarihine kadar aktarıldı, devam ediyor...`
-                : "Son 30 günün siparişleri parça parça aktarılıyor..."}
+                ? `${formatTRDate(conn.backfill_last_fetched_date)} tarihine kadar aktarıldı, devam ediyor...`
+                : "Son 30 günün siparişleri aktarılıyor..."}
             </p>
-            <p className="text-muted-foreground pl-4">Sayfa kapatıldığında da devam eder.</p>
+            <p className="text-purple-500 font-medium pl-4 text-xs">Sayfa kapatıldığında da devam eder.</p>
           </div>
         ) : !conn.initial_backfill_done ? (
           <p className="text-purple-600 flex items-center gap-1">
@@ -860,7 +866,10 @@ function MarketplacesTab() {
             curr.initial_backfill_done &&
             curr.sync_status === "idle"
           ) {
-            toast.success(`${curr.store_name} — 30 günlük sipariş geçmişi aktarıldı`, {
+            const datePart = curr.backfill_last_fetched_date
+              ? `${formatTRDate(curr.backfill_last_fetched_date)} tarihine kadar `
+              : "";
+            toast.success(`${curr.store_name} — ${datePart}sipariş geçmişi aktarıldı`, {
               duration: 8000,
             });
           }

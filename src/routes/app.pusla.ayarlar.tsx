@@ -563,18 +563,22 @@ function ConnectionCard({
   const [deleting, setDeleting] = useState(false);
   const [retrying, setRetrying] = useState(false);
 
+  function formatRelativeSync(isoDate: string | null): string {
+    if (!isoDate) return "";
+    const diffMs = Date.now() - new Date(isoDate).getTime();
+    const diffMin = Math.round(diffMs / 60000);
+    const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+    if (diffMin < 60) return rtf.format(-diffMin, "minutes");
+    if (diffMin < 1440) return rtf.format(-Math.round(diffMin / 60), "hours");
+    return rtf.format(-Math.round(diffMin / 1440), "days");
+  }
+
   const lastSyncInfo = (() => {
     if (!conn.last_order_sync_at) return { text: "Henüz sync yapılmadı", color: "text-muted-foreground" };
     const diffMs = Date.now() - new Date(conn.last_order_sync_at).getTime();
     const diffMin = Math.round(diffMs / 60000);
-    const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
-    let text: string;
-    if (diffMin < 60) text = rtf.format(-diffMin, "minutes");
-    else if (diffMin < 1440) text = rtf.format(-Math.round(diffMin / 60), "hours");
-    else text = rtf.format(-Math.round(diffMin / 1440), "days");
-    // Renk kodlaması: > 35 dk sarı, > 2 saat kırmızı
     const color = diffMin > 120 ? "text-red-600" : diffMin > 35 ? "text-amber-600" : "text-muted-foreground";
-    return { text: `Son sipariş sync: ${text}`, color };
+    return { text: `Son sipariş sync: ${formatRelativeSync(conn.last_order_sync_at)}`, color };
   })();
 
   const errorDisplay = (() => {
@@ -620,18 +624,12 @@ function ConnectionCard({
             <p className={lastSyncInfo.color}>{lastSyncInfo.text}</p>
             {conn.last_financial_sync_at && (
               <p className="text-muted-foreground">
-                Son komisyon sync: {new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
-                  -Math.round((Date.now() - new Date(conn.last_financial_sync_at).getTime()) / 3600000),
-                  "hours",
-                )}
+                Son komisyon sync: {formatRelativeSync(conn.last_financial_sync_at)}
               </p>
             )}
             {conn.last_stock_sync_at && (
               <p className="text-muted-foreground">
-                Son stok sync: {new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
-                  -Math.round((Date.now() - new Date(conn.last_stock_sync_at).getTime()) / 3600000),
-                  "hours",
-                )}
+                Son stok sync: {formatRelativeSync(conn.last_stock_sync_at)}
               </p>
             )}
           </>

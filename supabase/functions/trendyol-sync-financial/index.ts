@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
           category,
           amount,
           paid_amount: amount,
-          payment_status: "odendi",
+          payment_status: "ödendi",
           expense_date: expenseDate,
           note: description,
           assigned_to: "Trendyol",

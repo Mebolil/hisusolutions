@@ -70,6 +70,7 @@ type Product = {
   quantity: number;
   low_stock_threshold: number;
   unit_price: number | null;
+  platform: string | null;
 };
 type Category = { id: string; name: string };
 type Lot = {
@@ -562,7 +563,16 @@ function StockPage() {
                       <TableCell>
                         <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleOne(p.id)} />
                       </TableCell>
-                      <TableCell className="font-medium max-w-[200px] truncate">{p.name}</TableCell>
+                      <TableCell className="font-medium max-w-[200px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="truncate">{p.name}</span>
+                          {p.platform === "trendyol" && (
+                            <span className="inline-flex items-center text-[10px] font-medium bg-orange-100 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5 shrink-0">
+                              TY
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{p.urun_kodu || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">{p.kisa_ismi || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">{p.uretici_kodu || "-"}</TableCell>

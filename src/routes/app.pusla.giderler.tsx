@@ -56,6 +56,7 @@ type Expense = {
   sale_id: string | null;
   is_recurring: boolean | null;
   recurrence_interval: RecurrenceInterval | null;
+  is_auto_synced: boolean | null;
 };
 type Category = { id: string; name: string };
 type SaleRef = { id: string; product_name: string; sale_date: string };
@@ -638,6 +639,11 @@ function ExpensesPage() {
                       <TableCell className="max-w-[180px]">
                         <div className="flex items-center gap-1.5">
                           <span className="truncate">{e.category || "-"}</span>
+                          {e.is_auto_synced && (
+                            <span className="inline-flex items-center text-[10px] font-medium bg-orange-100 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5 shrink-0 cursor-default">
+                              Otomatik
+                            </span>
+                          )}
                           {e.is_recurring && (
                             <Tooltip>
                               <TooltipTrigger asChild>

@@ -499,6 +499,8 @@ type MarketplaceConnection = {
   initial_backfill_done: boolean;
   backfill_last_fetched_date: string | null;
   last_order_sync_at: string | null;
+  last_financial_sync_at: string | null;
+  last_stock_sync_at: string | null;
   created_at: string;
   extension_api_token: string;
 };
@@ -614,7 +616,25 @@ function ConnectionCard({
             Geçmiş aktarımı başlatılıyor...
           </p>
         ) : (
-          <p className={lastSyncInfo.color}>{lastSyncInfo.text}</p>
+          <>
+            <p className={lastSyncInfo.color}>{lastSyncInfo.text}</p>
+            {conn.last_financial_sync_at && (
+              <p className="text-muted-foreground">
+                Son komisyon sync: {new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
+                  -Math.round((Date.now() - new Date(conn.last_financial_sync_at).getTime()) / 3600000),
+                  "hours",
+                )}
+              </p>
+            )}
+            {conn.last_stock_sync_at && (
+              <p className="text-muted-foreground">
+                Son stok sync: {new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
+                  -Math.round((Date.now() - new Date(conn.last_stock_sync_at).getTime()) / 3600000),
+                  "hours",
+                )}
+              </p>
+            )}
+          </>
         )}
         {errorDisplay && (
           <p className="text-red-600 flex items-center gap-1">

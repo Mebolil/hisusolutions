@@ -551,15 +551,27 @@ function ConnectionCard({
   const [showToken, setShowToken] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const lastSync = (() => {
-    if (!conn.last_order_sync_at) return "Henüz sync yapılmadı";
-    const diffMs = new Date(conn.last_order_sync_at).getTime() - Date.now();
+  const lastSyncInfo = (() => {
+    if (!conn.last_order_sync_at) return { text: "Henüz sync yapılmadı", color: "text-muted-foreground" };
+    const diffMs = Date.now() - new Date(conn.last_order_sync_at).getTime();
     const diffMin = Math.round(diffMs / 60000);
     const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
-    if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minutes");
-    const diffHr = Math.round(diffMs / 3600000);
-    if (Math.abs(diffHr) < 24) return rtf.format(diffHr, "hours");
-    return rtf.format(Math.round(diffMs / 86400000), "days");
+    let text: string;
+    if (diffMin < 60) text = rtf.format(-diffMin, "minutes");
+    else if (diffMin < 1440) text = rtf.format(-Math.round(diffMin / 60), "hours");
+    else text = rtf.format(-Math.round(diffMin / 1440), "days");
+    // Renk kodlaması: > 35 dk sarı, > 2 saat kırmızı
+    const color = diffMin > 120 ? "text-red-600" : diffMin > 35 ? "text-amber-600" : "text-muted-foreground";
+    return { text: `Son sipariş sync: ${text}`, color };
+  })();
+
+  const errorDisplay = (() => {
+    if (!conn.sync_error_message) return null;
+    // Kullanıcı dostu hata mesajı (teknik detay gizle)
+    if (conn.sync_error_count && conn.sync_error_count >= 3) {
+      return "Trendyol'a birkaç kez arka arkaya ulaşılamadı. Bağlantı bilgilerinizi kontrol edin.";
+    }
+    return "Trendyol'a şu an ulaşılamıyor. Otomatik olarak tekrar denenecek.";
   })();
 
   return (
@@ -575,15 +587,25 @@ function ConnectionCard({
         <SyncStatusBadge status={conn.sync_status} />
       </div>
 
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p>Son sipariş sync: {lastSync}</p>
-        {conn.sync_error_message && (
-          <p className="text-red-600 flex items-center gap-1">
-            <XCircle className="h-3 w-3" /> {conn.sync_error_message}
+      <div className="text-xs space-y-1">
+        {conn.sync_status === "backfilling" ? (
+          <p className="text-purple-600 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Trendyol'dan 30 günlük siparişler aktarılıyor...
+            <span className="text-muted-foreground">(Sayfa kapatıldığında da devam eder)</span>
           </p>
+        ) : !conn.initial_backfill_done ? (
+          <p className="text-purple-600 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Geçmiş aktarımı başlatılıyor...
+          </p>
+        ) : (
+          <p className={lastSyncInfo.color}>{lastSyncInfo.text}</p>
         )}
-        {!conn.initial_backfill_done && (
-          <p className="text-purple-600">30 günlük geçmiş veri aktarımı hazırlanıyor...</p>
+        {errorDisplay && (
+          <p className="text-red-600 flex items-center gap-1">
+            <XCircle className="h-3 w-3 flex-shrink-0" /> {errorDisplay}
+          </p>
         )}
       </div>
 
@@ -782,6 +804,43 @@ function MarketplacesTab() {
   };
 
   useEffect(() => { fetchConnections(); }, []);
+
+  // Backfill/running durumunda 5 saniyede bir yenile; tamamlanınca toast göster
+  useEffect(() => {
+    const hasActiveSync = connections.some(
+      (c) => c.sync_status === "backfilling" || c.sync_status === "running",
+    );
+    if (!hasActiveSync) return;
+
+    const interval = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      try {
+        const { connections: fresh } = await callMarketplaceEF(session.access_token, "GET", "list");
+        const freshList: MarketplaceConnection[] = fresh ?? [];
+        setConnections(freshList);
+
+        // Backfill yeni tamamlandıysa kullanıcıya bildir
+        for (const prev of connections) {
+          const curr = freshList.find((c) => c.id === prev.id);
+          if (!curr) continue;
+          if (
+            (prev.sync_status === "backfilling" || !prev.initial_backfill_done) &&
+            curr.initial_backfill_done &&
+            curr.sync_status === "idle"
+          ) {
+            toast.success(`${curr.store_name} — 30 günlük sipariş geçmişi aktarıldı`, {
+              duration: 8000,
+            });
+          }
+        }
+      } catch {
+        // polling hatası sessizce geçer
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [connections]);
 
   const handleDelete = async (connId: string) => {
     try {

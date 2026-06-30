@@ -187,6 +187,22 @@ Deno.serve(async (req) => {
           duration_ms: 0,
         });
 
+        // Backfill tetikle: bağlantı kurulunca 30 günlük geçmiş otomatik başlar
+        const backfillUrl = `${SUPABASE_URL}/functions/v1/trendyol-backfill`;
+        const backfillFetch = fetch(backfillUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ connection_id: connId }),
+        }).catch(() => {/* backfill tetikleme hatası response'u etkilemez */});
+
+        // EdgeRuntime.waitUntil ile backfill isteğinin gönderilmesi garantilenir
+        if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+          (globalThis as any).EdgeRuntime.waitUntil(backfillFetch);
+        }
+
         return new Response(
           JSON.stringify({ success: true, connection: conn }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },

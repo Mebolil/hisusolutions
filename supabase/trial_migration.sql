@@ -1,4 +1,4 @@
--- Pusla 15 Gün Ücretsiz Trial — Migration
+-- Pusla 30 Gün Ücretsiz Trial — Migration
 -- Supabase Dashboard > SQL Editor'de çalıştır
 
 -- 1. profiles tablosuna trial kolonları ekle
@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, plan, trial_ends_at)
-  VALUES (NEW.id, 'trial', now() + interval '15 days')
+  VALUES (NEW.id, 'trial', now() + interval '30 days')
   ON CONFLICT (user_id) DO NOTHING;
   RETURN NEW;
 END;
@@ -24,5 +24,5 @@ CREATE TRIGGER on_auth_user_created
 
 -- 3. (Opsiyonel) Mevcut kullanıcılara trial ver (henüz planı olmayanlar)
 -- UPDATE profiles
--- SET plan = 'trial', trial_ends_at = now() + interval '15 days'
+-- SET plan = 'trial', trial_ends_at = now() + interval '30 days'
 -- WHERE plan IS NULL OR plan = '';

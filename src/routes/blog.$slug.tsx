@@ -198,7 +198,7 @@ function BlogPostPage() {
               <p className="mb-6 text-neutral-500">
                 Trendyol, Meta ve Google reklamlarınızı tek panelde görün.
                 Komisyon, kargo ve reklam maliyetlerini hesaba katarak gerçek kâr
-                marjınızı anlık izleyin. 15 gün ücretsiz, kredi kartı gerekmez.
+                marjınızı anlık izleyin. 30 gün ücretsiz, kredi kartı gerekmez.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link

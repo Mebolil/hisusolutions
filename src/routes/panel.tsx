@@ -155,7 +155,7 @@ function PanelPage() {
           <div className="mb-8 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4">
             <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">15 günlük deneme süreniz sona erdi</p>
+              <p className="text-sm font-semibold text-foreground">30 günlük deneme süreniz sona erdi</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 E-posta adresinize bilgi gönderdik. Devam etmek için bir plan seçin.
               </p>

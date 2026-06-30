@@ -217,7 +217,7 @@ serve(async (req) => {
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
           <p style="color:#94a3b8;font-size:12px">
             Pusla ile tüm bu verileri otomatik takip edebilirsiniz —
-            <a href="https://hisusolutions.com/pusla" style="color:#e07b39">15 günlük ücretsiz deneme</a> başlatın.
+            <a href="https://hisusolutions.com/pusla" style="color:#e07b39">30 günlük ücretsiz deneme</a> başlatın.
           </p>
         </div>`;
 

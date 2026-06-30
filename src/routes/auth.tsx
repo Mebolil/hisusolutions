@@ -164,11 +164,11 @@ function AuthPage() {
           ) : (
           <>
           <div className="text-center">
-            <h1 className="text-3xl font-bold">{mode === "signin" ? "Giriş Yap" : "15 Gün Ücretsiz Dene"}</h1>
+            <h1 className="text-3xl font-bold">{mode === "signin" ? "Giriş Yap" : "30 Gün Ücretsiz Dene"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {mode === "signin"
                 ? "Hesabınıza giriş yaparak paneli açın"
-                : "Kart gerekmez · Anında erişim · 15 gün boyunca tüm özellikler açık"}
+                : "Kart gerekmez · Anında erişim · 30 gün boyunca tüm özellikler açık"}
             </p>
           </div>
 
@@ -256,14 +256,14 @@ function AuthPage() {
               </label>
             )}
             <Button type="submit" disabled={loading} className="w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground hover:opacity-90">
-              {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "15 Gün Ücretsiz Başla"}
+              {loading ? "Yükleniyor..." : mode === "signin" ? "Giriş Yap" : "30 Gün Ücretsiz Başla"}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signin" ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
             <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="font-semibold text-primary hover:underline">
-              {mode === "signin" ? "15 Gün Ücretsiz Başla" : "Giriş Yap"}
+              {mode === "signin" ? "30 Gün Ücretsiz Başla" : "Giriş Yap"}
             </button>
           </p>
           </>

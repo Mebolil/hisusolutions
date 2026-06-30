@@ -97,7 +97,7 @@ function OdemePage() {
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold tracking-tight">Planını seç</h1>
           <p className="mt-3 text-muted-foreground">
-            15 günlük denemenin ardından devam etmek için bir plan seç
+            30 günlük denemenin ardından devam etmek için bir plan seç
           </p>
         </div>
 

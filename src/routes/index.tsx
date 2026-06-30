@@ -63,7 +63,7 @@ const products = [
     badge: "Beta ₺499/ay",
     desc: "Trendyol, Hepsiburada ve kendi sitenizde sattığınız geliri; Meta, Google ve TikTok reklamlarınızın ROAS'ını; stok ve giderleri tek ekranda görün.",
     bullets: ["Reklam ROAS takibi (Türkiye'de rakiplerde yok)", "Kritik stok uyarısı", "Ay sonu raporu 5 dakika"],
-    cta: "15 Gün Ücretsiz Dene",
+    cta: "30 Gün Ücretsiz Dene",
     featured: true,
   },
   {
@@ -250,7 +250,7 @@ function HomePage() {
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link to="/pusla" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:opacity-90">
-              15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" />
+              30 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" />
             </Link>
             <Link to="/pusla" className="rounded-full border border-border bg-background px-7 py-3.5 text-sm font-semibold transition hover:bg-accent">
               Detayları Gör
@@ -360,7 +360,7 @@ function HomePage() {
           </div>
           <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
             <p className="text-lg font-medium leading-relaxed">Onlarca doğrulanmış müşteri yorumumuz yok — ve bunu söylemekten çekinmiyoruz.</p>
-            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Pusla beta sürecinde. İlk kullanıcılar ürünü şekillendiriyor. 15 gün ücretsiz deneyin — beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
+            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Pusla beta sürecinde. İlk kullanıcılar ürünü şekillendiriyor. 30 gün ücretsiz deneyin — beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
             <Link to="/pusla" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
               Pusla'i Ücretsiz Dene <ArrowRight className="h-4 w-4" />
             </Link>

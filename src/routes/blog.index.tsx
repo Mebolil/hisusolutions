@@ -134,7 +134,7 @@ function BlogListPage() {
               Pusla'i Ücretsiz Deneyin
             </h2>
             <p className="mb-6 text-neutral-500">
-              15 gün ücretsiz, kredi kartı gerekmez. Reklam ROAS'ınızı ve kâr
+              30 gün ücretsiz, kredi kartı gerekmez. Reklam ROAS'ınızı ve kâr
               marjınızı tek ekranda görün.
             </p>
             <Link

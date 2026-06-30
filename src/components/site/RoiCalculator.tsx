@@ -90,7 +90,7 @@ export function RoiCalculator() {
                 href="#demo"
                 className="mt-6 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
               >
-                15 Gün Ücretsiz Dene
+                30 Gün Ücretsiz Dene
               </a>
             </div>
           </div>

@@ -42,10 +42,10 @@ serve(async (req) => {
 
     const userHtml = `
       <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
-        <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px">15 günlük deneme süreniz sona erdi</h2>
+        <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px">30 günlük deneme süreniz sona erdi</h2>
         <p style="color:#475569;margin:0 0 20px">Merhaba ${userName},</p>
         <p style="color:#475569;line-height:1.6">
-          Pusla'daki 15 günlük ücretsiz deneme süreniz doldu. Kaydettiğiniz verilere ve tüm özelliklere erişmeye devam etmek için bir plan seçmeniz gerekiyor.
+          Pusla'daki 30 günlük ücretsiz deneme süreniz doldu. Kaydettiğiniz verilere ve tüm özelliklere erişmeye devam etmek için bir plan seçmeniz gerekiyor.
         </p>
         <div style="background:#f8fafc;border-radius:12px;padding:20px;margin:24px 0">
           <p style="margin:0 0 8px;font-weight:600;color:#0f172a">Pusla ile neler yapabilirsiniz?</p>
@@ -68,7 +68,7 @@ serve(async (req) => {
     const adminHtml = `
       <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px">
         <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">⏰ Trial Süresi Doldu</h2>
-        <p style="color:#64748b;font-size:13px;margin:0 0 20px">Bir kullanıcının 15 günlük denemesi sona erdi.</p>
+        <p style="color:#64748b;font-size:13px;margin:0 0 20px">Bir kullanıcının 30 günlük denemesi sona erdi.</p>
         <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden">
           <tr><td style="padding:8px 14px;color:#64748b;font-size:13px;white-space:nowrap">İsim</td><td style="padding:8px 14px;font-weight:500;font-size:13px">${userName}</td></tr>
           <tr><td style="padding:8px 14px;color:#64748b;font-size:13px;white-space:nowrap">E-posta</td><td style="padding:8px 14px;font-weight:500;font-size:13px">${userEmail}</td></tr>

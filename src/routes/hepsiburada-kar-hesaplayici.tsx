@@ -754,7 +754,7 @@ function HepsiburadaKarHesaplayiciPage() {
             onClick={() => trackEvent("hb_cta_tiklandi", { fiyat: isReady ? Math.round(sellingPrice) : null })}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-primary shadow-lg transition-colors hover:bg-white/90"
           >
-            Pusla'i 15 Gün Ücretsiz Dene →
+            Pusla'i 30 Gün Ücretsiz Dene →
           </Link>
         </div>
       </section>

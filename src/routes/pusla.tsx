@@ -30,7 +30,7 @@ export const Route = createFileRoute("/pusla")({
           "@type": "FAQPage",
           "mainEntity": [
             { "@type": "Question", "name": "Pusla nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Pusla, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Satış, gider, stok ve reklam ROI'sini tek ekranda görmenizi sağlar." } },
-            { "@type": "Question", "name": "Pusla ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar, sadece 10 slot, ömür boyu kilitli. Sabit liste fiyatı ₺629/ay + KDV. 15 gün ücretsiz deneyebilirsiniz, kart gerekmez." } },
+            { "@type": "Question", "name": "Pusla ne kadar?", "acceptedAnswer": { "@type": "Answer", "text": "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar, sadece 10 slot, ömür boyu kilitli. Sabit liste fiyatı ₺629/ay + KDV. 30 gün ücretsiz deneyebilirsiniz, kart gerekmez." } },
             { "@type": "Question", "name": "Pusla Excel'den farkı nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Excel manuel giriş gerektirir, hata yapar ve anlık veri vermez. Pusla otomatik hesaplar, gerçek zamanlı kâr/zarar gösterir ve reklam kampanyalarınızın gerçek ROI'sini saptar." } },
             { "@type": "Question", "name": "Kimler Pusla kullanabilir?", "acceptedAnswer": { "@type": "Answer", "text": "E-ticaret işletmeleri, perakende, hizmet sektörü ve bütçe takibi yapmak isteyen her KOBİ kullanabilir. Özellikle aylık cirosu 50.000 TL üzeri işletmeler için kritik değer üretir." } },
           ]
@@ -75,7 +75,7 @@ export const Route = createFileRoute("/pusla")({
 
 const faqs: FaqItem[] = [
   { q: "Pusla nedir?", a: "Pusla, e-ticaret işletmeleri ve KOBİ'ler için geliştirilmiş bir finansal yönetim yazılımıdır. Gelir, gider, stok ve reklamlarınızın ne kadar kazandırdığını tek ekranda görmenizi sağlar." },
-  { q: "Pusla ne kadar?", a: "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar geçerli, sadece 10 slot var ve bu fiyat ömür boyu kilitli kalır. Beta sonrası sabit fiyat ₺629/ay + KDV'dir. 15 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
+  { q: "Pusla ne kadar?", a: "Kurucu Beta fiyatı ₺499/ay + KDV — 31 Temmuz 2026'ya kadar geçerli, sadece 10 slot var ve bu fiyat ömür boyu kilitli kalır. Beta sonrası sabit fiyat ₺629/ay + KDV'dir. 30 gün ücretsiz trial ile kart gerekmeden başlayabilirsiniz." },
   { q: "Excel'den geçmek zor olacak mı?", a: "Hayır. Ekibiniz 15 dakikada alışır. Verilerinizi Excel'den import edebilirsiniz. İlk kurulumda biz size rehberlik ediyoruz." },
   { q: "Verilerim güvende mi?", a: "Evet. Supabase altyapısı üzerinde çalışır, SSL şifreleme ile korunur. Verileriniz Türkiye'deki sunucularda tutulur." },
   { q: "İptal edersem verilerimi kaybeder miyim?", a: "Hayır. İptal öncesinde verilerinizi Excel/PDF olarak export edebilirsiniz. Verileriniz size ait, her zaman erişebilirsiniz." },
@@ -98,7 +98,7 @@ function ButcelemePage() {
           <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-6xl">Trendyol'dan Satıyorsun.<br />Meta'ya Reklam Veriyorsun.<br /><span className="text-primary">Hangisi Gerçekten Para Kazandırıyor?</span></h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Gelir, gider, stok ve reklam ROAS'ınızı tek ekranda görün. Paraşüt, Uyumsoft ve Logo İşbaşı'nda reklam takibi yok — Pusla'de var.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">15 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></Link>
+            <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90">30 Gün Ücretsiz Dene <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Kredi kartı gerekmez · Kurulum 5 dakika · İstediğin zaman iptal</p>
         </div>
@@ -112,7 +112,7 @@ function ButcelemePage() {
               { Icon: Zap, text: "İlk kullanıcılar ürünü şekillendiriyor · Beta fırsatı açık" },
               { Icon: Megaphone, text: "Reklam ROAS takibi · Paraşüt, Uyumsoft'ta yok" },
               { Icon: Package, text: "Stok + Gelir + Gider · Tek ekran" },
-              { Icon: Check, text: "15 gün ücretsiz · Kart gerekmez · İstediğin zaman iptal" },
+              { Icon: Check, text: "30 gün ücretsiz · Kart gerekmez · İstediğin zaman iptal" },
               { Icon: Gift, text: "Referans kampanyası: İkiniz de 1 ay ücretsiz · Eylül'e kadar" },
             ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-2 text-muted-foreground">
@@ -286,7 +286,7 @@ function ButcelemePage() {
               search={{ mode: "signup" }}
               className="mt-6 block w-full rounded-full bg-amber-500 py-3 text-center text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
             >
-              15 Gün Ücretsiz Başla
+              30 Gün Ücretsiz Başla
             </Link>
             <Link
               to="/odeme"
@@ -365,7 +365,7 @@ function ButcelemePage() {
               search={{ mode: "signup" }}
               className="mt-6 block w-full rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
             >
-              15 Gün Ücretsiz Başla
+              30 Gün Ücretsiz Başla
             </Link>
             <Link
               to="/odeme"
@@ -393,7 +393,7 @@ function ButcelemePage() {
             </ul>
           </div>
         </div>
-        <p className="mt-6 text-center text-xs text-muted-foreground">Tüm fiyatlara KDV dahil değildir. 15 gün ücretsiz deneme — kart gerekmez, istediğin zaman iptal.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Tüm fiyatlara KDV dahil değildir. 30 gün ücretsiz deneme — kart gerekmez, istediğin zaman iptal.</p>
       </section>
 
       {/* Referans Programı */}
@@ -479,7 +479,7 @@ function ButcelemePage() {
         <div className="mt-10 rounded-2xl border border-primary/20 bg-primary-soft p-8 text-center">
           <p className="text-lg font-medium leading-relaxed">Pusla beta sürecinde. Henüz onlarca doğrulanmış müşteri yorumumuz yok —</p>
           <p className="mt-2 text-muted-foreground">ve bunu söylemekten çekinmiyoruz.</p>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 15 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">İlk kullanıcı olarak 30 gün ücretsiz kullanırsınız. Beğenmezseniz ödemezsiniz. Risk tamamen bizde.</p>
           <Link to="/auth" search={{ mode: "signup" }} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Ücretsiz Dene, Karar Ver <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
@@ -510,7 +510,7 @@ function ButcelemePage() {
       {/* Risk Reversal */}
       <div className="mx-auto max-w-3xl px-4 pb-4">
         <div className="flex flex-wrap justify-center gap-6 rounded-2xl border border-primary/20 bg-primary-soft px-7 py-4 text-sm font-semibold">
-          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 15 gün ücretsiz</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 30 gün ücretsiz</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Kart gerekmez</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> İstediğin zaman iptal</span>
         </div>

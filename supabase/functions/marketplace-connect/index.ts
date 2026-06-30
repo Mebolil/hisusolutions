@@ -117,13 +117,18 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Vault'a kaydet
-      let apiKeySecretId: string;
-      let apiSecretSecretId: string;
+      // Vault'a kaydet — atomic olmayan işlem, hata durumunda temizle
+      const connId = crypto.randomUUID();
+      let apiKeySecretId: string | null = null;
+      let apiSecretSecretId: string | null = null;
+
+      async function cleanupVaultSecrets() {
+        for (const sid of [apiKeySecretId, apiSecretSecretId].filter(Boolean)) {
+          try { await adminClient.rpc("vault_delete_secret", { p_id: sid }); } catch { /* ignore */ }
+        }
+      }
 
       try {
-        const connId = crypto.randomUUID();
-
         const { data: keyData, error: keyErr } = await adminClient.rpc("vault_create_secret", {
           p_secret: api_key,
           p_name: `trendyol_apikey_${connId}`,
@@ -160,6 +165,8 @@ Deno.serve(async (req) => {
           .single();
 
         if (connErr) {
+          // DB kaydı başarısız → Vault'ta oluşturulan secret'ları temizle
+          await cleanupVaultSecrets();
           if (connErr.code === "23505") {
             return new Response(
               JSON.stringify({ error: "Bu Supplier ID ile zaten bir bağlantı var" }),
@@ -185,6 +192,7 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       } catch (vaultErr) {
+        await cleanupVaultSecrets();
         return new Response(
           JSON.stringify({ error: `Kayıt hatası: ${sanitizeError(vaultErr)}` }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

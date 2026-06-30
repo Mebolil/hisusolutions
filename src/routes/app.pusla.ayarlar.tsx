@@ -545,18 +545,22 @@ function ConnectionCard({
   onRefreshToken,
 }: {
   conn: MarketplaceConnection;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onRefreshToken: (id: string) => void;
 }) {
   const [showToken, setShowToken] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const lastSync = conn.last_order_sync_at
-    ? new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
-        Math.round((new Date(conn.last_order_sync_at).getTime() - Date.now()) / 60000),
-        "minutes",
-      )
-    : "Henüz sync yapılmadı";
+  const lastSync = (() => {
+    if (!conn.last_order_sync_at) return "Henüz sync yapılmadı";
+    const diffMs = new Date(conn.last_order_sync_at).getTime() - Date.now();
+    const diffMin = Math.round(diffMs / 60000);
+    const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+    if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minutes");
+    const diffHr = Math.round(diffMs / 3600000);
+    if (Math.abs(diffHr) < 24) return rtf.format(diffHr, "hours");
+    return rtf.format(Math.round(diffMs / 86400000), "days");
+  })();
 
   return (
     <div className="rounded-lg border p-4 space-y-3">
@@ -618,7 +622,11 @@ function ConnectionCard({
           onClick={async () => {
             if (!confirm(`"${conn.store_name}" bağlantısı kaldırılsın mı?`)) return;
             setDeleting(true);
-            onDelete(conn.id);
+            try {
+              await onDelete(conn.id);
+            } finally {
+              setDeleting(false);
+            }
           }}
         >
           {deleting

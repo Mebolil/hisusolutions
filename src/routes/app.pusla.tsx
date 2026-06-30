@@ -15,7 +15,7 @@ export const Route = createFileRoute("/app/pusla")({
   component: PuslaGuard,
 });
 
-const ALLOWED_PLANS = ["butcecrm", "butceleme", "pusla", "pro", "enterprise", "trial"];
+const ALLOWED_PLANS = ["pusla", "pro", "enterprise", "trial"];
 
 function PuslaGuard() {
   const [ready, setReady] = useState(false);

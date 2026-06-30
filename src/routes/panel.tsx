@@ -26,7 +26,7 @@ const PRODUCTS: Product[] = [
     icon: BarChart3,
     title: "Pusla",
     desc: "Gelir, gider, stok ve reklam ROI'sini tek ekranda yönetin.",
-    plans: ["butcecrm", "butceleme", "pusla", "pro", "enterprise"],
+    plans: ["pusla", "pro", "enterprise"],
   },
   {
     key: "web",

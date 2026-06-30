@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
         }
 
         if (resp.status === 429) {
-          // Exponential backoff: 2s, 4s, 8s
+          if (retryCount >= 5) throw new Error("Trendyol rate limit: 5 deneme aşıldı, backfill durduruldu");
           await new Promise((r) => setTimeout(r, Math.min(2000 * (2 ** retryCount), 30000)));
           retryCount++;
           continue;

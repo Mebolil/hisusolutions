@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
   try {
     let page = 0;
     let hasMore = true;
+    let retryCount = 0;
 
     while (hasMore) {
       const url =
@@ -132,9 +133,12 @@ Deno.serve(async (req) => {
       }
 
       if (resp.status === 429) {
-        await new Promise((r) => setTimeout(r, 5000));
+        if (retryCount >= 5) throw new Error("Trendyol rate limit: 5 deneme aşıldı");
+        await new Promise((r) => setTimeout(r, Math.min(2000 * (2 ** retryCount), 30000)));
+        retryCount++;
         continue;
       }
+      retryCount = 0;
 
       if (!resp.ok) {
         throw new Error(`Trendyol API hatası (HTTP ${resp.status})`);

@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ connection_id: connId }),
-        }).catch(() => {/* backfill tetikleme hatası response'u etkilemez */});
+        }).catch((e) => { console.error("Backfill tetikleme hatası:", e); });
 
         // EdgeRuntime.waitUntil ile backfill isteğinin gönderilmesi garantilenir
         if (typeof (globalThis as any).EdgeRuntime !== "undefined") {

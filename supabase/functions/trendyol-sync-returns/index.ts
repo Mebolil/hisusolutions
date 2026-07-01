@@ -4,6 +4,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PAGE_SIZE = 50;
 const MAX_WINDOW_DAYS = 14;
+const MAX_PAGES = 40; // 40 × 50 = 2000 claim — EF 150s timeout güvenliği
 
 function sanitizeError(err: unknown): string {
   if (err instanceof Error) return err.message.slice(0, 300);
@@ -11,9 +12,15 @@ function sanitizeError(err: unknown): string {
   return "Bilinmeyen hata";
 }
 
-// Türkiye UTC+3 sabit
+// Türkiye UTC+3 sabit — ms timestamp veya ISO string kabul eder
 function toTRDate(msTimestamp: number | string | null | undefined): string {
   if (!msTimestamp) return new Date().toISOString().slice(0, 10);
+  // ISO string formatı (ör. "2024-01-15" veya "2024-01-15T10:30:00")
+  if (typeof msTimestamp === "string" && isNaN(Number(msTimestamp))) {
+    const d = new Date(msTimestamp);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    return new Date().toISOString().slice(0, 10);
+  }
   const ts = typeof msTimestamp === "string" ? Number(msTimestamp) : msTimestamp;
   if (!ts || ts <= 0 || isNaN(ts)) return new Date().toISOString().slice(0, 10);
   return new Date(ts + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -128,7 +135,7 @@ Deno.serve(async (req) => {
       totalFetched += claims.length;
 
       const totalPages = data.totalPages ?? data.page?.totalPages ?? 1;
-      if (page + 1 >= totalPages || claims.length === 0) hasMore = false;
+      if (page + 1 >= totalPages || claims.length === 0 || page + 1 >= MAX_PAGES) hasMore = false;
       else page++;
 
       for (const claim of claims) {

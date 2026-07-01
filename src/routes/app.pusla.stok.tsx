@@ -906,7 +906,7 @@ function PushStockDialog({
             <p className="text-sm text-muted-foreground py-4 text-center">Yükleniyor...</p>
           ) : !connectionId ? (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Aktif Trendyol bağlantısı bulunamadı. Pusla → Ayarlar → Entegrasyonlar bölümünden bağlantı ekleyin.
+              Aktif Trendyol bağlantısı bulunamadı. Pusla → Ayarlar → Pazar Yerleri bölümünden bağlantı ekleyin.
             </div>
           ) : (
             <>
@@ -1018,7 +1018,7 @@ function HbPushStockDialog({
             <p className="text-sm text-muted-foreground py-4 text-center">Yükleniyor...</p>
           ) : !connectionId ? (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              Aktif Hepsiburada bağlantısı bulunamadı. Pusla → Ayarlar → Entegrasyonlar bölümünden bağlantı ekleyin.
+              Aktif Hepsiburada bağlantısı bulunamadı. Pusla → Ayarlar → Pazar Yerleri bölümünden bağlantı ekleyin.
             </div>
           ) : (
             <>

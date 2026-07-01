@@ -121,6 +121,14 @@ Deno.serve(async (req) => {
     }
 
     if (resp.status === 429) {
+      if (logId) {
+        await adminClient.from("marketplace_sync_logs").update({
+          status: "skipped",
+          error_message: "HB API rate limit — tekrar denenecek",
+          finished_at: new Date().toISOString(),
+          duration_ms: Date.now() - startTime,
+        }).eq("id", logId);
+      }
       return new Response(
         JSON.stringify({ skipped: true, reason: "Rate limit" }),
         { headers: { "Content-Type": "application/json" } },
@@ -237,6 +245,7 @@ Deno.serve(async (req) => {
 
     await adminClient.from("marketplace_connections").update({
       last_order_sync_at: finishedAt,
+      initial_backfill_done: true,
     }).eq("id", connection_id);
 
     return new Response(

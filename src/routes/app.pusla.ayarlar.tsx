@@ -582,13 +582,15 @@ function ConnectionCard({
     return { text: `Son sipariş sync: ${formatRelativeSync(conn.last_order_sync_at)}`, color };
   })();
 
+  const platformLabel = conn.platform === "hepsiburada" ? "Hepsiburada" : "Trendyol";
+
   const errorDisplay = (() => {
     if (!conn.sync_error_message) return null;
     // Kullanıcı dostu hata mesajı (teknik detay gizle)
     if (conn.sync_error_count && conn.sync_error_count >= 3) {
-      return "Trendyol'a birkaç kez arka arkaya ulaşılamadı. Bağlantı bilgilerinizi kontrol edin.";
+      return `${platformLabel}'a birkaç kez arka arkaya ulaşılamadı. Bağlantı bilgilerinizi kontrol edin.`;
     }
-    return "Trendyol'a şu an ulaşılamıyor. Otomatik olarak tekrar denenecek.";
+    return `${platformLabel}'a şu an ulaşılamıyor. Otomatik olarak tekrar denenecek.`;
   })();
 
   return (
@@ -597,7 +599,15 @@ function ConnectionCard({
         <div className="flex items-center gap-2 min-w-0">
           <Store className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{conn.store_name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="font-medium text-sm truncate">{conn.store_name}</p>
+              {conn.platform === "trendyol" && (
+                <span className="text-xs px-1.5 py-0.5 rounded border bg-orange-50 text-orange-700 border-orange-200 font-medium flex-shrink-0">TY</span>
+              )}
+              {conn.platform === "hepsiburada" && (
+                <span className="text-xs px-1.5 py-0.5 rounded border bg-red-50 text-red-700 border-red-200 font-medium flex-shrink-0">HB</span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground capitalize">{conn.platform}</p>
           </div>
         </div>

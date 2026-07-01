@@ -497,7 +497,7 @@ Deno.serve(async (req) => {
     // Sadece kullanıcının kendi bağlantısı
     const { data: conn, error: fetchErr } = await adminClient
       .from("marketplace_connections")
-      .select("id, is_active, initial_backfill_done")
+      .select("id, platform, is_active, initial_backfill_done")
       .eq("id", connection_id)
       .eq("user_id", user.id)
       .is("deleted_at", null)
@@ -517,9 +517,12 @@ Deno.serve(async (req) => {
       sync_error_message: null,
     }).eq("id", connection_id);
 
-    // Backfill tamamlanmamışsa yeniden tetikle
+    // Backfill tamamlanmamışsa yeniden tetikle (platform-aware)
     if (!conn.initial_backfill_done) {
-      const backfillFetch = fetch(`${SUPABASE_URL}/functions/v1/trendyol-backfill`, {
+      const backfillUrl = conn.platform === "hepsiburada"
+        ? `${SUPABASE_URL}/functions/v1/hepsiburada-sync-orders`
+        : `${SUPABASE_URL}/functions/v1/trendyol-backfill`;
+      const backfillFetch = fetch(backfillUrl, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
@@ -528,8 +531,19 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ connection_id }),
       }).catch((e) => { console.error("Retry backfill tetikleme hatası:", e); });
 
-      if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
-        (globalThis as any).EdgeRuntime.waitUntil(backfillFetch);
+      if (conn.platform === "hepsiburada") {
+        const stockBackfill = fetch(`${SUPABASE_URL}/functions/v1/hepsiburada-sync-stock`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ connection_id }),
+        }).catch((e) => { console.error("HB retry stock backfill hatası:", e); });
+        if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+          (globalThis as any).EdgeRuntime.waitUntil(Promise.all([backfillFetch, stockBackfill]));
+        }
+      } else {
+        if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+          (globalThis as any).EdgeRuntime.waitUntil(backfillFetch);
+        }
       }
     }
 

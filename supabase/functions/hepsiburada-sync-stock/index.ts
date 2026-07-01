@@ -100,6 +100,14 @@ Deno.serve(async (req) => {
     }
 
     if (resp.status === 429) {
+      if (logId) {
+        await adminClient.from("marketplace_sync_logs").update({
+          status: "skipped",
+          error_message: "HB API rate limit — tekrar denenecek",
+          finished_at: new Date().toISOString(),
+          duration_ms: Date.now() - startTime,
+        }).eq("id", logId);
+      }
       return new Response(
         JSON.stringify({ skipped: true, reason: "Rate limit, bir sonraki sync'te devam edilecek" }),
         { headers: { "Content-Type": "application/json" } },
@@ -133,7 +141,7 @@ Deno.serve(async (req) => {
         urun_kodu: merchantSku,
         note: `HB SKU: ${merchantSku}`,
       }, {
-        onConflict: "user_id,marketplace_product_id",
+        onConflict: "user_id,marketplace_product_id,platform",
         ignoreDuplicates: false,
       });
 
@@ -178,6 +186,7 @@ Deno.serve(async (req) => {
 
     await adminClient.from("marketplace_connections").update({
       last_stock_sync_at: finishedAt,
+      initial_backfill_done: true,
     }).eq("id", connection_id);
 
     return new Response(

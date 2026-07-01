@@ -18,7 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown, ShoppingCart } from "lucide-react";
+import { Package, Search, AlertTriangle, History, Plus, Pencil, Trash2, ChevronUp, ChevronDown, ShoppingCart, ArrowUpToLine } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -71,6 +71,8 @@ type Product = {
   low_stock_threshold: number;
   unit_price: number | null;
   platform: string | null;
+  marketplace_product_id: string | null;
+  last_pushed_at: string | null;
 };
 type Category = { id: string; name: string };
 type Lot = {
@@ -154,6 +156,7 @@ function StockPage() {
   const [stats, setStats] = useState({ total: 0, low: 0, out: 0 });
   const [reorderProduct, setReorderProduct] = useState<Product | null>(null);
   const [recentSales, setRecentSales] = useState<{ product_name: string; quantity: number }[]>([]);
+  const [pushTarget, setPushTarget] = useState<Product | null>(null);
 
   // Whether we're in client-side filter mode (stateFilter low/ok)
   const clientMode = stateFilter === "low" || stateFilter === "ok";
@@ -607,6 +610,15 @@ function StockPage() {
                               <ShoppingCart className="h-3.5 w-3.5" /> Sipariş
                             </Button>
                           )}
+                          {p.platform === "trendyol" && p.marketplace_product_id && (
+                            <Button size="sm" variant="outline"
+                              className="h-7 gap-1 shrink-0 border-orange-300 text-orange-700 hover:bg-orange-50"
+                              onClick={() => setPushTarget(p)}
+                              title="Stoğu Trendyol'a gönder"
+                            >
+                              <ArrowUpToLine className="h-3.5 w-3.5" /> TY
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => setEditing(p)} className="gap-1">
                             <Pencil className="h-3.5 w-3.5" /> Düzenle
                           </Button>
@@ -685,6 +697,17 @@ function StockPage() {
         <ReorderSuggestionDialog
           product={reorderProduct}
           onClose={() => setReorderProduct(null)}
+        />
+      )}
+      {pushTarget && (
+        <PushStockDialog
+          product={pushTarget}
+          onClose={() => setPushTarget(null)}
+          onSuccess={(updatedProduct) => {
+            setPushTarget(null);
+            setRows((prev) => prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r));
+            if (allRows) setAllRows((prev) => prev ? prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r) : prev);
+          }}
         />
       )}
     </div>
@@ -783,6 +806,109 @@ function ReorderSuggestionDialog({
           <Button variant="outline" onClick={onClose}>İptal</Button>
           <Button onClick={createReminder} disabled={saving} className="gap-1.5">
             <ShoppingCart className="h-4 w-4" /> {saving ? "Oluşturuluyor..." : "Hatırlatıcı Oluştur"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PushStockDialog({
+  product, onClose, onSuccess,
+}: {
+  product: Product;
+  onClose: () => void;
+  onSuccess: (updated: Partial<Product> & { id: string }) => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [pushing, setPushing] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("marketplace_connections")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("platform", "trendyol")
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      setConnectionId(data?.id ?? null);
+      setLoading(false);
+    })();
+  }, []);
+
+  async function handlePush() {
+    if (!connectionId) return;
+    setPushing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("trendyol-push-stock", {
+        body: { connection_id: connectionId, product_id: product.id, quantity: product.quantity },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error ?? "Trendyol'a gönderilemedi. Lütfen tekrar deneyin.");
+        return;
+      }
+      toast.success(`${product.name} — ${product.quantity} adet Trendyol'a gönderildi`);
+      onSuccess({ id: product.id, quantity: product.quantity, last_pushed_at: new Date().toISOString() });
+    } catch {
+      toast.error("Trendyol bu güncellemeyi kabul etmedi. Stok miktarını kontrol edin veya birkaç dakika sonra tekrar deneyin.");
+    } finally {
+      setPushing(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && !pushing && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ArrowUpToLine className="h-5 w-5 text-orange-600" />
+            Trendyol'a Stok Gönder
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Yükleniyor...</p>
+          ) : !connectionId ? (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Aktif Trendyol bağlantısı bulunamadı. Pusla → Ayarlar → Entegrasyonlar bölümünden bağlantı ekleyin.
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-sm">
+                <p className="font-medium">{product.name}</p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>Mevcut stok:</span>
+                  <span className="font-semibold text-foreground text-base">{product.quantity} adet</span>
+                </div>
+                {product.unit_price && product.unit_price > 0 && (
+                  <p className="text-xs text-muted-foreground">Fiyat: {formatCurrency(Number(product.unit_price))}</p>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Bu değişiklik Trendyol mağazanıza yansıyacak.
+              </p>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={pushing}>İptal</Button>
+          <Button
+            onClick={handlePush}
+            disabled={pushing || loading || !connectionId}
+            className="gap-1.5 bg-orange-600 hover:bg-orange-700 text-white"
+          >
+            {pushing ? (
+              <><span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full" /> Gönderiliyor...</>
+            ) : (
+              <><ArrowUpToLine className="h-4 w-4" /> Trendyol'a Gönder</>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -79,6 +79,20 @@ Deno.serve(async (req) => {
   let totalFetched = 0;
   let totalUpserted = 0;
 
+  // Push cooldown: son 5 dk içinde push yapılan ürünleri atla
+  const PUSH_COOLDOWN_MS = 5 * 60 * 1000;
+  const cooldownSince = new Date(Date.now() - PUSH_COOLDOWN_MS).toISOString();
+  const { data: recentlyPushedRows } = await adminClient
+    .from("products")
+    .select("marketplace_product_id")
+    .eq("user_id", conn.user_id)
+    .is("deleted_at", null)
+    .not("last_pushed_at", "is", null)
+    .gte("last_pushed_at", cooldownSince);
+  const pushCooldownSet = new Set(
+    (recentlyPushedRows ?? []).map((p: { marketplace_product_id: string | null }) => p.marketplace_product_id).filter(Boolean),
+  );
+
   try {
     const url =
       `https://apigw.trendyol.com/sapigw/suppliers/${conn.trendyol_supplier_id}/products` +
@@ -115,6 +129,9 @@ Deno.serve(async (req) => {
 
     for (const product of products) {
       if (!product.barcode) continue; // marketplace_product_id için zorunlu
+
+      // Push cooldown: son 5 dk içinde push yapıldıysa bu ürünü atla
+      if (pushCooldownSet.has(String(product.barcode))) continue;
 
       const { error: upsertErr } = await adminClient.from("products").upsert({
         user_id: conn.user_id,

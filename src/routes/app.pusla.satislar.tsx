@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, formatDate } from "@/lib/pusla-helpers";
+import { formatCurrency, formatDate, inferCostType } from "@/lib/pusla-helpers";
 import { parseISO, differenceInDays } from "date-fns";
 import { friendlyDbError } from "@/lib/pusla-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,14 +65,6 @@ function parseNoteField(notes: string | null | undefined, label: string): string
   return m ? m[1].trim() : "";
 }
 
-function inferCostType(label: string): string {
-  const l = label.toLowerCase();
-  if (/ürün|maliyet/.test(l)) return "urun_maliyeti";
-  if (/kargo|gönderim|teslimat/.test(l)) return "kargo";
-  if (/komisyon/.test(l)) return "komisyon";
-  if (/ambalaj|paket/.test(l)) return "ambalaj";
-  return "diger";
-}
 type Customer = { id: string; name: string };
 type Campaign = { id: string; name: string };
 type Product = { id: string; name: string; quantity: number; unit_price: number | null };

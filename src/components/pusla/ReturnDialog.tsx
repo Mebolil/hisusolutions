@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency, parseCostItems, friendlyDbError } from "@/lib/pusla-helpers";
+import { formatCurrency, parseCostItems, friendlyDbError, mapToReturnCostType } from "@/lib/pusla-helpers";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -27,6 +27,8 @@ type Sale = {
 };
 
 type ProductRef = { id: string; name: string };
+
+type SaleCostItem = { label: string; cost_type: string; amount: number };
 
 type ReturnRecord = {
   id: string;
@@ -76,9 +78,12 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated, alreadyR
   const [showDetails, setShowDetails] = useState(false);
   const [saving, setSaving] = useState(false);
   const [costReversed, setCostReversed] = useState(0);
+  const [saleCostItems, setSaleCostItems] = useState<SaleCostItem[]>([]);
 
   useEffect(() => {
-    if (sale) {
+    if (!sale) return;
+    let cancelled = false;
+    (async () => {
       const today = new Date().toISOString().split("T")[0];
       setReturnDate(today);
       setQuantity(1);
@@ -91,24 +96,45 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated, alreadyR
       setCustomAmount(false);
       setNote("");
       setShowDetails(false);
-      // Maliyet parse
-      const costItems = parseCostItems(sale.note);
-      const totalCost = costItems.reduce((s, i) => s + i.amount, 0) || Number(sale.total_cost || 0);
+
+      // Gerçek maliyet kalemlerini DB'den çek (öncelik 1)
+      let dbItems: SaleCostItem[] = [];
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (uid) {
+        const { data } = await supabase
+          .from("sale_cost_items")
+          .select("label,cost_type,amount")
+          .eq("sale_id", sale.id)
+          .eq("user_id", uid)
+          .is("deleted_at", null);
+        dbItems = (data as SaleCostItem[]) || [];
+      }
+      if (cancelled) return;
+      setSaleCostItems(dbItems);
+
+      // Maliyet önceliği: 1) dbItems, 2) note parse (legacy), 3) total_cost
+      const totalCost = dbItems.length > 0
+        ? dbItems.reduce((s, i) => s + Number(i.amount), 0)
+        : (parseCostItems(sale.note).reduce((s, i) => s + i.amount, 0) || Number(sale.total_cost || 0));
       const perUnitCost = totalCost / Math.max(1, Number(sale.quantity));
       setCostReversed(parseFloat(perUnitCost.toFixed(2)));
-    }
+    })();
+    return () => { cancelled = true; };
   }, [sale]);
 
   useEffect(() => {
     if (!customAmount && sale) {
       const perUnit = Number(sale.total_amount) / Math.max(1, Number(sale.quantity));
       setReturnAmount(parseFloat((perUnit * quantity).toFixed(2)));
-      const costItems = parseCostItems(sale.note);
-      const totalCost = costItems.reduce((s, i) => s + i.amount, 0) || Number(sale.total_cost || 0);
+      // Maliyet önceliği: 1) dbItems, 2) note parse (legacy), 3) total_cost
+      const totalCost = saleCostItems.length > 0
+        ? saleCostItems.reduce((s, i) => s + Number(i.amount), 0)
+        : (parseCostItems(sale.note).reduce((s, i) => s + i.amount, 0) || Number(sale.total_cost || 0));
       const perUnitCost = totalCost / Math.max(1, Number(sale.quantity));
       setCostReversed(parseFloat((perUnitCost * quantity).toFixed(2)));
     }
-  }, [quantity, customAmount, sale]);
+  }, [quantity, customAmount, sale, saleCostItems]);
 
   if (!sale) return null;
 
@@ -158,6 +184,23 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated, alreadyR
       .update({ status: "iade_edildi" })
       .eq("id", sale.id)
       .eq("user_id", uid);
+
+    // İade maliyet kalemlerini orantılı olarak kaydet (graceful — hata iade akışını durdurmaz)
+    if (saleCostItems.length > 0 && data) {
+      const returnCostRows = saleCostItems
+        .map((item) => ({
+          user_id: uid,
+          return_id: data as string,
+          label: item.label,
+          cost_type: mapToReturnCostType(item.cost_type),
+          amount: +((Number(item.amount) * quantity / Math.max(1, Number(sale.quantity))).toFixed(2)),
+        }))
+        .filter((r) => r.amount > 0);
+      if (returnCostRows.length > 0) {
+        const { error: rciErr } = await supabase.from("return_cost_items").insert(returnCostRows);
+        if (rciErr) toast.warning("İade kaydedildi ancak maliyet kalemi detayı kaydedilemedi");
+      }
+    }
 
     const newReturn: ReturnRecord = {
       id: data as string,
@@ -257,6 +300,16 @@ export function ReturnDialog({ sale, products = [], onClose, onCreated, alreadyR
 
           {showDetails && (
             <div className="space-y-3 border-l-2 border-border pl-4">
+              {saleCostItems.length > 0 && (
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {saleCostItems.map((item) =>
+                    `${item.label} ${formatCurrency(Number(item.amount) * quantity / Math.max(1, Number(sale.quantity)))}`
+                  ).join(" • ")}
+                  {" — Toplam "}
+                  {formatCurrency(saleCostItems.reduce((s, i) => s + Number(i.amount) * quantity / Math.max(1, Number(sale.quantity)), 0))}
+                  {" maliyet kontrolünüzde"}
+                </p>
+              )}
               <div>
                 <Label>İade Tarihi</Label>
                 <Input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} />

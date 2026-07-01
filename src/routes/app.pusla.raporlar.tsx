@@ -43,6 +43,7 @@ type Campaign = { id: string; name: string; platform: string | null; status: str
 type Customer = { id: string; name: string };
 type ReturnData = { product_name: string; return_amount: number; return_date: string };
 type SaleCostItem = { sale_id: string; label: string; amount: number; deleted_at: string | null };
+type ReturnCostItem = { return_id: string; label: string; amount: number; deleted_at: string | null; cost_type: string; created_at: string };
 
 type PeriodKey = "week" | "month" | "3m" | "6m" | "year" | "custom";
 
@@ -70,6 +71,7 @@ function ReportsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [returns, setReturns] = useState<ReturnData[]>([]);
   const [saleCostItems, setSaleCostItems] = useState<SaleCostItem[]>([]);
+  const [returnCostItems, setReturnCostItems] = useState<ReturnCostItem[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -78,7 +80,7 @@ function ReportsPage() {
       const uid = session.user.id;
       // 13 aylık lookback: tüm built-in period'ları (hafta/ay/3ay/6ay/yıl) kapsar
       const fetchFrom = format(subMonths(new Date(), 13), "yyyy-MM-dd");
-      const [s, e, pu, p, c, cu, ret, sci] = await Promise.all([
+      const [s, e, pu, p, c, cu, ret, sci, rci] = await Promise.all([
         supabase.from("sales").select("id,sale_date,due_date,customer_id,product_name,quantity,total_amount,total_cost,paid_amount,payment_status,campaign_id,platform,note,status,currency,exchange_rate").eq("user_id", uid).is("deleted_at", null).gte("sale_date", fetchFrom).limit(50000),
         supabase.from("expenses").select("*").eq("user_id", uid).is("deleted_at", null).gte("expense_date", fetchFrom),
         supabase.from("purchases").select("*").eq("user_id", uid).is("deleted_at", null).gte("purchase_date", fetchFrom),
@@ -96,6 +98,11 @@ function ReportsPage() {
           .eq("user_id", uid)
           .gte("created_at", fetchFrom + "T00:00:00.000Z")
           .limit(50000),
+        supabase.from("return_cost_items")
+          .select("return_id,label,amount,deleted_at,cost_type,created_at")
+          .eq("user_id", uid)
+          .gte("created_at", fetchFrom + "T00:00:00.000Z")
+          .limit(50000),
       ]);
       setSales((s.data as Sale[]) || []);
       setExpenses((e.data as Expense[]) || []);
@@ -106,6 +113,8 @@ function ReportsPage() {
       setReturns((ret.data as ReturnData[]) || []);
       // Graceful: if table doesn't exist yet (pre-migration), fall back to note parsing
       setSaleCostItems((!sci.error ? (sci.data as SaleCostItem[]) : null) || []);
+      // Graceful: tablo yoksa (pre-migration) sessizce boş kal
+      setReturnCostItems((!rci.error ? (rci.data as ReturnCostItem[]) : null) || []);
       setLoading(false);
     })();
   }, []);
@@ -349,6 +358,25 @@ function ReportsPage() {
   const totalCostFromBreakdown = useMemo(
     () => costBreakdown.reduce((s, i) => s + i.total, 0),
     [costBreakdown],
+  );
+
+  // İade ile geri alınan maliyet kalemleri — dönem içi (created_at bazlı) label gruplu
+  const returnCostBreakdown = useMemo(() => {
+    const map = new Map<string, { label: string; total: number }>();
+    for (const item of returnCostItems) {
+      if (item.deleted_at !== null) continue;
+      if (!inRange(item.created_at)) continue;
+      const key = item.label.toLowerCase().trim();
+      const existing = map.get(key);
+      if (existing) existing.total += Number(item.amount);
+      else map.set(key, { label: item.label, total: Number(item.amount) });
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [returnCostItems, range]);
+
+  const totalReturnCost = useMemo(
+    () => returnCostBreakdown.reduce((s, i) => s + i.total, 0),
+    [returnCostBreakdown],
   );
 
   // --- ÜRÜN KARLILIĞI ---
@@ -1686,6 +1714,43 @@ function ReportsPage() {
                   </Table>
                 </CardContent>
               </Card>
+
+              {totalReturnCost > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">İade ile Geri Alınan Maliyetler</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="rounded-lg border p-3 max-w-xs">
+                      <p className="text-xs text-muted-foreground">Toplam İade Maliyeti</p>
+                      <p className="text-xl font-bold text-emerald-600">{formatCurrency(totalReturnCost)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Bu dönem iadelerle geri alınan maliyet</p>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>İade Maliyet Kalemi</TableHead>
+                          <TableHead className="text-right">Toplam</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {returnCostBreakdown.map((item) => (
+                          <TableRow key={item.label}>
+                            <TableCell className="font-medium">{item.label}</TableCell>
+                            <TableCell className="text-right font-semibold text-emerald-600">{formatCurrency(item.total)}</TableCell>
+                          </TableRow>
+                        ))}
+                        {returnCostBreakdown.length > 1 && (
+                          <TableRow className="bg-muted/30 font-semibold">
+                            <TableCell>TOPLAM</TableCell>
+                            <TableCell className="text-right text-emerald-600">{formatCurrency(totalReturnCost)}</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
         </TabsContent>

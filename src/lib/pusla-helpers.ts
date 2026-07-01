@@ -62,6 +62,28 @@ export function friendlyDbError(error: unknown, fallback = "Bir hata oluştu"): 
   return fallback;
 }
 
+// Maliyet kalemi etiketinden cost_type (sale_cost_items enum) çıkarımı yapar.
+export function inferCostType(label: string): string {
+  const l = label.toLowerCase();
+  if (/ürün|maliyet/.test(l)) return "urun_maliyeti";
+  if (/kargo|gönderim|teslimat/.test(l)) return "kargo";
+  if (/komisyon/.test(l)) return "komisyon";
+  if (/ambalaj|paket/.test(l)) return "ambalaj";
+  return "diger";
+}
+
+// sale_cost_items cost_type → return_cost_items return_cost_type eşlemesi.
+export function mapToReturnCostType(costType: string): string {
+  switch (costType) {
+    case "kargo": return "kargo_iade";
+    case "komisyon": return "komisyon_iade";
+    case "ambalaj": return "ambalaj_iade";
+    case "urun_maliyeti": return "diger";
+    case "diger": return "diger";
+    default: return "diger";
+  }
+}
+
 // Satış notundaki "[Maliyet Kalemleri]" bloğunu parse eder.
 export function parseCostItems(note: string | null | undefined): { label: string; amount: number }[] {
   if (!note?.trim()) return [];

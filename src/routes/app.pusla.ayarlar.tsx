@@ -501,6 +501,7 @@ type MarketplaceConnection = {
   last_order_sync_at: string | null;
   last_financial_sync_at: string | null;
   last_stock_sync_at: string | null;
+  last_returns_sync_at: string | null;
   created_at: string;
   extension_api_token: string;
 };
@@ -630,6 +631,11 @@ function ConnectionCard({
             {conn.last_stock_sync_at && (
               <p className="text-muted-foreground">
                 Son stok sync: {formatRelativeSync(conn.last_stock_sync_at)}
+              </p>
+            )}
+            {conn.last_returns_sync_at && (
+              <p className="text-muted-foreground">
+                Son iade sync: {formatRelativeSync(conn.last_returns_sync_at)}
               </p>
             )}
           </>

@@ -19,7 +19,7 @@ import { ReturnKpiCards } from "@/components/pusla/ReturnKpiCards";
 import { ReturnDialog } from "@/components/pusla/ReturnDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Search, RotateCcw, Plus } from "lucide-react";
+import { Search, RotateCcw, Plus, ExternalLink } from "lucide-react";
 import {
   PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartTooltip, ResponsiveContainer,
@@ -56,6 +56,21 @@ type Sale = {
 
 type ProductRef = { id: string; name: string };
 
+type MarketplaceReturn = {
+  id: string;
+  claim_id: string;
+  order_id: string | null;
+  claim_type: string;
+  return_date: string | null;
+  total_price: number | null;
+  synced_at: string;
+  marketplace_connection_id: string | null;
+};
+
+type MarketplaceReturnDetail = MarketplaceReturn & {
+  items: Array<{ barcode?: string; productName?: string; quantity?: number; price?: number }> | null;
+};
+
 const REASON_LABELS: Record<string, string> = {
   musteri_vazgecti: "Müşteri Vazgeçti",
   urun_hasarli: "Ürün Hasarlı",
@@ -83,6 +98,10 @@ function IadelerPage() {
   const [returns, setReturns] = useState<ReturnRecord[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<ProductRef[]>([]);
+  const [marketplaceReturns, setMarketplaceReturns] = useState<MarketplaceReturn[]>([]);
+  const [trQ, setTrQ] = useState("");
+  const [trDetail, setTrDetail] = useState<MarketplaceReturnDetail | null>(null);
+  const [trDetailLoading, setTrDetailLoading] = useState(false);
   const [q, setQ] = useState("");
   const [returnDialogSale, setReturnDialogSale] = useState<Sale | null>(null);
   const [currentSaleReturned, setCurrentSaleReturned] = useState(0);
@@ -96,7 +115,7 @@ function IadelerPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { setLoading(false); return; }
     const uid = session.user.id;
-    const [ret, sal, prod] = await Promise.all([
+    const [ret, sal, prod, mpRet] = await Promise.all([
       supabase.from("returns")
         .select("*")
         .eq("user_id", uid)
@@ -109,10 +128,18 @@ function IadelerPage() {
         .is("deleted_at", null)
         .order("sale_date", { ascending: false }),
       supabase.from("products").select("id,name").eq("user_id", uid).is("deleted_at", null),
+      supabase.from("marketplace_returns")
+        .select("id, claim_id, order_id, claim_type, return_date, total_price, synced_at, marketplace_connection_id")
+        .eq("user_id", uid)
+        .eq("claim_type", "RETURN")
+        .is("deleted_at", null)
+        .order("return_date", { ascending: false })
+        .limit(500),
     ]);
     setReturns((ret.data as ReturnRecord[]) || []);
     setSales((sal.data as Sale[]) || []);
     setProducts((prod.data as ProductRef[]) || []);
+    setMarketplaceReturns((mpRet.data as MarketplaceReturn[]) || []);
     setLoading(false);
   }
 
@@ -201,6 +228,35 @@ function IadelerPage() {
         .reduce((s, r) => s + Number(r.return_amount || 0), 0),
     }));
   }, [returns]);
+
+  const trFiltered = useMemo(() => {
+    if (!trQ) return marketplaceReturns;
+    const lower = trQ.toLowerCase();
+    return marketplaceReturns.filter((r) =>
+      (r.claim_id || "").toLowerCase().includes(lower) ||
+      (r.order_id || "").toLowerCase().includes(lower)
+    );
+  }, [marketplaceReturns, trQ]);
+
+  const trTotalAmount = useMemo(
+    () => marketplaceReturns.reduce((s, r) => s + Number(r.total_price || 0), 0),
+    [marketplaceReturns],
+  );
+
+  async function loadTrDetail(row: MarketplaceReturn) {
+    setTrDetail({ ...row, items: null });
+    setTrDetailLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setTrDetailLoading(false); return; }
+    const { data } = await supabase
+      .from("marketplace_returns")
+      .select("items")
+      .eq("id", row.id)
+      .eq("user_id", session.user.id)
+      .single();
+    setTrDetail({ ...row, items: (data?.items as MarketplaceReturnDetail["items"]) || [] });
+    setTrDetailLoading(false);
+  }
 
   const pickerSales = useMemo(() => {
     if (!pickerQuery) return sales.slice(0, 100);
@@ -294,6 +350,14 @@ function IadelerPage() {
           <Tabs defaultValue="liste">
             <TabsList>
               <TabsTrigger value="liste">İade Listesi</TabsTrigger>
+              <TabsTrigger value="trendyol" className="gap-1.5">
+                Trendyol İadeleri
+                {marketplaceReturns.length > 0 && (
+                  <span className="bg-primary/10 text-primary text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                    {marketplaceReturns.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="analiz">Analiz</TabsTrigger>
             </TabsList>
 
@@ -413,6 +477,90 @@ function IadelerPage() {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
+
+            <TabsContent value="trendyol" className="mt-4 space-y-4">
+              {marketplaceReturns.length > 0 && (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <Card className="border-orange-200 bg-orange-50/50">
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-xs text-muted-foreground">Toplam İade Tutarı</p>
+                      <p className="text-2xl font-bold text-orange-700 mt-0.5">{formatCurrency(trTotalAmount)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-4">
+                      <p className="text-xs text-muted-foreground">İade Sayısı</p>
+                      <p className="text-2xl font-bold mt-0.5">{marketplaceReturns.length}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Trendyol Otomatik İadeleri</CardTitle>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Claim ID veya sipariş no ara..."
+                        value={trQ}
+                        onChange={(e) => setTrQ(e.target.value)}
+                        className="pl-9 h-9 w-64"
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {marketplaceReturns.length === 0 ? (
+                    <div className="text-center py-16 text-muted-foreground">
+                      <RotateCcw className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                      <p className="font-medium">Henüz Trendyol iade verisi yok</p>
+                      <p className="text-sm mt-1">Trendyol bağlantınız aktifse veriler 30 dakika içinde çekilir.</p>
+                    </div>
+                  ) : trFiltered.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground text-sm">Arama ile eşleşen kayıt bulunamadı.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>İade Tarihi</TableHead>
+                            <TableHead>Sipariş No</TableHead>
+                            <TableHead>Claim ID</TableHead>
+                            <TableHead className="text-right">Tutar</TableHead>
+                            <TableHead>Sync Tarihi</TableHead>
+                            <TableHead></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {trFiltered.map((r) => (
+                            <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => loadTrDetail(r)}>
+                              <TableCell className="whitespace-nowrap">
+                                {r.return_date ? formatDate(r.return_date) : "—"}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{r.order_id || "—"}</TableCell>
+                              <TableCell className="font-mono text-xs text-muted-foreground">{r.claim_id}</TableCell>
+                              <TableCell className="text-right font-medium text-red-600">
+                                {r.total_price != null ? formatCurrency(Number(r.total_price)) : "—"}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                {r.synced_at ? formatDate(r.synced_at.slice(0, 10)) : "—"}
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
+                                  <ExternalLink className="h-3 w-3" />
+                                  Detay
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="analiz" className="mt-4 space-y-4">
@@ -580,6 +728,70 @@ function IadelerPage() {
         onClose={() => { setReturnDialogSale(null); setCurrentSaleReturned(0); }}
         onCreated={(ret) => setReturns((prev) => [ret, ...prev])}
       />
+
+      {/* Trendyol İade Detay Dialog */}
+      <Dialog open={!!trDetail} onOpenChange={(open) => { if (!open) setTrDetail(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Trendyol İade Detayı</DialogTitle>
+          </DialogHeader>
+          {trDetail && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Claim ID</p>
+                  <p className="font-mono font-medium">{trDetail.claim_id}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sipariş No</p>
+                  <p className="font-mono font-medium">{trDetail.order_id || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">İade Tarihi</p>
+                  <p className="font-medium">{trDetail.return_date ? formatDate(trDetail.return_date) : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Toplam Tutar</p>
+                  <p className="font-semibold text-red-600">
+                    {trDetail.total_price != null ? formatCurrency(Number(trDetail.total_price)) : "—"}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">İade Kalemleri</p>
+                {trDetailLoading ? (
+                  <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+                ) : !trDetail.items || trDetail.items.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Kalem bilgisi bulunamadı.</p>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Barkod</TableHead>
+                          <TableHead className="text-xs">Ürün</TableHead>
+                          <TableHead className="text-right text-xs">Adet</TableHead>
+                          <TableHead className="text-right text-xs">Fiyat</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {trDetail.items.map((item, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-mono text-xs">{item.barcode || "—"}</TableCell>
+                            <TableCell className="text-xs max-w-[160px] truncate" title={item.productName}>{item.productName || "—"}</TableCell>
+                            <TableCell className="text-right text-xs">{item.quantity ?? "—"}</TableCell>
+                            <TableCell className="text-right text-xs">{item.price != null ? formatCurrency(Number(item.price)) : "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

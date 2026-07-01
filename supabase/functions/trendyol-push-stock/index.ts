@@ -9,6 +9,10 @@ function sanitizeError(err: unknown): string {
   return "Bilinmeyen hata";
 }
 
+function isUUID(s: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -37,10 +41,21 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Geçersiz istek" }), { status: 400 });
   }
 
-  const { connection_id, product_id, quantity } = body;
-  if (!connection_id || !product_id || quantity === undefined || quantity < 0) {
+  const { connection_id, product_id, quantity: rawQuantity } = body;
+
+  // UUID format validation
+  if (!connection_id || !product_id || !isUUID(connection_id) || !isUUID(product_id)) {
     return new Response(
-      JSON.stringify({ error: "connection_id, product_id ve quantity zorunlu" }),
+      JSON.stringify({ error: "Geçersiz connection_id veya product_id" }),
+      { status: 400 },
+    );
+  }
+
+  // quantity: integer, 0–100_000 aralığı zorunlu
+  const qty = Math.round(Number(rawQuantity));
+  if (!Number.isFinite(qty) || qty < 0 || qty > 100_000) {
+    return new Response(
+      JSON.stringify({ error: "Stok miktarı 0 ile 100.000 arasında olmalıdır" }),
       { status: 400 },
     );
   }
@@ -108,7 +123,7 @@ Deno.serve(async (req) => {
       product_id,
       sync_type: "stock_push",
       status: "running",
-      quantity_sent: quantity,
+      quantity_sent: qty,
       sync_from: new Date().toISOString(),
       sync_to: new Date().toISOString(),
     })
@@ -134,14 +149,19 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           items: [{
             barcode: product.marketplace_product_id,
-            quantity,
+            quantity: qty,
             salePrice,
-            listPrice: salePrice,
+            listPrice: salePrice, // listPrice >= salePrice zorunlu; eşit geçerli
           }],
         }),
       });
     } catch (fetchErr) {
       throw new Error(`Trendyol API'ye ulaşılamadı: ${sanitizeError(fetchErr)}`);
+    }
+
+    // 429 rate limit — özel mesaj
+    if (resp.status === 429) {
+      throw new Error("Trendyol rate limit aşıldı (10 istek/dk). 60 saniye sonra tekrar deneyin.");
     }
 
     if (!resp.ok) {
@@ -150,26 +170,26 @@ Deno.serve(async (req) => {
     }
 
     const result = await resp.json();
-    const batchRequestId: string | null = result.batchRequestId ?? null;
+
+    // Per-item hata kontrolü — Trendyol HTTP 200 döndürüp item bazında hata verebilir
+    const failedItems = (result.items ?? []).filter((i: any) => String(i.status) !== "200");
+    if (failedItems.length > 0) {
+      const reason = failedItems[0]?.failureReasons?.[0] ?? "Trendyol ürünü reddetti";
+      throw new Error(`Trendyol hata: ${String(reason).slice(0, 200)}`);
+    }
+
+    // batchRequestId sanitize — external input
+    const batchRequestId = result.batchRequestId
+      ? String(result.batchRequestId).slice(0, 64).replace(/[^\w-]/g, "")
+      : null;
+
     const pushedAt = new Date().toISOString();
 
     // Başarı: lokal stok + last_pushed_at güncelle
     await adminClient.from("products").update({
-      quantity,
+      quantity: qty,
       last_pushed_at: pushedAt,
     }).eq("id", product_id).eq("user_id", user.id);
-
-    // Stok hareketi kaydet
-    if (quantity !== Number(product.quantity)) {
-      const diff = quantity - Number(product.quantity);
-      await adminClient.from("stock_lots").insert({
-        product_id,
-        user_id: user.id,
-        quantity: diff,
-        unit_cost: salePrice,
-        note: `Trendyol push (batchId: ${batchRequestId ?? "—"})`,
-      }).then(() => {});
-    }
 
     // Sync log güncelle
     if (syncLog?.id) {

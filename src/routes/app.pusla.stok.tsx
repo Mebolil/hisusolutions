@@ -614,9 +614,9 @@ function StockPage() {
                             <Button size="sm" variant="outline"
                               className="h-7 gap-1 shrink-0 border-orange-300 text-orange-700 hover:bg-orange-50"
                               onClick={() => setPushTarget(p)}
-                              title="Stoğu Trendyol'a gönder"
+                              aria-label="Stoğu Trendyol'a gönder"
                             >
-                              <ArrowUpToLine className="h-3.5 w-3.5" /> TY
+                              <ArrowUpToLine className="h-3.5 w-3.5" /> Gönder
                             </Button>
                           )}
                           <Button size="sm" variant="ghost" onClick={() => setEditing(p)} className="gap-1">
@@ -852,10 +852,13 @@ function PushStockDialog({
       });
       if (error || data?.error) {
         toast.error(data?.error ?? "Trendyol'a gönderilemedi. Lütfen tekrar deneyin.");
+        setPushing(false);
         return;
       }
-      toast.success(`${product.name} — ${product.quantity} adet Trendyol'a gönderildi`);
+      const shortName = product.name.length > 40 ? product.name.slice(0, 40) + "…" : product.name;
+      setPushing(false);
       onSuccess({ id: product.id, quantity: product.quantity, last_pushed_at: new Date().toISOString() });
+      toast.success(`${shortName} — ${product.quantity} adet Trendyol'a gönderildi`);
     } catch {
       toast.error("Trendyol bu güncellemeyi kabul etmedi. Stok miktarını kontrol edin veya birkaç dakika sonra tekrar deneyin.");
     } finally {
@@ -887,13 +890,19 @@ function PushStockDialog({
                   <span>Mevcut stok:</span>
                   <span className="font-semibold text-foreground text-base">{product.quantity} adet</span>
                 </div>
-                {product.unit_price && product.unit_price > 0 && (
+                {product.unit_price && product.unit_price > 0 ? (
                   <p className="text-xs text-muted-foreground">Fiyat: {formatCurrency(Number(product.unit_price))}</p>
+                ) : (
+                  <p className="text-xs text-amber-700 font-medium">⚠ Fiyat tanımlı değil — Trendyol push başarısız olabilir. Ürünü düzenleyerek fiyat ekleyin.</p>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Bu değişiklik Trendyol mağazanıza yansıyacak.
-              </p>
+              {pushing ? (
+                <p className="text-sm text-muted-foreground text-center">Trendyol'a gönderiliyor, lütfen bekleyin…</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Bu değişiklik Trendyol mağazanıza yansıyacak.
+                </p>
+              )}
             </>
           )}
         </div>

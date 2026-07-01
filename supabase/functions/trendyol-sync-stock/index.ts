@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
     .from("products")
     .select("marketplace_product_id")
     .eq("user_id", conn.user_id)
+    .eq("platform", "trendyol")
     .is("deleted_at", null)
     .not("last_pushed_at", "is", null)
     .gte("last_pushed_at", cooldownSince);

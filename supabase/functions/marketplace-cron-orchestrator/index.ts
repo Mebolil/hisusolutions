@@ -3,10 +3,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const SYNC_ORDERS_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-orders`;
-const SYNC_FINANCIAL_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-financial`;
-const SYNC_STOCK_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-stock`;
-const SYNC_RETURNS_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-returns`;
+const TY_SYNC_ORDERS_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-orders`;
+const TY_SYNC_FINANCIAL_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-financial`;
+const TY_SYNC_STOCK_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-stock`;
+const TY_SYNC_RETURNS_URL = `${SUPABASE_URL}/functions/v1/trendyol-sync-returns`;
+
+const HB_SYNC_ORDERS_URL = `${SUPABASE_URL}/functions/v1/hepsiburada-sync-orders`;
+const HB_SYNC_STOCK_URL = `${SUPABASE_URL}/functions/v1/hepsiburada-sync-stock`;
+const HB_SYNC_RETURNS_URL = `${SUPABASE_URL}/functions/v1/hepsiburada-sync-returns`;
 const SYNC_CALL_TIMEOUT_MS = 30_000;
 
 const ORDER_SYNC_INTERVAL_MS = 25 * 60 * 1000;          // 25 dk
@@ -62,7 +66,10 @@ Deno.serve(async (req) => {
   };
 
   for (const conn of connections ?? []) {
-    if (conn.platform !== "trendyol") continue;
+    const isTrendyol = conn.platform === "trendyol";
+    const isHepsiburada = conn.platform === "hepsiburada";
+
+    if (!isTrendyol && !isHepsiburada) continue;
 
     // Circuit breaker: art arda 5+ hata → atla
     if ((conn.sync_error_count ?? 0) >= 5) {
@@ -76,22 +83,21 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    const headers = {
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+    };
+    const body = JSON.stringify({ connection_id: conn.id });
+
     // ── Sipariş sync (her 25 dk) ──────────────────────────────
     const lastOrderMs = conn.last_order_sync_at
       ? new Date(conn.last_order_sync_at).getTime()
       : 0;
 
     if (nowMs - lastOrderMs >= ORDER_SYNC_INTERVAL_MS) {
+      const ordersUrl = isTrendyol ? TY_SYNC_ORDERS_URL : HB_SYNC_ORDERS_URL;
       try {
-        await fetch(SYNC_ORDERS_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ connection_id: conn.id }),
-          signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS),
-        });
+        await fetch(ordersUrl, { method: "POST", headers, body, signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS) });
         results.orders.triggered++;
       } catch {
         results.orders.skipped++;
@@ -101,29 +107,20 @@ Deno.serve(async (req) => {
       results.orders.skipped++;
     }
 
-    // ── Finansal sync (günlük) ────────────────────────────────
-    const lastFinancialMs = conn.last_financial_sync_at
-      ? new Date(conn.last_financial_sync_at).getTime()
-      : 0;
+    // ── Finansal sync (günlük — sadece Trendyol) ─────────────
+    if (isTrendyol) {
+      const lastFinancialMs = conn.last_financial_sync_at
+        ? new Date(conn.last_financial_sync_at).getTime()
+        : 0;
 
-    if (nowMs - lastFinancialMs >= FINANCIAL_SYNC_INTERVAL_MS) {
-      try {
-        fetch(SYNC_FINANCIAL_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ connection_id: conn.id }),
-          signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS),
-        }).catch((e) => { console.error("Finansal sync tetikleme hatası:", e); });
+      if (nowMs - lastFinancialMs >= FINANCIAL_SYNC_INTERVAL_MS) {
+        fetch(TY_SYNC_FINANCIAL_URL, { method: "POST", headers, body, signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS) })
+          .catch((e) => { console.error("Finansal sync tetikleme hatası:", e); });
         results.financial.triggered++;
-      } catch {
+        await new Promise((r) => setTimeout(r, 300));
+      } else {
         results.financial.skipped++;
       }
-      await new Promise((r) => setTimeout(r, 300));
-    } else {
-      results.financial.skipped++;
     }
 
     // ── Stok sync (4 saatte bir) ──────────────────────────────
@@ -132,20 +129,10 @@ Deno.serve(async (req) => {
       : 0;
 
     if (nowMs - lastStockMs >= STOCK_SYNC_INTERVAL_MS) {
-      try {
-        fetch(SYNC_STOCK_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ connection_id: conn.id }),
-          signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS),
-        }).catch((e) => { console.error("Stok sync tetikleme hatası:", e); });
-        results.stock.triggered++;
-      } catch {
-        results.stock.skipped++;
-      }
+      const stockUrl = isTrendyol ? TY_SYNC_STOCK_URL : HB_SYNC_STOCK_URL;
+      fetch(stockUrl, { method: "POST", headers, body, signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS) })
+        .catch((e) => { console.error("Stok sync tetikleme hatası:", e); });
+      results.stock.triggered++;
       await new Promise((r) => setTimeout(r, 300));
     } else {
       results.stock.skipped++;
@@ -157,20 +144,10 @@ Deno.serve(async (req) => {
       : 0;
 
     if (nowMs - lastReturnsMs >= RETURNS_SYNC_INTERVAL_MS) {
-      try {
-        fetch(SYNC_RETURNS_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ connection_id: conn.id }),
-          signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS),
-        }).catch((e) => { console.error("İade sync tetikleme hatası:", e); });
-        results.returns.triggered++;
-      } catch {
-        results.returns.skipped++;
-      }
+      const returnsUrl = isTrendyol ? TY_SYNC_RETURNS_URL : HB_SYNC_RETURNS_URL;
+      fetch(returnsUrl, { method: "POST", headers, body, signal: AbortSignal.timeout(SYNC_CALL_TIMEOUT_MS) })
+        .catch((e) => { console.error("İade sync tetikleme hatası:", e); });
+      results.returns.triggered++;
       await new Promise((r) => setTimeout(r, 300));
     } else {
       results.returns.skipped++;

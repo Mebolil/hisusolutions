@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
       // marketplace_returns'a upsert — ON CONFLICT(user_id, claim_id)
       const { error: upsertErr } = await adminClient.from("marketplace_returns").upsert({
         user_id: conn.user_id,
-        connection_id,
+        marketplace_connection_id: connection_id,
         claim_id: String(claimId).slice(0, 100),
         order_id: packageNumber || null,
         platform: "hepsiburada",

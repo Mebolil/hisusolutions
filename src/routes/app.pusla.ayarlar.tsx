@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
-import { Plus, Trash2, Settings as SettingsIcon, RotateCcw, Store, CheckCircle2, XCircle, Loader2, RefreshCw, Link, Unlink } from "lucide-react";
+import { Plus, Trash2, Settings as SettingsIcon, RotateCcw, Store, CheckCircle2, XCircle, Loader2, RefreshCw, Link, Unlink, Lock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
@@ -845,10 +845,142 @@ function AddTrendyolForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
+function AddHepsiburadaForm({ onSuccess }: { onSuccess: () => void }) {
+  const [merchantId, setMerchantId] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!merchantId || !username || !password) {
+      toast.error("Tüm zorunlu alanları doldurun");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("testing");
+    setErrorMsg("");
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Oturum bulunamadı");
+
+      await callMarketplaceEF(session.access_token, "POST", "connect", {
+        platform: "hepsiburada",
+        hb_merchant_id: merchantId.trim(),
+        hb_username: username.trim(),
+        hb_password: password,
+        store_name: storeName.trim() || "HB Mağazam",
+      });
+
+      setStatus("success");
+      toast.success("Hepsiburada bağlantısı başarıyla kuruldu!");
+      setTimeout(() => {
+        onSuccess();
+        setMerchantId(""); setUsername(""); setPassword(""); setStoreName("");
+        setStatus("idle");
+      }, 1500);
+    } catch (err) {
+      setStatus("error");
+      const msg = err instanceof Error ? err.message : "Bağlantı kurulamadı";
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 border rounded-md px-3 py-2">
+        <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+        <span>Bilgileriniz şifreli saklanır ve yalnızca HB API çağrılarında kullanılır. Dilediğiniz zaman silebilirsiniz.</span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="hb-merchant-id">Merchant ID <span className="text-red-500">*</span></Label>
+          <Input
+            id="hb-merchant-id"
+            placeholder="Örn: 123456789"
+            value={merchantId}
+            onChange={(e) => setMerchantId(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="hb-store-name">Mağaza Adı (opsiyonel)</Label>
+          <Input
+            id="hb-store-name"
+            placeholder="Örn: HB Ana Mağaza"
+            value={storeName}
+            onChange={(e) => setStoreName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="hb-username">Kullanıcı Adı <span className="text-red-500">*</span></Label>
+          <Input
+            id="hb-username"
+            placeholder="HB satıcı kullanıcı adı"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="hb-password">Şifre <span className="text-red-500">*</span></Label>
+          <Input
+            id="hb-password"
+            type="password"
+            placeholder="HB satıcı şifresi"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Bilgilere <strong>Hepsiburada Satıcı Portalı → Entegrasyon → API Anahtarı</strong> sayfasından ulaşabilirsiniz.
+      </p>
+
+      {status === "testing" && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 border rounded-md p-3">
+          <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+          HB sunucularına bağlanılıyor...
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+          <XCircle className="h-4 w-4 flex-shrink-0" />
+          {errorMsg}
+        </div>
+      )}
+
+      {status === "success" && (
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-3">
+          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+          Bağlantı başarılı! Stok ve sipariş verileriniz aktarılmaya başlayacak.
+        </div>
+      )}
+
+      <Button type="submit" disabled={loading || status === "success"}>
+        {loading
+          ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Test ediliyor...</>
+          : <><Link className="h-4 w-4 mr-2" /> Hepsiburada'yı Bağla</>}
+      </Button>
+    </form>
+  );
+}
+
 function MarketplacesTab() {
   const [connections, setConnections] = useState<MarketplaceConnection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState<false | "trendyol" | "hepsiburada">(false);
 
   const fetchConnections = async () => {
     setLoading(true);
@@ -960,9 +1092,14 @@ function MarketplacesTab() {
               </p>
             </div>
             {!showAddForm && (
-              <Button onClick={() => setShowAddForm(true)} size="sm">
-                <Plus className="h-4 w-4 mr-1" /> Bağlantı Ekle
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setShowAddForm("trendyol")} size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" /> Trendyol
+                </Button>
+                <Button onClick={() => setShowAddForm("hepsiburada")} size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" /> Hepsiburada
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -970,10 +1107,14 @@ function MarketplacesTab() {
         {showAddForm && (
           <CardContent className="border-t pt-6 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm">Trendyol Bağla</h3>
+              <h3 className="font-medium text-sm">
+                {showAddForm === "hepsiburada" ? "Hepsiburada Bağla" : "Trendyol Bağla"}
+              </h3>
               <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>İptal</Button>
             </div>
-            <AddTrendyolForm onSuccess={() => { setShowAddForm(false); fetchConnections(); }} />
+            {showAddForm === "hepsiburada"
+              ? <AddHepsiburadaForm onSuccess={() => { setShowAddForm(false); fetchConnections(); }} />
+              : <AddTrendyolForm onSuccess={() => { setShowAddForm(false); fetchConnections(); }} />}
           </CardContent>
         )}
 
@@ -988,12 +1129,17 @@ function MarketplacesTab() {
               <div>
                 <p className="text-sm font-medium">Henüz pazar yeri bağlantısı yok</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Trendyol'u bağlayarak sipariş verilerinizin otomatik aktarılmasını sağlayın.
+                  Trendyol veya Hepsiburada'yı bağlayarak verilerinizi otomatik aktarın.
                 </p>
               </div>
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="h-4 w-4 mr-1" /> İlk Bağlantıyı Ekle
-              </Button>
+              <div className="flex items-center justify-center gap-2">
+                <Button onClick={() => setShowAddForm("trendyol")} variant="outline">
+                  <Plus className="h-4 w-4 mr-1" /> Trendyol
+                </Button>
+                <Button onClick={() => setShowAddForm("hepsiburada")} variant="outline">
+                  <Plus className="h-4 w-4 mr-1" /> Hepsiburada
+                </Button>
+              </div>
             </div>
           ) : connections.length > 0 ? (
             <div className="space-y-3">
@@ -1011,21 +1157,6 @@ function MarketplacesTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed opacity-75">
-        <CardContent className="pt-5 pb-5">
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
-              <Store className="h-4 w-4 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Hepsiburada — Yakında</p>
-              <p className="text-xs text-muted-foreground">
-                Trendyol entegrasyonu stabilize olduktan sonra eklenecek.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

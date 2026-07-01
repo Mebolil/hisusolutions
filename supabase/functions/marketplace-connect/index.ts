@@ -216,10 +216,150 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Hepsiburada — Faz 6'da eklenecek
+    // Hepsiburada bağlantısı
+    if (platform === "hepsiburada") {
+      const { hb_merchant_id, hb_username, hb_password, store_name: sname } = body as any;
+
+      if (!hb_merchant_id || !hb_username || !hb_password) {
+        return new Response(
+          JSON.stringify({ error: "Merchant ID, kullanıcı adı ve şifre zorunludur" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // HB API testi — listings endpoint'ine size=1 ile dokunarak kimlik doğrula
+      const testUrl =
+        `https://listing-external.hepsiburada.com/listings/merchantid/${hb_merchant_id}?offset=0&limit=1`;
+      const credentials = btoa(`${hb_username}:${hb_password}`);
+
+      let testResp: Response;
+      try {
+        testResp = await fetch(testUrl, {
+          headers: {
+            Authorization: `Basic ${credentials}`,
+            "Content-Type": "application/json",
+          },
+        });
+      } catch (fetchErr) {
+        return new Response(
+          JSON.stringify({ error: `Hepsiburada'ya ulaşılamadı: ${sanitizeError(fetchErr)}` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (testResp.status === 401 || testResp.status === 403) {
+        return new Response(
+          JSON.stringify({ error: "Kullanıcı adı veya şifre hatalı. Hepsiburada Satıcı Paneli'nden kontrol edin." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (testResp.status === 404) {
+        return new Response(
+          JSON.stringify({ error: "Merchant ID bulunamadı. ID'nizi kontrol edin." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (!testResp.ok) {
+        return new Response(
+          JSON.stringify({ error: `Hepsiburada bağlantısı başarısız (HTTP ${testResp.status})` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Şifreyi Vault'a kaydet
+      const connId = crypto.randomUUID();
+      let pwdSecretId: string | null = null;
+
+      async function cleanupHbVault() {
+        if (pwdSecretId) {
+          try { await adminClient.rpc("vault_delete_secret", { p_id: pwdSecretId }); } catch { /* ignore */ }
+        }
+      }
+
+      try {
+        const { data: pwdData, error: pwdErr } = await adminClient.rpc("vault_create_secret", {
+          p_secret: hb_password,
+          p_name: `hb_password_${connId}`,
+          p_description: `HB Password — connection ${connId}`,
+        });
+        if (pwdErr || !pwdData) throw new Error(`Vault şifre hatası: ${pwdErr?.message}`);
+        pwdSecretId = pwdData as string;
+
+        const { data: conn, error: connErr } = await adminClient
+          .from("marketplace_connections")
+          .insert({
+            id: connId,
+            user_id: user.id,
+            platform: "hepsiburada",
+            store_name: sname?.trim() || `HB Mağazam`,
+            hb_merchant_id,
+            hb_username,
+            hb_password_secret_id: pwdSecretId,
+            sync_status: "idle",
+          })
+          .select("id, store_name, sync_status, created_at")
+          .single();
+
+        if (connErr) {
+          await cleanupHbVault();
+          if (connErr.code === "23505") {
+            return new Response(
+              JSON.stringify({ error: "Bu Merchant ID ile zaten bir bağlantı var" }),
+              { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+          throw new Error(connErr.message);
+        }
+
+        await adminClient.from("marketplace_sync_logs").insert({
+          connection_id: conn!.id,
+          user_id: user.id,
+          sync_type: "connection_test",
+          status: "success",
+          records_fetched: 0,
+          finished_at: new Date().toISOString(),
+          duration_ms: 0,
+        });
+
+        // Backfill: stok + sipariş başlat
+        const backfillStockFetch = fetch(`${SUPABASE_URL}/functions/v1/hepsiburada-sync-stock`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ connection_id: connId }),
+        }).catch((e) => { console.error("HB stock backfill hatası:", e); });
+
+        const backfillOrdersFetch = fetch(`${SUPABASE_URL}/functions/v1/hepsiburada-sync-orders`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ connection_id: connId }),
+        }).catch((e) => { console.error("HB orders backfill hatası:", e); });
+
+        if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
+          (globalThis as any).EdgeRuntime.waitUntil(Promise.all([backfillStockFetch, backfillOrdersFetch]));
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, connection: conn }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      } catch (vaultErr) {
+        await cleanupHbVault();
+        return new Response(
+          JSON.stringify({ error: `Kayıt hatası: ${sanitizeError(vaultErr)}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     return new Response(
-      JSON.stringify({ error: "Hepsiburada entegrasyonu yakında gelecek" }),
-      { status: 501, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ error: "Geçersiz platform" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 

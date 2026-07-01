@@ -856,6 +856,7 @@ function SalesPage() {
       <ReturnDialog
         sale={returnDialogSale}
         products={products}
+        alreadyReturned={returnDialogSale ? (returnMap.get(returnDialogSale.id) ?? 0) : 0}
         onClose={() => setReturnDialogSale(null)}
         onCreated={() => load()}
       />

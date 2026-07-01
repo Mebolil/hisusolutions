@@ -41,7 +41,7 @@ type Purchase = { id: string; purchase_date: string; amount: number; paid_amount
 type Product = { id: string; name: string; quantity: number; low_stock_threshold: number; unit_price: number | null; category: string | null };
 type Campaign = { id: string; name: string; platform: string | null; status: string; spend: number; start_date: string };
 type Customer = { id: string; name: string };
-type ReturnData = { product_name: string; return_amount: number; return_date: string };
+type ReturnData = { id: string; product_name: string; return_amount: number; return_date: string };
 type SaleCostItem = { sale_id: string; label: string; amount: number; deleted_at: string | null };
 type ReturnCostItem = { return_id: string; label: string; amount: number; deleted_at: string | null; cost_type: string; created_at: string };
 
@@ -88,7 +88,7 @@ function ReportsPage() {
         supabase.from("campaigns").select("*").eq("user_id", uid).limit(500),
         supabase.from("customers").select("id,name").eq("user_id", uid).limit(2000),
         supabase.from("returns")
-          .select("product_name,return_amount,return_date")
+          .select("id,product_name,return_amount,return_date")
           .eq("user_id", uid)
           .eq("status", "active")
           .is("deleted_at", null)
@@ -360,19 +360,26 @@ function ReportsPage() {
     [costBreakdown],
   );
 
-  // İade ile geri alınan maliyet kalemleri — dönem içi (created_at bazlı) label gruplu
+  const returnDateById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of returns) map.set(r.id, r.return_date);
+    return map;
+  }, [returns]);
+
+  // İade ile geri alınan maliyet kalemleri — dönem içi (return_date bazlı) label gruplu
   const returnCostBreakdown = useMemo(() => {
     const map = new Map<string, { label: string; total: number }>();
     for (const item of returnCostItems) {
       if (item.deleted_at !== null) continue;
-      if (!inRange(item.created_at)) continue;
+      const effectiveDate = returnDateById.get(item.return_id) || item.created_at;
+      if (!inRange(effectiveDate)) continue;
       const key = item.label.toLowerCase().trim();
       const existing = map.get(key);
       if (existing) existing.total += Number(item.amount);
       else map.set(key, { label: item.label, total: Number(item.amount) });
     }
     return [...map.values()].sort((a, b) => b.total - a.total);
-  }, [returnCostItems, range]);
+  }, [returnCostItems, returnDateById, range]);
 
   const totalReturnCost = useMemo(
     () => returnCostBreakdown.reduce((s, i) => s + i.total, 0),

@@ -157,6 +157,7 @@ function StockPage() {
   const [reorderProduct, setReorderProduct] = useState<Product | null>(null);
   const [recentSales, setRecentSales] = useState<{ product_name: string; quantity: number }[]>([]);
   const [pushTarget, setPushTarget] = useState<Product | null>(null);
+  const [hbPushTarget, setHbPushTarget] = useState<Product | null>(null);
 
   // Whether we're in client-side filter mode (stateFilter low/ok)
   const clientMode = stateFilter === "low" || stateFilter === "ok";
@@ -574,6 +575,11 @@ function StockPage() {
                               TY
                             </span>
                           )}
+                          {p.platform === "hepsiburada" && (
+                            <span className="inline-flex items-center text-[10px] font-medium bg-red-100 text-red-700 border border-red-200 rounded px-1.5 py-0.5 shrink-0">
+                              HB
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{p.urun_kodu || "-"}</TableCell>
@@ -615,6 +621,15 @@ function StockPage() {
                               className="h-7 gap-1 shrink-0 border-orange-300 text-orange-700 hover:bg-orange-50"
                               onClick={() => setPushTarget(p)}
                               aria-label="Stoğu Trendyol'a gönder"
+                            >
+                              <ArrowUpToLine className="h-3.5 w-3.5" /> Gönder
+                            </Button>
+                          )}
+                          {p.platform === "hepsiburada" && p.marketplace_product_id && (
+                            <Button size="sm" variant="outline"
+                              className="h-7 gap-1 shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+                              onClick={() => setHbPushTarget(p)}
+                              aria-label="Stoğu Hepsiburada'ya gönder"
                             >
                               <ArrowUpToLine className="h-3.5 w-3.5" /> Gönder
                             </Button>
@@ -705,6 +720,17 @@ function StockPage() {
           onClose={() => setPushTarget(null)}
           onSuccess={(updatedProduct) => {
             setPushTarget(null);
+            setRows((prev) => prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r));
+            if (allRows) setAllRows((prev) => prev ? prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r) : prev);
+          }}
+        />
+      )}
+      {hbPushTarget && (
+        <HbPushStockDialog
+          product={hbPushTarget}
+          onClose={() => setHbPushTarget(null)}
+          onSuccess={(updatedProduct) => {
+            setHbPushTarget(null);
             setRows((prev) => prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r));
             if (allRows) setAllRows((prev) => prev ? prev.map((r) => r.id === updatedProduct.id ? { ...r, ...updatedProduct } : r) : prev);
           }}
@@ -917,6 +943,118 @@ function PushStockDialog({
               <><span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full" /> Gönderiliyor...</>
             ) : (
               <><ArrowUpToLine className="h-4 w-4" /> Trendyol'a Gönder</>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HbPushStockDialog({
+  product, onClose, onSuccess,
+}: {
+  product: Product;
+  onClose: () => void;
+  onSuccess: (updated: Partial<Product> & { id: string }) => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [pushing, setPushing] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("marketplace_connections")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("platform", "hepsiburada")
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      setConnectionId(data?.id ?? null);
+      setLoading(false);
+    })();
+  }, []);
+
+  async function handlePush() {
+    if (!connectionId) return;
+    setPushing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("hepsiburada-push-stock", {
+        body: { connection_id: connectionId, product_id: product.id, quantity: product.quantity },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error ?? "Hepsiburada'ya gönderilemedi. Lütfen tekrar deneyin.");
+        setPushing(false);
+        return;
+      }
+      const shortName = product.name.length > 40 ? product.name.slice(0, 40) + "…" : product.name;
+      setPushing(false);
+      onSuccess({ id: product.id, quantity: product.quantity, last_pushed_at: new Date().toISOString() });
+      toast.success(`${shortName} — ${product.quantity} adet Hepsiburada'ya gönderildi`);
+    } catch {
+      toast.error("Hepsiburada bu güncellemeyi kabul etmedi. Stok miktarını kontrol edin veya birkaç dakika sonra tekrar deneyin.");
+    } finally {
+      setPushing(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && !pushing && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ArrowUpToLine className="h-5 w-5 text-red-500" />
+            Hepsiburada'ya Stok Gönder
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Yükleniyor...</p>
+          ) : !connectionId ? (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Aktif Hepsiburada bağlantısı bulunamadı. Pusla → Ayarlar → Entegrasyonlar bölümünden bağlantı ekleyin.
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-sm">
+                <p className="font-medium">{product.name}</p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>Mevcut stok:</span>
+                  <span className="font-semibold text-foreground text-base">{product.quantity} adet</span>
+                </div>
+                {product.unit_price && product.unit_price > 0 ? (
+                  <p className="text-xs text-muted-foreground">Fiyat: {formatCurrency(Number(product.unit_price))}</p>
+                ) : (
+                  <p className="text-xs text-amber-700 font-medium">⚠ Fiyat tanımlı değil — HB push başarısız olabilir. Ürünü düzenleyerek fiyat ekleyin.</p>
+                )}
+              </div>
+              {pushing ? (
+                <p className="text-sm text-muted-foreground text-center">Hepsiburada'ya gönderiliyor, lütfen bekleyin…</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Bu değişiklik Hepsiburada mağazanıza yansıyacak.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={pushing}>İptal</Button>
+          <Button
+            onClick={handlePush}
+            disabled={pushing || loading || !connectionId}
+            className="gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+          >
+            {pushing ? (
+              <><span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full" /> Gönderiliyor...</>
+            ) : (
+              <><ArrowUpToLine className="h-4 w-4" /> HB'ye Gönder</>
             )}
           </Button>
         </DialogFooter>

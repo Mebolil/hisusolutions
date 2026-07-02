@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         resp = await fetch(url, {
           headers: {
             Authorization: `Basic ${credentials}`,
-            "User-Agent": `${conn.trendyol_supplier_id} - HisuPusla`,
+            "User-Agent": `${conn.trendyol_supplier_id} - PUSLA`,
             "Content-Type": "application/json",
           },
         });

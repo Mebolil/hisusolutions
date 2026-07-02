@@ -15,10 +15,11 @@ function sanitizeError(err: unknown): string {
 }
 
 const TY_ERROR_MESSAGES: Record<number, string> = {
-  401: "API anahtarı veya şifre hatalı. Trendyol Satıcı Paneli'nden kontrol edin.",
+  401: "API anahtarı veya şifre hatalı. Trendyol Satıcı Paneli → Hesap Bilgilerim → API Bilgileri'nden kontrol edin.",
   403: "Bu API anahtarının yeterli yetkisi yok.",
   404: "Mağaza (Supplier ID) bulunamadı. Supplier ID'nizi kontrol edin.",
   429: "Trendyol rate limit aşıldı. Lütfen 1 dakika bekleyip tekrar deneyin.",
+  556: "Trendyol panel ayarı gerekiyor: Trendyol Satıcı Paneli → Hesap Bilgilerim → Entegrasyon Bilgileri → 'Entegratör ile çalışıyorum' seçeneğini etkinleştirip Entegratör Adı alanına 'PUSLA' yazıp kaydedin, ardından tekrar deneyin.",
 };
 
 Deno.serve(async (req) => {
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
         testResp = await fetch(testUrl, {
           headers: {
             "Authorization": `Basic ${credentials}`,
-            "User-Agent": `${trendyol_supplier_id} - HisuPusla`,
+            "User-Agent": `${trendyol_supplier_id} - PUSLA`,
             "Content-Type": "application/json",
           },
         });
@@ -108,6 +109,9 @@ Deno.serve(async (req) => {
       }
 
       if (!testResp.ok) {
+        let tyBody = "";
+        try { tyBody = await testResp.text(); } catch { /* ignore */ }
+        console.error(`Trendyol API hata: HTTP ${testResp.status}`, tyBody);
         const msg =
           TY_ERROR_MESSAGES[testResp.status] ??
           `Trendyol bağlantısı başarısız (HTTP ${testResp.status})`;

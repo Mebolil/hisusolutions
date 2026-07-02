@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         method: "PUT",
         headers: {
           Authorization: `Basic ${credentials}`,
-          "User-Agent": `${conn.trendyol_supplier_id} - HisuPusla`,
+          "User-Agent": `${conn.trendyol_supplier_id} - PUSLA`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

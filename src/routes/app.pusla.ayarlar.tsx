@@ -827,8 +827,18 @@ function AddTrendyolForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       </div>
 
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-1.5">
+        <p className="text-xs font-semibold text-amber-800">Bağlamadan önce 1 dakikalık zorunlu adım:</p>
+        <ol className="text-xs text-amber-700 space-y-1 list-decimal list-inside">
+          <li><strong>Trendyol Satıcı Paneli</strong>'ne girin</li>
+          <li>Sağ üstten mağaza adınıza tıklayın → <strong>Hesap Bilgilerim</strong></li>
+          <li><strong>Entegrasyon Bilgileri</strong> sekmesini açın</li>
+          <li>"<strong>Pazaryeri entegratörü ile çalışıyor musunuz?</strong>" seçeneğini aktif edin</li>
+          <li>Entegratör adı alanına <strong>PUSLA</strong> yazın ve kaydedin</li>
+        </ol>
+        <p className="text-xs text-amber-700">Bu adım olmadan bağlantı 556 hatasıyla reddedilir. API bilgilerinizi de aynı sayfadan alabilirsiniz.</p>
+      </div>
       <p className="text-xs text-muted-foreground">
-        API bilgilerini <strong>Trendyol Satıcı Paneli → Entegrasyon Bilgileri</strong> bölümünden alabilirsiniz.
         Anahtarlar şifreli olarak saklanır — mağazanıza yalnızca okuma yetkisiyle erişilir, hiçbir şey yazılmaz.
       </p>
 

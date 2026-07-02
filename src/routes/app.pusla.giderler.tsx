@@ -33,12 +33,12 @@ import {
 } from "recharts";
 
 const EXPENSES_CSV_FIELDS: CsvField[] = [
-  { key: "expense_date",   label: "Tarih",         required: true, type: "date" },
-  { key: "category",       label: "Kategori",      required: true },
-  { key: "amount",         label: "Tutar",         required: true, type: "number" },
-  { key: "paid_amount",    label: "Ödenen",        type: "number" },
-  { key: "payment_status", label: "Ödeme Durumu",  required: true },
-  { key: "note",           label: "Not" },
+  { key: "expense_date",   label: "Tarih",         required: true, type: "date",   aliases: ["İşlem Tarihi", "Valör Tarihi", "Tarih", "Date"] },
+  { key: "category",       label: "Kategori",      required: true,                  aliases: ["İşlem Tipi", "Kategori", "Tür", "Gider Türü"] },
+  { key: "amount",         label: "Tutar",         required: true, type: "number", aliases: ["İşlem Tutarı", "Borç", "Alacak", "Miktar", "Tutar"] },
+  { key: "paid_amount",    label: "Ödenen",        type: "number",                  aliases: ["Ödenen Tutar", "Tahsil Edilen"] },
+  { key: "payment_status", label: "Ödeme Durumu",                                   aliases: ["Durum", "İşlem Durumu", "Status"] },
+  { key: "note",           label: "Not",                                             aliases: ["Açıklama", "İşlem Açıklaması", "Detay", "Referans"] },
 ];
 const EXPENSES_CSV_SAMPLE = ["2025-05-01", "Kira", 5000, 5000, "ödendi", "Mayıs ayı"];
 

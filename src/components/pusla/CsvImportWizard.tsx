@@ -48,15 +48,55 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
     id: "trendyol",
     label: "Trendyol Siparişleri",
     columnMap: {
+      // Sipariş no → not alanına
       "Sipariş No": "note",
+      "Sipariş Numarası": "note",
+      "Sipariş ID": "note",
+      // Ürün adı — gerçek Trendyol XLSX'deki farklı başlıklar
       "Ürün Adı": "product_name",
+      "Ürün İsmi": "product_name",
+      "Ürün": "product_name",
+      "Ürün Kodu/Adı": "product_name",
+      "Ürün Başlığı": "product_name",
+      "Ürün Kodu": "product_name",
+      // Miktar
       "Adet": "quantity",
+      "Miktar": "quantity",
+      "Sipariş Adedi": "quantity",
+      // Birim fiyat
       "Birim Fiyat": "unit_price",
+      "Ürün Fiyatı": "unit_price",
+      "Satış Fiyatı": "unit_price",
+      "Birim Satış Fiyatı": "unit_price",
+      // Toplam tutar — gerçek Trendyol XLSX sütun isimleri
       "Toplam Fiyat": "total_amount",
+      "Toplam Tutar": "total_amount",
+      "Sipariş Tutarı": "total_amount",
+      "Satış Tutarı": "total_amount",
+      "Net Ödeme Tutarı": "total_amount",
+      "Ödeme Tutarı": "total_amount",
+      "Müşteri Fiyatı": "total_amount",
+      // Kargo
       "Kargo Tutarı": "total_cost",
+      "Kargo Bedeli": "total_cost",
+      "Kargo Ücreti": "total_cost",
+      "Kargo Masrafı": "total_cost",
+      // Tarih
       "Sipariş Tarihi": "sale_date",
+      "Oluşturma Tarihi": "sale_date",
+      "Sipariş Oluşturma Tarihi": "sale_date",
+      "Tarih": "sale_date",
+      // Müşteri
       "Müşteri Adı": "_customer_name",
+      "Alıcı Adı": "_customer_name",
+      "Alıcı": "_customer_name",
+      "Teslimat Alıcısı": "_customer_name",
+      // Ödeme durumu
       "Ödeme Durumu": "payment_status",
+      "Sipariş Durumu": "payment_status",
+      "Paket Durumu": "payment_status",
+      "Durum": "payment_status",
+      "Kargo Durumu": "payment_status",
     },
   },
   {
@@ -64,12 +104,25 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
     label: "HepsiBurada Siparişleri",
     columnMap: {
       "Sipariş Numarası": "note",
+      "Sipariş No": "note",
       "Ürün": "product_name",
+      "Ürün Adı": "product_name",
       "Miktar": "quantity",
+      "Adet": "quantity",
       "Fiyat": "unit_price",
+      "Birim Fiyat": "unit_price",
+      "Satış Fiyatı": "unit_price",
       "Toplam": "total_amount",
+      "Toplam Tutar": "total_amount",
+      "Sipariş Tutarı": "total_amount",
       "Tarih": "sale_date",
+      "Sipariş Tarihi": "sale_date",
+      "Oluşturma Tarihi": "sale_date",
       "Müşteri": "_customer_name",
+      "Alıcı": "_customer_name",
+      "Alıcı Adı": "_customer_name",
+      "Sipariş Durumu": "payment_status",
+      "Durum": "payment_status",
     },
   },
   {
@@ -82,6 +135,7 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
       "item-price": "total_amount",
       "purchase-date": "sale_date",
       "buyer-name": "_customer_name",
+      "order-status": "payment_status",
     },
   },
   {
@@ -89,9 +143,16 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
     label: "Banka Ekstresi",
     columnMap: {
       "Tarih": "expense_date",
+      "İşlem Tarihi": "expense_date",
+      "Valör Tarihi": "expense_date",
       "Açıklama": "note",
+      "İşlem Açıklaması": "note",
+      "Referans": "note",
       "Tutar": "amount",
+      "İşlem Tutarı": "amount",
+      "Borç": "amount",
       "İşlem Tipi": "category",
+      "Tür": "category",
     },
   },
 ];
@@ -137,22 +198,58 @@ function autoDetectMapping(
   fields: CsvField[]
 ): Record<string, number> {
   const result: Record<string, number> = {};
+  const assigned = new Set<number>();
   for (const f of fields) {
     const normLabel = norm(f.label);
     const normKey = norm(f.key);
     const normAliases = (f.aliases ?? []).map(norm);
     const candidates = [normLabel, normKey, ...normAliases];
 
-    let idx = csvHeaders.findIndex((h) => candidates.includes(norm(h)));
+    // 1) Exact match — highest priority
+    let idx = csvHeaders.findIndex((h, i) => !assigned.has(i) && candidates.includes(norm(h)));
+    // 2) Partial match — only for candidates with 4+ chars to avoid "tarih" matching "kargoyateslimtarihi"
     if (idx === -1) {
-      idx = csvHeaders.findIndex((h) => {
+      const longCandidates = candidates.filter((a) => a.length >= 4);
+      idx = csvHeaders.findIndex((h, i) => {
+        if (assigned.has(i)) return false;
         const hn = norm(h);
-        return candidates.some((a) => hn.includes(a) || a.includes(hn));
+        // csv header must START WITH or fully CONTAIN a long candidate (not the other way around)
+        return longCandidates.some((a) => hn === a || hn.startsWith(a) || a.startsWith(hn));
       });
     }
+    if (idx >= 0) assigned.add(idx);
     result[f.key] = idx;
   }
   return result;
+}
+
+/** İlk N satırdan en fazla alan eşleştiren satırı başlık olarak seçer.
+ *  Trendyol gibi XLSX'lerde gerçek başlık satırı row[0] olmayabilir. */
+function findBestHeaderRow(
+  allRows: string[][],
+  fields: CsvField[],
+  templates: PlatformTemplate[]
+): string[][] {
+  const SEARCH_DEPTH = 5;
+  let bestRowIdx = 0;
+  let bestScore = -1;
+
+  for (let i = 0; i < Math.min(SEARCH_DEPTH, allRows.length - 1); i++) {
+    const headers = allRows[i].map((h) => h.trim());
+    const autoScore = Object.values(autoDetectMapping(headers, fields)).filter((v) => v >= 0).length;
+    let score = autoScore;
+    for (const tpl of templates) {
+      const tmapping = applyPlatformTemplate(tpl, headers, fields);
+      const ts = Object.values(tmapping).filter((v) => v >= 0).length;
+      if (ts > score) score = ts;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestRowIdx = i;
+    }
+  }
+
+  return [allRows[bestRowIdx], ...allRows.slice(bestRowIdx + 1)];
 }
 
 function applyPlatformTemplate(
@@ -164,10 +261,24 @@ function applyPlatformTemplate(
   for (const f of fields) {
     result[f.key] = -1;
   }
+  // Process template entries in order; first match wins for each fieldKey
+  const assigned = new Set<number>();
   for (const [csvCol, fieldKey] of Object.entries(template.columnMap)) {
-    const colIdx = csvHeaders.findIndex((h) => norm(h) === norm(csvCol));
-    if (colIdx >= 0) {
+    if (result[fieldKey] !== undefined && result[fieldKey] >= 0) continue; // already matched
+    const normCol = norm(csvCol);
+    // Exact match first
+    let colIdx = csvHeaders.findIndex((h) => norm(h) === normCol);
+    // Partial match fallback (header contains the key or vice versa)
+    if (colIdx === -1) {
+      colIdx = csvHeaders.findIndex((h, i) => {
+        if (assigned.has(i)) return false;
+        const hn = norm(h);
+        return hn.includes(normCol) || normCol.includes(hn);
+      });
+    }
+    if (colIdx >= 0 && !assigned.has(colIdx)) {
       result[fieldKey] = colIdx;
+      assigned.add(colIdx);
     }
   }
   return result;
@@ -196,6 +307,34 @@ function coerceValue(f: CsvField, v: string, today: string): unknown {
     return today;
   }
   return v;
+}
+
+/** Dosyadaki başlıklara göre en iyi platform şablonunu tespit eder.
+ *  Eşlenen zorunlu alan sayısı en fazla olan kazanır; beraberlikte total_amount öncelikli. */
+function detectBestPlatform(
+  csvHeaders: string[],
+  fields: CsvField[],
+  templates: PlatformTemplate[]
+): { platformId: string; mapping: Record<string, number> } {
+  const autoMapping = autoDetectMapping(csvHeaders, fields);
+  const score = (m: Record<string, number>) =>
+    fields.filter((f) => (m[f.key] ?? -1) >= 0).length;
+
+  let bestId = "custom";
+  let bestScore = score(autoMapping);
+  let bestMapping = autoMapping;
+
+  for (const template of templates) {
+    const tmapping = applyPlatformTemplate(template, csvHeaders, fields);
+    const s = score(tmapping);
+    if (s > bestScore) {
+      bestScore = s;
+      bestId = template.id;
+      bestMapping = tmapping;
+    }
+  }
+
+  return { platformId: bestId, mapping: bestMapping };
 }
 
 async function suggestMappingWithLLM(
@@ -301,8 +440,8 @@ export function CsvImportWizard({
 
     let rows: string[][];
     try {
-      const isXlsx = /\.xlsx$/i.test(file.name);
-      if (isXlsx) {
+      const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+      if (isExcel) {
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
@@ -323,10 +462,17 @@ export function CsvImportWizard({
       return;
     }
 
+    // Trendyol gibi platformlar bazen XLSX'e üst bilgi satırı ekler; gerçek başlığı bul
+    rows = findBestHeaderRow(rows, fields, visibleTemplates);
+
     const csvHeaders = rows[0].map((h) => h.trim());
-    const autoMapping = autoDetectMapping(csvHeaders, fields);
-    setMapping({ fieldToColIdx: autoMapping, csvHeaders, rows });
-    setSelectedPlatform("custom");
+    const { platformId, mapping: detectedMapping } = detectBestPlatform(csvHeaders, fields, visibleTemplates);
+    setMapping({ fieldToColIdx: detectedMapping, csvHeaders, rows });
+    setSelectedPlatform(platformId);
+    if (platformId !== "custom") {
+      const tpl = PLATFORM_TEMPLATES.find((t) => t.id === platformId);
+      if (tpl) toast.info(`"${tpl.label}" şablonu otomatik algılandı`);
+    }
     setLlmUsed(false);
     setStep("map");
   }
@@ -577,7 +723,7 @@ export function CsvImportWizard({
               <input
                 ref={fileRef}
                 type="file"
-                accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 className="hidden"
                 onChange={handleFileSelect}
               />

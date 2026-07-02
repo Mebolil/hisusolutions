@@ -30,13 +30,13 @@ import { CsvToolbar, type CsvField } from "@/components/pusla/CsvToolbar";
 import { ReturnDialog } from "@/components/pusla/ReturnDialog";
 
 const SALES_CSV_FIELDS: CsvField[] = [
-  { key: "sale_date",      label: "Tarih",          required: true, type: "date" },
-  { key: "product_name",   label: "Ürün",           required: true },
-  { key: "quantity",       label: "Miktar",         required: true, type: "number" },
-  { key: "total_amount",   label: "Tutar",          required: true, type: "number" },
-  { key: "total_cost",     label: "Maliyet",        type: "number" },
-  { key: "paid_amount",    label: "Tahsil Edilen",  type: "number" },
-  { key: "payment_status", label: "Ödeme Durumu",   required: true },
+  { key: "sale_date",      label: "Tarih",          required: true,  type: "date",   aliases: ["Sipariş Tarihi", "Order Date", "Tarih"] },
+  { key: "product_name",   label: "Ürün",           required: true,                  aliases: ["Ürün Adı", "Ürün İsmi", "Ürün Adı", "Product Name", "Ürün", "Ürün Başlığı", "Ürün Kodu/Adı"] },
+  { key: "quantity",       label: "Miktar",         required: true,  type: "number", aliases: ["Adet", "Qty", "Quantity", "Sipariş Adedi"] },
+  { key: "total_amount",   label: "Tutar",          required: true,  type: "number", aliases: ["Toplam Fiyat", "Toplam Tutar", "Sipariş Tutarı", "Sipariş Fiyatı", "Satış Tutarı", "Total Amount", "Tutar"] },
+  { key: "total_cost",     label: "Maliyet",        type: "number",                  aliases: ["Kargo Tutarı", "Kargo Bedeli", "Toplam Maliyet", "Maliyet", "Cost"] },
+  { key: "paid_amount",    label: "Tahsil Edilen",  type: "number",                  aliases: ["Tahsil", "Ödenen Tutar", "Paid"] },
+  { key: "payment_status", label: "Ödeme Durumu",                                    aliases: ["Sipariş Durumu", "Durum", "Status", "Paket Durumu", "Ödeme Tipi"] },
 ];
 const SALES_CSV_SAMPLE = ["2025-05-01", "Örnek Ürün", 1, 100, 60, 100, "ödendi"];
 

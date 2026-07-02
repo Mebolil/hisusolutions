@@ -71,15 +71,23 @@ function downloadCsv(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Minimal RFC4180-ish parser supporting quoted fields with commas/newlines. */
+/** Minimal RFC4180-ish parser supporting quoted fields with commas/newlines.
+ *  Auto-detects separator: uses ';' when first line has more semicolons than commas
+ *  (Turkish Excel exports use semicolon as separator). */
 export function parseCsv(text: string): string[][] {
+  // strip BOM
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  // Auto-detect separator from first line
+  const firstLine = text.split("\n")[0];
+  const commas = (firstLine.match(/,/g) ?? []).length;
+  const semis = (firstLine.match(/;/g) ?? []).length;
+  const sep = semis > commas ? ";" : ",";
+
   const rows: string[][] = [];
   let cur: string[] = [];
   let field = "";
   let i = 0;
   let inQuotes = false;
-  // strip BOM
-  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
   while (i < text.length) {
     const c = text[i];
     if (inQuotes) {
@@ -90,7 +98,7 @@ export function parseCsv(text: string): string[][] {
       field += c; i++;
     } else {
       if (c === '"') { inQuotes = true; i++; continue; }
-      if (c === ",") { cur.push(field); field = ""; i++; continue; }
+      if (c === sep) { cur.push(field); field = ""; i++; continue; }
       if (c === "\r") { i++; continue; }
       if (c === "\n") { cur.push(field); rows.push(cur); cur = []; field = ""; i++; continue; }
       field += c; i++;
@@ -161,7 +169,7 @@ export function CsvToolbar({
     }
     try {
       let rows: string[][];
-      const isXlsx = /\.xlsx$/i.test(file.name);
+      const isXlsx = /\.(xlsx|xls)$/i.test(file.name);
       if (isXlsx) {
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: "array" });
@@ -370,7 +378,7 @@ export function CsvToolbar({
         <input
           ref={xlsxRef}
           type="file"
-          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           className="hidden"
           onChange={handleImport}
         />

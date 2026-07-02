@@ -91,7 +91,10 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
       "Alıcı Adı": "_customer_name",
       "Alıcı": "_customer_name",
       "Teslimat Alıcısı": "_customer_name",
+      // Kargo maliyeti
+      "Faturalanan Kargo Tutarı": "total_cost",
       // Ödeme durumu
+      "Sipariş Statüsü": "payment_status",
       "Ödeme Durumu": "payment_status",
       "Sipariş Durumu": "payment_status",
       "Paket Durumu": "payment_status",
